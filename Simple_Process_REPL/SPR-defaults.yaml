@@ -1,5 +1,6 @@
 REPL:
     prompt        : 'SPR:> '
+
 ssh:
     pemfile       : 'server.pem'
     ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
@@ -55,12 +56,3 @@ exec:
     help: app-help
 
     functions :
-         id-it :
-            fn  : get reset wait pause pause identify
-            doc : 'Id the board. get, then identify. Need the reset and pauses for consistent success'
-         id-it-w-dialog :
-            fn  : dialog-start id-it
-            doc : 'Give a start dialog, get, then identify.'
-         setup :
-            fn  : update wait pause setup-done
-            doc : 'Update the os and mark the setup bit done.'

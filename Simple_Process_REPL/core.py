@@ -593,8 +593,10 @@ def load_functions():
     # fns = get_in_config(['exec', 'functions'])
     # print(yaml.dump(fns))
 
-    for k, v in get_in_config(["exec", "functions"]).items():
-        r.add_symbol(k, v["fn"], v["doc"])
+    fns = get_in_config(["exec", "functions"])
+    if fns is not None:
+        for k, v in fns.items():
+            r.add_symbol(k, v["fn"], v["doc"])
 
 
 def save_yaml_file(filename, dictionary):
@@ -605,9 +607,10 @@ def save_yaml_file(filename, dictionary):
 
 def load_yaml_file(filename):
     "load a dictionary from a yaml file"
-    with open(filename) as f:
-        someyaml = yaml.load(f, Loader=yaml.SafeLoader)
-    return someyaml
+    if os.path.isfile(filename):
+        with open(filename) as f:
+            someyaml = yaml.load(f, Loader=yaml.SafeLoader)
+        return someyaml
 
 
 def load_defaults(pkgname=None, yamlname=None):
@@ -793,9 +796,13 @@ def init(symbols, specials, parser):
     AS["args"] = vars(parser.parse_args())
 
     if AS["args"]["config_file"]:
-        AS["config"] |= load_yaml_file(AS["args"]["config_file"])
+        y = load_yaml_file(AS["args"]["config_file"])
+        if y is not None:
+            AS["config"] |= y
     elif get_in(AS, ["defaults", "config_file"]):
-        AS["config"] |= load_yaml_file(get_in(AS, ["defaults", "config_file"]))
+        y = load_yaml_file(get_in(AS, ["defaults", "config_file"]))
+        if y is not None:
+            AS["config"] |= y
 
     print(get_in_config(["files", "loglevel"]))
 

@@ -4,11 +4,16 @@
     
 This is a stupid simple, highly configurable, application interface.
 
+To start the REPL;
+
+    SPR -r 
+
 To create a new application copy main.py, import some libraries,
 write some functions, fill in the symbol table and the special's table
 as needed.  Create a 'Config.yaml' to your liking.
 
-Instant application.
+[The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
+is an application built from the Simple_Process_REPL.
 
 
 ## Yet another application framework.
@@ -41,15 +46,15 @@ The _-r_ will give a repl.
 
 # Invoking.
 Two different kinds of help are built in.
-    * `python -m Simple_Process_REPL -h`
-    * `python -m Simple_Process_REPL help`
+    * `SPR -h`
+    * `SPR help`
 
 Help with the symbols which are available for programming 
 in the REPL is obtained with the help symbol/function.
- `python -m Simple_Process_REPL help` 
+ `SPR help` 
 
 The easiest way to understand this is system is by using the REPL. 
-It will show you how it works. `python -m Simple_Process_REPL -r` 
+It will show you how it works. `SPR -r` 
  
 Then type _help_ and/or _showin_.
 
@@ -260,7 +265,7 @@ Compound commands can be defined in yaml, in python code, or interactively in th
     * `def mymsg "my special msg" msgbox "Hello World"`
     * That means it works in yaml too.
  * __log-info__ and __log-debug__ allow sending of arbitrary messages to the log.
- * __sh__ for running shell commands.
+ * __sh__ for running shell commands. - There are known bugs.
 
  
 ## Core: Everything generic in functionality
