@@ -608,15 +608,17 @@ def save_yaml_file(filename, dictionary):
 def load_yaml_file(filename):
     "load a dictionary from a yaml file"
     if os.path.isfile(filename):
+        logger.info("Loading Configuration: %s" % filename)
         with open(filename) as f:
             someyaml = yaml.load(f, Loader=yaml.SafeLoader)
         return someyaml
 
 
-def load_defaults(pkgname=None, yamlname=None):
+def load_defaults(state_init, pkgname=None, yamlname=None):
     global AS
 
     AS["config"] |= load_base_config()
+    AS |= state_init
     if pkgname is None:
         return AS
     AS["config"] |= load_pkg_config(pkgname, yamlname)
@@ -626,6 +628,7 @@ def load_defaults(pkgname=None, yamlname=None):
 # import pkg_resources
 def load_pkg_config(pkgname, yamlname):
     """load a configuration file from a package."""
+    logger.info("Loading Configuration: %s: %s" % (pkgname, yamlname))
     return yaml.load(pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader)
     # f = pkg_resources.resource_filename(pkgname, yamlname)
     # print(f)
@@ -736,7 +739,7 @@ def do_something():
 
     # Run the repl.
     if AS["args"]["repl"]:
-        r.repl(get_in_config)(["REPL", "prompt"])
+        r.repl(get_in_config(["REPL", "prompt"]))
 
     # if there aren't any commands on the cli
     # do the auto exec in a loop or once.
@@ -795,7 +798,7 @@ def init(symbols, specials, parser):
 
     AS["args"] = vars(parser.parse_args())
 
-    if AS["args"]["config_file"]:
+    if get_in(AS, ["args" "config_file"]):
         y = load_yaml_file(AS["args"]["config_file"])
         if y is not None:
             AS["config"] |= y
@@ -804,7 +807,7 @@ def init(symbols, specials, parser):
         if y is not None:
             AS["config"] |= y
 
-    print(get_in_config(["files", "loglevel"]))
+    # print(get_in_config(["files", "loglevel"]))
 
     logs.add_file_handler(
         logger,

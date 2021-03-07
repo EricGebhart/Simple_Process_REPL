@@ -473,7 +473,7 @@ def repl(prompt="SPR:> "):
 
     while True:
         try:
-            line = input("SPR:> ")
+            line = input(prompt)
             if len(line):
                 eval_list(parse(line))
         except Exception as e:
