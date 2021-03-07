@@ -1,0 +1,66 @@
+REPL:
+    prompt        : 'SPR:> '
+ssh:
+    pemfile       : 'server.pem'
+    ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
+
+images:
+    flash   : 'foo.bin'
+    test    : 'fooTest.bin'
+
+files:
+    logfile       : 'SPR.log'
+    loglevel      : 'info'
+
+    config_file   : 'SPRConfig.yaml'
+
+serial:
+    baudrate      : 9600
+
+test:
+    start_string    : 'Initial response from Test'
+    response_string : '!'
+    fail_regex      : '^F:.*'
+    done_regex      : '^I:Test All Done'
+    do_qqc_regex    : '^I:Now Setting Serial Number'
+    do_qqc_func     : input-serial
+
+#number of seconds to wait for a response from board and from the test.
+waiting:
+    timeout      : 30
+    pause_time   : 5
+
+
+dialogs :
+    title : 'Particle Board Interface'
+    plugin_start     : 'Plug in a new device, press OK to start'
+    ready_to_test    : 'Device: $device_id, press OK to test'
+    ready_to_flash   : 'Device: $device_id, press OK to flash'
+    device_failed    : 'Device Failed!'
+    device_success   : 'Device Succeeded!'
+    start_again      : 'Setup another device ? '
+    continue_to_next : 'Choice?  Press Y/y to congure another device: '
+    input_serial     : 'Please input the 8 digit serial number.'
+    images_seen      : 'Please verify the test image is shown on the screen.'
+    serial_is_correct : 'This serial number is correct?'
+    serial_must      : 'Serial Number must be 8 digits.'
+    continue         : 'Ready to Continue ?'
+    process_finish   : 'Turn the Power Switch Off and Disconnect the Test Battery and USB.'
+
+exec:
+    # function name to autoexec when asked to run
+
+    autoexec : hello
+
+    help: app-help
+
+    functions :
+         id-it :
+            fn  : get reset wait pause pause identify
+            doc : 'Id the board. get, then identify. Need the reset and pauses for consistent success'
+         id-it-w-dialog :
+            fn  : dialog-start id-it
+            doc : 'Give a start dialog, get, then identify.'
+         setup :
+            fn  : update wait pause setup-done
+            doc : 'Update the os and mark the setup bit done.'
