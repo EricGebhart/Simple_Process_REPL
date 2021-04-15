@@ -3,6 +3,14 @@
     pip install Simple_Process_REPL
     
 This is a stupid simple, configurable, application interface.
+You will need to install dialog. 
+
+on Arch Linux
+```sudo pacman -S dialog```
+
+or on OSX/OSXI
+```brew install dialog```
+
 
 To start the REPL;
 

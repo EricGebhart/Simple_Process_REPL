@@ -28,5 +28,13 @@ setup(
     scripts=[],
     license="MIT",
     entry_points={"console_scripts": ["SPR=Simple_Process_REPL.__main__:main"]},
-    install_requires=["pythondialog", "pyYAML"],
+    install_requires=[
+        "pythondialog",
+        "pyYAML",
+        "regex",
+        "python-barcode",
+        "qrcode",
+        "PIL",
+        # "brother_ql",
+    ],
 )
