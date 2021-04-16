@@ -6,53 +6,60 @@ import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 
-def pad_serial_num(sn):
-    """make the serial number is the minimum length, pad from left with 0s."""
-    fmt = ("%%.%dd" % get_in_config("serial_number" "Minimum_length"))
+def pad_num(sn):
+    """make sure the number is the minimum length, pad from left with 0s."""
+    fmt = ("%%.%dd" % get_in_config("bcqr_minimum_length"))
     return(fmt % sn)
 
 
-def serial_num_2_barcode(sn):
-    return pad_serial_num(sn)
+def num_2_barcode(sn):
+    """turn a number into what we need for a barcode."""
+    prefix = get_in_config("barcode" "prefix")
+    suffix = get_in_config("barcode" "suffix")
+    return pad_num(sn)
 
 
-def serial_num_2_qrcode():
-    prefix = get_in_config("serial_number" "QR_code" "prefix")
-    suffix = get_in_config("serial_number" "QR_code" "suffix")
-    return str(prefix + pad_serial_num(number) + suffix)
+def num_2_qrcode():
+    prefix = get_in_config("QR_code" "prefix")
+    suffix = get_in_config("QR_code" "suffix")
+    return str(prefix + pad_num(number) + suffix)
 
 
 def save_barcode(bc, filename):
     # options = [module_height = 8, text_distance = 2]
-    options = get_in_config("serial_number" "barcode" "save_options")
+    options = get_in_config("barcode" "save_options")
     bc.save(fileName, options)
 
 
-def get_bc_filename(sn):
+def get_bc_filename(s):
     """generate a name for a barcode file"""
-    suffix = get_in_config("serial_number" "barcode" "filename_suffix")
-    path = get_in_config("serial_number" "barcode" "save_path")
-    return os.path.join(path, sn + suffix + '.png')
+    suffix = get_in_config("barcode" "filename_suffix")
+    path = get_in_config("barcode" "save_path")
+    return os.path.join(path, s + suffix + '.png')
 
-def get_qr_filename(sn):
+
+def get_qr_filename(s):
     """generate a name for a QR code file"""
-    suffix = get_in_config("serial_number" "QR_code" "filename_suffix")
-    path = get_in_config("serial_number" "QR_code" "save_path")
-    return os.path.join(path, sn + suffix + '.png')
+    suffix = get_in_config("QR_code" "filename_suffix")
+    path = r.get_in_config("QR_code" "save_path")
+    return os.path.join(path, s + suffix + '.png')
 
 
 def save_qr_code(qrc, filename):
     qrc.save(fileName)
 
 
-def create_bar_code(sn):
-    """Create a barcode from a number"""
-    return barcode.get('code128', serial_num_2_barcode(sn), writer=ImageWriter())
+def create_bar_code(s):
+    """Create a barcode from a string"""
+    return barcode.get('code128', num_2_barcode(s), writer=ImageWriter())
 
 ​
-def create_qr_code(sn):
-    """Create a QR code from a number"""
-    qrCode = serial_num_2_qrcode(sn)
+def create_qr_code(s):
+    """Create a QR code from a string"""
+    qrfont = r.get_in_config("QR_code" "font")
+    qrfont_size = r.get_in_config("QR_code" "font_size")
+
+    qrCode = num_2_qrcode(s)
     qr = qrcode.QRCode(version=2,
                        error_correction=qrcode.constants.ERROR_CORRECT_L,
                        box_size=4,
@@ -64,10 +71,10 @@ def create_qr_code(sn):
     img = qr.make_image(fill_color="black", back_color="white")
     backColor = 'rgb(255, 255, 255)'
     # Left Top Right Bottom
-    bimg = ImageOps.expand(img, border = (30,0,30,40), fill=backColor)
+    bimg = ImageOps.expand(img, border=(30, 0, 30, 40), fill=backColor)
 
     draw = ImageDraw.Draw(bimg)
-    font = ImageFont.truetype('DejaVuSans.ttf', size=18)
+    font = ImageFont.truetype(qrfont, size=qrfont_size)
     (x, y) = (34, 116)
     color = 'rgb(0, 0, 0)'
     draw.text((x, y), qrCode, fill=color, font=font)
@@ -93,7 +100,7 @@ def makeFailSticker(reason, code):
 # This is probably unnecessary, there is another implementation in core.
 def dialog_print_codes():
     """
-    Ask for a serial number,
+    Ask for a number,
     how many to print
     and QR or Bar code.
     Then loop through an os.system call to print.
@@ -104,13 +111,13 @@ def dialog_print_codes():
     fn = None
 
     if label_type == "Bar Code":
-        code = create_bar_code(serial_num_2_barcode(sn))
+        code = create_bar_code(num_2_barcode(sn))
         fn = get_bc_filename(sn)
         save_barcode(code, fn)
         fn = fn + ".png"  # so everyone else knows it's extension.
 
     elif label_type == "QR Code":
-        code = create_qr_code(serial_num_2_qrcode(sn))
+        code = create_qr_code(num_2_qrcode(sn))
         fn = get_qr_filename(sn)
         save_qr_code(code, fn)
 

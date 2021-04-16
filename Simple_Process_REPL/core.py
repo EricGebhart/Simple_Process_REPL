@@ -200,18 +200,22 @@ def save_bcqr(codetype=BarCodeType):
     "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
     sn = get_in(AS, ["barQR", "value"])
     code = get_in(AS, ["barQR", codetype, "code"])
-    fn = bq.get_bc_filename(sn)
-    bq.save_bar_code(code, fn)
+
+    if codetype == BarCodeType:
+        fn = bq.get_bc_filename(sn)
+        bq.save_bar_code(code, fn)
+    elif codetype == QRCodeType:
+        fn = bq.get_qr_filename(sn)
+        bq.save_qr_code(code, fn)
+
     set_in(["barQR", codetype, "saved", fn]))
 
 
 def print_bcqr(codetype=BarCodeType):
-    """save the current barcode for the serial number"""
-    cmd_name, print_command = print_command_radio()
+    """Print the current 'barcode' or 'QR_code'."""
     fn = get_in(AS, ["device", codetype, "saved"])
-    command = print_command % fn
-    logger.info("Printing %s %s to %s" % (codetype, fn, cmd_name))
-    os.system(command)
+    print_file(fn)
+
 
 def print_file(name):
     """Given a name, prompt for the printer and print the file."""
