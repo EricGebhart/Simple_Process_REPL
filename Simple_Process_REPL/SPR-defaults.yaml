@@ -5,20 +5,21 @@ ssh:
     pemfile       : 'server.pem'
     ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
 
-serial_number:
-  # it will be padded with 0's on the front.
+QR_code:
+    filename_suffix: 'QR'
     minumum_length: 6
-    QR_code:
-        prefix: 'K1'
-        suffix: 'A'
-        filename_suffix: 'QR'
-        save_path: 'qrcodes'
-    barcode:
-        filename_suffix: 'BC'
-        save_options:
-            module_height: 8
-            text_distance: 2
-        save_path: 'barcodes'
+    prefix: 'K1'
+    suffix: 'A'
+    save_path: 'qrcodes'
+barcode:
+    filename_suffix: 'BC'
+    minumum_length: 6
+    prefix: ''
+    suffix: ''
+    save_path: 'barcodes'
+    save_options:
+        module_height: 8
+        text_distance: 2
 
 print_commands:
     linux:

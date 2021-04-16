@@ -131,9 +131,9 @@ def dialog_print_codes():
 
 def dialog_BC_or_QR():
     return D.select_choice(
-        "What would you like to print?",
+        "Which would you like to print?",
         [
-            ("Bar Code", "Bar codes"),
-            ("QR Code", "QR Codes"),
+            ("Bar Code", ""),
+            ("QR Code", ""),
         ],
     )

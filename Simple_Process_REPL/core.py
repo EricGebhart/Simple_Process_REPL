@@ -54,6 +54,11 @@ running in a loop or one time with no commands.
 # Application state, which will contain merged data from the application layer.
 AS = {
     "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""},
+    "BarQR-code": {
+        "src": []
+        "value": ""
+        "QR_code":{"code": None "filename": ""}
+        "barcode":{"code": None "filename": ""}}
     "config": {},
     "args": {},
     "wifi-connected": False,
@@ -145,113 +150,99 @@ def islinux():
     return "Linux" == AS["platform"]
 
 
+def input_string_to(msg, keys):
+    """Dialog to get a string and set it in the Application state with a value vector."""
+    v = keys + input_string("msg")
+    set_in(v)
+
+
+def input_string_to_v(v):
+    """varargs version of input_string_to which takes a vector,
+    the first entry should be a string which will be displayed in the dialog window."""
+    input_string_to(v[0], v[1:])
+
+
 def input_sn():
     """Dialog to get a serial number and set it on the device."""
-    sn = input_string("Enter a serial Number")
-    set_in(["device", "serial_number", sn])
+    input_string_to("Enter a serial Number", ["device", "serial_number"])
 
 
-def set_serial_bc():
-    "Get a bar code for the current serial number, set it on the device"
+BarCodeType = "barcode"
+QRCodeType = "QR_code"
+
+def set_bcqr_code_from(keys):
+    v = get_in(AS, keys)
+    set_bcqr_code(keys, v)
+
+
+def set_bcqr_code(keys, v):
+    set-in(["BarQR-code", "src", keys])
+    set-in(["BarQR-code", "value", v])
+
+
+def get_bcqr(codetype=BarCodeType):
+    "Get a bar code for the current barQR value."
     try:
-        sn = get_in(AS, ["device", "serial_number"])
-        set_in(["device", "barcode", "code",
-                bq.create_bar_code(bq.serial_num_2_barcode(sn))])
-        set_in(["device", "barcode", "saved" ""]))
+        v = get_in(AS, ["barQR", "value"])
+        if codetype == BarCodeType:
+                code = bq.create_bar_code(bq.serial_num_2_barcode(v))])
+        elif codetype == QRCodeType:
+                code = q.create_qr_code(bq.serial_num_2_qrcode(v))])
+
+        set_in(["barQR", codetype, "code", code])
+        set_in(["barQR", codetype, "saved" ""]))
 
     except Exception as e:
         print(e)
 
 
-def set_serial_qrc():
-    "Set a QR code for the current serial number, into the device"
-    try:
-        sn = get_in(AS, ["device", "serial_number"])
-        set_in(["device", "QR_code", "code",
-                bq.create_qr_code(bq.serial_num_2_qrcode(sn))])
-        set_in(["device", "QR_code", "saved" ""]))
-    except Exception as e:
-        print(e)
-
-
-def save_serial_bc():
-    "Save a bar code for the current serial number to it's png file"
-    sn = get_in(AS, ["device", "serial_number"])
-    code = get_in(AS, ["device", "barcode", "code"])
+def save_bcqr(codetype=BarCodeType):
+    "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
+    sn = get_in(AS, ["barQR", "value"])
+    code = get_in(AS, ["barQR", codetype, "code"])
     fn = bq.get_bc_filename(sn)
-    set_in(["device", "barcode", "saved", fn]))
     bq.save_bar_code(code, fn)
+    set_in(["barQR", codetype, "saved", fn]))
 
 
-def save_serial_qrc():
-    "Save the current QR code for serial number to it's png file"
-    sn = get_in(AS, ["device", "serial_number"])
-    code = get_in(AS, ["device", "QR_code", "code"])
-    fn = bq.get_qr_filename(sn)
-    set_in(["device" "QR_code" "saved" fn]))
-    bq.save_qr_code(code, fn)
-
-
-def print_serial_bc():
+def print_bcqr(codetype=BarCodeType):
     """save the current barcode for the serial number"""
     cmd_name, print_command = print_command_radio()
-    fn = get_in(AS, ["device", "barcode", "saved"])
+    fn = get_in(AS, ["device", codetype, "saved"])
     command = print_command % fn
-    logger.info("Printing Bar code %s" % fn)
+    logger.info("Printing %s %s to %s" % (codetype, fn, cmd_name))
     os.system(command)
 
-
-def print_serial_qrc():
-    """Print the serial number's QR code"""
+def print_file(name):
+    """Given a name, prompt for the printer and print the file."""
     cmd_name, print_command = print_command_radio()
-    fn = get_in(AS, ["device", "QR_code", "saved"])
-    command = print_command % fn
-    logger.info("Printing QR code %s" % fn)
+    command = print_command % name
+    logger.info("Printing file %s to %s" % (name, cmd_name))
     os.system(command)
 
 
-def print_serial():
-    """Dialog to print the serial number's barcode or QR code"""
-    label_type = D.dialog_BC_or_QR()
+def print_file_from(keys):
+    """Given a value vector, print the filename value held there."""
+    print_file(get_in(AS, keys))
+
+
+def BC_or_QR():
+    label_type = bq.dialog_BC_or_QR()
     if label_type == "Bar Code":
-        print_serial_bc()
+       return BarCodeType
     elif label_type == "QR Code":
-        print_serial_qrc()
-
-
-def save_serial_codes():
-    """create and save barcode and qrcodes for the current serial number"""
-    set_serial_bc()
-    save_serial_bc()
-    set_serial_qrc()
-    save_serial_qrc()
-
-
-def write_barcode():
-    """write the current serial number as a barcode file."""
-    set_serial_bc()
-    save_serial_bc()
-    return get_in(AS, ["device", "barcode", "saved"])
-
-
-def write_QR_code():
-    """write the current serial number as a QR code file."""
-    set_serial_qrc()
-    save_serial_qrc()
-    return get_in(AS, ["device", "QR_code", "saved"])
+       return QRCodeType
 
 
 def print_codes():
     """Ask for a number, then print some number of bar or qr codes.
     See the `serial_number` section of the configuration."""
 
-    input_sn()
-    sn = get_in_device("serial_number")
-    label = bq.dialog_BC_or_QR()
-    if label == "Bar Code":
-        fn = write_barcode()
-    elif label == "QR Code":
-        fn = write_QR_code()
+    input_string_to("Enter a code to print", ["barQR", "value"])
+    codetype = BC_or_QR()
+    get_bcqr(codetype)
+    save_bcqr(codetype)
+    fn = get_in(AS, ["barQR", codetype, "saved", fn]))
 
     cmd_name, print_command = print_command_radio()
     count = input_count("How many to Print ?")
@@ -615,17 +606,6 @@ _symbols = [
     ["cli-finish", D.cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
 
     ["print-codes", print_codes, "Dialog to take a number, and print any number of barcodes or QR codes."],
-    ["input_sn", input_sn, "Dialog to set the device Serial number."],
-    ["write_QR_code", write_QR_code, "Create and save the serial as a QR code png"],
-    ["write_barcode", write_barcode, "Create and save the serial as a barcode png"],
-    ["print_serial", print_serial, "Dialog to print the serial number as a png"],
-    ["print_serial_bc", print_serial_bc, "Print the current serial number's barcode."],
-    ["print_serial_qrc", print_serial_qrc, "Print the current serial number's QR Code"],
-    ["set_serial_bc", set_serial_bc, "Create a barcode for the current Serial Number."],
-    ["set_serial_qrc", set_serial_qrc, "Create a QR code for the current Serial Number."],
-    ["save_serial_bc", save_serial_bc, "Save the serial number as a barcode png"],
-    ["save_serial_qrc", save_serial_qrc, "Save the serial number as a QR code png"],
-    ["save_serial_codes", barcode, "Save the serial number as a barcode and a QR code."],
 
     ["help", help, "Repl help, list symbols and their help."],
     ["quit", exit, "Quit"],
@@ -738,12 +718,30 @@ _specials = [
         "Show the value in the Application state; showin config files",
     ],
     [
-        "setin",
+        "set-in",
         set_in,
         -1,
         "Set a value vector in the application state; setin foo bar 10",
     ],
-    ["print_file", D.dialog_print_file, 1, "Dialog to print a file; print foo.txt"],
+    [
+        "input-string-to",
+        input_string_to,
+        -1,
+        'prompt for an input and set it to the value vector; input_string_to "some msg" "device" "serial_number"',
+    ],
+    [
+        "set-bcqr-from",
+        set_bcqr_from,
+        -1,
+        'Set the BarQR value to the value at the value vector given; set-bcqr-from device serial_number',
+    ],
+    ["get-bcqr", get_bcqr, 1, 'load a barcode or QR code for the current value; get-bcqr "barcode"]',
+    ["save-bcqr", save_bcqr, 1, 'save the current barcode or QR code to a file; save-bcqr "barcode"]',
+    ["print-bcqr", save_bcqr, 1, 'print the current barcode or QR code file; print-bcqr "barcode"]',
+    ["print-file", print_file, 1, "Print a file; print-file foo.txt"],
+    ["print-file-from", print_file_from, -1,
+     "Print a file using the string stored at the value vector; print-file-from barQR QR_code saved"],
+    ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
     ["_archive-log", archive_log, 1, "Archive the logfile."],
     ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
     ["sh", do_shell, -1, "Run a shell command; sh ls -l"],
