@@ -1,5 +1,6 @@
 import pkgutil
-from dialog import Dialog
+import Simple_Process_REPL.dialog_cli as D
+import Simple_Process_REPL.bar_qr as bq
 from sys import exit
 import logging
 import Simple_Process_REPL.logs as logs
@@ -52,7 +53,7 @@ running in a loop or one time with no commands.
 
 # Application state, which will contain merged data from the application layer.
 AS = {
-    "device": {"id": "", "name": "", "path": "", "last_id": ""},
+    "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""},
     "config": {},
     "args": {},
     "wifi-connected": False,
@@ -63,11 +64,6 @@ AS = {
     },
     "platform": platform(),
 }
-
-
-# set up the dialog interface
-d = Dialog(dialog="dialog")
-inputbox = d.inputbox
 
 
 def reset_device():
@@ -88,8 +84,29 @@ def set(d):
     the Application state.
     """
     global AS
-    merge = AS | d
-    AS = merge
+    AS |= d
+
+
+def set_in(keys):
+    """Takes a list of keys ending with the value to assign
+    into the Application State dictionary tree."""
+    global AS
+    AS |= make_dict(keys)
+
+
+def make_dict(keys):
+    """Create a dictionary tree with a value from a list.
+    ie. make_dict(["foo", "bar", value]) => {foo: {bar: value}}
+    """
+    d = {}
+    v = None
+    for x in keys.reverse():
+        if v is None:
+            v = x
+        else:
+            d[x] = v
+            v = d
+    return d
 
 
 def get_in(dict_tree, keys):
@@ -126,6 +143,128 @@ def get_in_device(key):
 def islinux():
     """Check if the platform is linux."""
     return "Linux" == AS["platform"]
+
+
+def input_sn():
+    """Dialog to get a serial number and set it on the device."""
+    sn = input_string("Enter a serial Number")
+    set_in(["device", "serial_number", sn])
+
+
+def set_serial_bc():
+    "Get a bar code for the current serial number, set it on the device"
+    try:
+        sn = get_in(AS, ["device", "serial_number"])
+        set_in(["device", "barcode", "code",
+                bq.create_bar_code(bq.serial_num_2_barcode(sn))])
+        set_in(["device", "barcode", "saved" ""]))
+
+    except Exception as e:
+        print(e)
+
+
+def set_serial_qrc():
+    "Set a QR code for the current serial number, into the device"
+    try:
+        sn = get_in(AS, ["device", "serial_number"])
+        set_in(["device", "QR_code", "code",
+                bq.create_qr_code(bq.serial_num_2_qrcode(sn))])
+        set_in(["device", "QR_code", "saved" ""]))
+    except Exception as e:
+        print(e)
+
+
+def save_serial_bc():
+    "Save a bar code for the current serial number to it's png file"
+    sn = get_in(AS, ["device", "serial_number"])
+    code = get_in(AS, ["device", "barcode", "code"])
+    fn = bq.get_bc_filename(sn)
+    set_in(["device", "barcode", "saved", fn]))
+    bq.save_bar_code(code, fn)
+
+
+def save_serial_qrc():
+    "Save the current QR code for serial number to it's png file"
+    sn = get_in(AS, ["device", "serial_number"])
+    code = get_in(AS, ["device", "QR_code", "code"])
+    fn = bq.get_qr_filename(sn)
+    set_in(["device" "QR_code" "saved" fn]))
+    bq.save_qr_code(code, fn)
+
+
+def print_serial_bc():
+    """save the current barcode for the serial number"""
+    cmd_name, print_command = print_command_radio()
+    fn = get_in(AS, ["device", "barcode", "saved"])
+    command = print_command % fn
+    logger.info("Printing Bar code %s" % fn)
+    os.system(command)
+
+
+def print_serial_qrc():
+    """Print the serial number's QR code"""
+    cmd_name, print_command = print_command_radio()
+    fn = get_in(AS, ["device", "QR_code", "saved"])
+    command = print_command % fn
+    logger.info("Printing QR code %s" % fn)
+    os.system(command)
+
+
+def print_serial():
+    """Dialog to print the serial number's barcode or QR code"""
+    label_type = D.dialog_BC_or_QR()
+    if label_type == "Bar Code":
+        print_serial_bc()
+    elif label_type == "QR Code":
+        print_serial_qrc()
+
+
+def save_serial_codes():
+    """create and save barcode and qrcodes for the current serial number"""
+    set_serial_bc()
+    save_serial_bc()
+    set_serial_qrc()
+    save_serial_qrc()
+
+
+def write_barcode():
+    """write the current serial number as a barcode file."""
+    set_serial_bc()
+    save_serial_bc()
+    return get_in(AS, ["device", "barcode", "saved"])
+
+
+def write_QR_code():
+    """write the current serial number as a QR code file."""
+    set_serial_qrc()
+    save_serial_qrc()
+    return get_in(AS, ["device", "QR_code", "saved"])
+
+
+def print_codes():
+    """Ask for a number, then print some number of bar or qr codes.
+    See the `serial_number` section of the configuration."""
+
+    input_sn()
+    sn = get_in_device("serial_number")
+    label = bq.dialog_BC_or_QR()
+    if label == "Bar Code":
+        fn = write_barcode()
+    elif label == "QR Code":
+        fn = write_QR_code()
+
+    cmd_name, print_command = print_command_radio()
+    count = input_count("How many to Print ?")
+    command = print_command % fn
+
+    if ynbox(
+        "You are ready to print %d %s label(s) of %s to %s?" %
+            (count, label, sn, cmd_name)):
+
+        command = print_command % fn
+        for i in range(0, count):
+            os.system(command)
+
 
 
 def mk_cmd(cmd, prefix=""):
@@ -194,19 +333,6 @@ def get_SSIDS():
         ssids.append(line.split(" ")[0])
 
     return ssids
-
-
-def select_choice(msg, choices):
-    logger.info("select choice: %s", choices)
-    code, choice = d.menu(
-        msg,
-        title=get_in_config(["dialogs", "title"]),
-        choices=choices,
-        height=50,
-        width=50,
-    )
-    os.system("clear")
-    return choice
 
 
 def connect_SSID(ssid):
@@ -388,99 +514,6 @@ def show():
     showin(["device"])
 
 
-def msgbox(msg):
-    "Display a simple message box, enter to continue."
-    d.msgbox(msg, title=get_in_config(["dialogs", "title"]), height=10, width=50)
-    os.system("clear")
-
-
-def ynbox(msg):
-    "Display a yesno dialog, return True or False."
-    response = d.yesno(
-        msg, title=get_in_config(["dialogs", "title"]), height=10, width=50
-    )
-    os.system("clear")
-    if response == "ok":
-        return True
-    else:
-        return False
-
-
-def continue_to_next():
-    "cli version of continue to next."
-    if re.match("^[yY]?$", input(get_in_config(["dialogs", "continue_to_next"]))):
-        return True
-    raise Exception("Answer was No")
-
-
-def msgcli(msg):
-    """Display a message on the cli and wait for input."""
-    print(msg)
-    input("Press any key to continue;")
-
-
-def continue_to_next_dialog():
-    "Do another one? Dialog. returns True/False"
-    if not ynbox(get_in_config(["dialogs", "start_again"])):
-        logger.info("exiting")
-        return False
-    return True
-
-
-def cli_failed():
-    """cli: Process failed."""
-    msgcli(get_in_config(["dialogs", "device_failed"]))
-
-
-def dialog_failed():
-    """dialog: Process failed."""
-    msgbox(get_in_config(["dialogs", "device_failed"]))
-
-
-# So we have a parameter less functions for all of these.
-
-
-def dialog_start():
-    """dialog: Plugin a board and start a process."""
-    msgbox(get_in_config(["dialogs", "plugin_start"]))
-
-
-def dialog_finish():
-    """dialog: unplug and shutdown a board at the end of a process."""
-    msgbox(get_in_config(["dialogs", "process_finish"]))
-
-
-def dialog_test():
-    """dialog: Ready to test?"""
-    msgbox(get_in_config(["dialogs", "ready_to_test"]))
-
-
-def dialog_flash():
-    """dialog: Ready to flash?"""
-    msgbox(get_in_config(["dialogs", "ready_to_flash"]))
-
-
-# So we have parameter less functions for all of these.
-def cli_start():
-    """cli: Plugin a board and start a process."""
-    msgcli(get_in_config(["dialogs", "plugin_start"]))
-
-
-def cli_finish():
-    """cli: unplug and shutdown a board at the end of a process."""
-    msgcli(get_in_config(["dialogs", "process_finish"]))
-
-
-def cli_test():
-    """cli: Ready to test?"""
-    msgcli(get_in_config(["dialogs", "ready_to_test"]))
-
-
-def cli_flash():
-    """cli: Ready to flash?"""
-    msgcli(get_in_config(["dialogs", "ready_to_flash"]))
-
-
 def archive_log(new_name):
     "Move/rename the current logfile to the filename given."
     os.rename(get_in_config(["files", "logfile"]), new_name)
@@ -500,9 +533,9 @@ def hello():
     automatically set autoexec exec/autoexec in the config file to it's name.
     Here are the commands the interpreter currently recognizes."""
     print(msg)
-    msgcli(get_in_config(["dialogs", "continue"]))
+    D.msgcli(get_in_config(["dialogs", "continue"]))
     help()
-    msgcli(get_in_config(["dialogs", "continue"]))
+    D.msgcli(get_in_config(["dialogs", "continue"]))
 
 
 def application_help():
@@ -570,16 +603,30 @@ _symbols = [
         "Copy the functions from the REPL into the state, automatic w/save.",
     ],
     # dialog functions
-    ["dialog-start", dialog_start, "Dialog, for ready to start ?"],
-    ["dialog-test", dialog_test, "Dialog, ready to test ?"],
-    ["dialog-flash", dialog_flash, "Dialog, ready to flash ?"],
-    ["dialog-failed", dialog_failed, "Dialog, ready to flash ?"],
-    ["dialog-finish", dialog_finish, "Dialog, Unplug, power off."],
-    ["cli-start", cli_start, "Dialog, for ready to start ?"],
-    ["cli-test", cli_test, "Dialog, ready to test ?"],
-    ["cli-flash", cli_flash, "Dialog, ready to flash ?"],
-    ["cli-failed", cli_failed, "Dialog, ready to flash ?"],
-    ["cli-finish", cli_finish, "Dialog, Unplug, power off."],
+    ["dialog-start", D.dialog_start, "Dialog, for ready to start ?"],
+    ["dialog-test", D.dialog_test, "Dialog, ready to test ?"],
+    ["dialog-flash", D.dialog_flash, "Dialog, ready to flash ?"],
+    ["dialog-failed", D.dialog_failed, "Dialog, ready to flash ?"],
+    ["dialog-finish", D.dialog_finish, "Dialog, Unplug, power off."],
+    ["cli-start", D.cli_start, "Dialog, for ready to start ?"],
+    ["cli-test", D.cli_test, "Dialog, ready to test ?"],
+    ["cli-flash", D.cli_flash, "Dialog, ready to flash ?"],
+    ["cli-failed", D.cli_failed, "Dialog, ready to flash ?"],
+    ["cli-finish", D.cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
+
+    ["print-codes", print_codes, "Dialog to take a number, and print any number of barcodes or QR codes."],
+    ["input_sn", input_sn, "Dialog to set the device Serial number."],
+    ["write_QR_code", write_QR_code, "Create and save the serial as a QR code png"],
+    ["write_barcode", write_barcode, "Create and save the serial as a barcode png"],
+    ["print_serial", print_serial, "Dialog to print the serial number as a png"],
+    ["print_serial_bc", print_serial_bc, "Print the current serial number's barcode."],
+    ["print_serial_qrc", print_serial_qrc, "Print the current serial number's QR Code"],
+    ["set_serial_bc", set_serial_bc, "Create a barcode for the current Serial Number."],
+    ["set_serial_qrc", set_serial_qrc, "Create a QR code for the current Serial Number."],
+    ["save_serial_bc", save_serial_bc, "Save the serial number as a barcode png"],
+    ["save_serial_qrc", save_serial_qrc, "Save the serial number as a QR code png"],
+    ["save_serial_codes", barcode, "Save the serial number as a barcode and a QR code."],
+
     ["help", help, "Repl help, list symbols and their help."],
     ["quit", exit, "Quit"],
 ]
@@ -664,10 +711,10 @@ def log_lvl(lvl):
 _specials = [
     ["save-config", save_config, 1, "Save the configuration; save-config filename"],
     ["load-config", load_config, 1, "Load a configuration; save-config filename"],
-    ["msgbox", msgbox, 1, 'Give a dialog message box; msgbox "some message"'],
+    ["msgbox", D.msgbox, 1, 'Give a dialog message box; msgbox "some message"'],
     [
         "msgcli",
-        msgcli,
+        D.msgcli,
         1,
         'Give a message to continue at the command line; msgbox "some message"',
     ],
@@ -690,6 +737,13 @@ _specials = [
         -1,
         "Show the value in the Application state; showin config files",
     ],
+    [
+        "setin",
+        set_in,
+        -1,
+        "Set a value vector in the application state; setin foo bar 10",
+    ],
+    ["print_file", D.dialog_print_file, 1, "Dialog to print a file; print foo.txt"],
     ["_archive-log", archive_log, 1, "Archive the logfile."],
     ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
     ["sh", do_shell, -1, "Run a shell command; sh ls -l"],
@@ -718,13 +772,13 @@ def do_one():
     """Execute the default process one time, with fail and finish dialogs"""
     try:
         eval_default_process()
-        dialog_finish()
+        D.dialog_finish()
 
     except Exception as e:
         logger.error("Device Failed")
         logger.error(e)
-        dialog_failed()
-        dialog_finish()
+        D.dialog_failed()
+        D.dialog_finish()
 
 
 def do_something():

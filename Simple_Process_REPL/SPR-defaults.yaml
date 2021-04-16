@@ -5,6 +5,31 @@ ssh:
     pemfile       : 'server.pem'
     ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
 
+serial_number:
+  # it will be padded with 0's on the front.
+    minumum_length: 6
+    QR_code:
+        prefix: 'K1'
+        suffix: 'A'
+        filename_suffix: 'QR'
+        save_path: 'qrcodes'
+    barcode:
+        filename_suffix: 'BC'
+        save_options:
+            module_height: 8
+            text_distance: 2
+        save_path: 'barcodes'
+
+print_commands:
+    linux:
+        default: 'echo "Sorry I dont know how to print this %s"'
+    windows:
+        default: 'echo "Sorry I dont know how to print this %s"'
+        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
+    darwin:
+        default: 'echo "Sorry I dont know how to print this %s"'
+        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
+
 images:
     flash   : 'foo.bin'
     test    : 'fooTest.bin'
