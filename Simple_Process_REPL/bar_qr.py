@@ -4,44 +4,99 @@ import barcode
 from barcode.writer import ImageWriter
 import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
+import Simple_Process_REPL.appstate as A
+import os
+
+BarCodeType = "barcode"
+QRCodeType = "QR_code"
+
+
+def set_bcqr_from(keys):
+    v = A.get_in(keys)
+    A.set_in(["BarQR", "src", keys])
+    A.set_in(["BarQR", "value", v])
+
+
+def get_bcqr(codetype=BarCodeType):
+    "Get a bar code for the current barQR value."
+    try:
+        v = A.get_in(["barQR", "value"])
+        if codetype == BarCodeType:
+            code = create_bar_code(num_2_barcode(v))
+        elif codetype == QRCodeType:
+            code = create_qr_code(num_2_qrcode(v))
+
+        A.set_in(["barQR", codetype, "code", code])
+        A.set_in(["barQR", codetype, "saved", ""])
+
+    except Exception as e:
+        print(e)
+
+
+def save_bcqr(codetype=BarCodeType):
+    "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
+    sn = A.get_in(["barQR", "value"])
+    code = A.get_in(["barQR", codetype, "code"])
+
+    if codetype == BarCodeType:
+        fn = get_bc_filename(sn)
+        save_barcode(code, fn)
+    elif codetype == QRCodeType:
+        fn = get_qr_filename(sn)
+        save_qr_code(code, fn)
+
+    A.set_in(["barQR", codetype, "saved", fn])
+    return fn
+
+
+def print_bcqr(codetype=BarCodeType):
+    """Print the current 'barcode' or 'QR_code'."""
+    fn = A.get_in(["device", codetype, "saved"])
+    print_file(fn)
+
+
+def print_bcqr_loop(codetype=BarCodeType):
+    """print a code in a loop"""
+    fn = A.get_in(["device", codetype, "saved"])
+    print_file_loop(fn)
 
 
 def pad_num(sn):
     """make sure the number is the minimum length, pad from left with 0s."""
-    fmt = "%%.%dd" % get_in_config("bcqr_minimum_length")
+    fmt = "%%.%dd" % A.get_in_config("bcqr_minimum_length")
     return fmt % sn
 
 
 def num_2_barcode(sn):
     """turn a number into what we need for a barcode."""
-    prefix = get_in_config("barcode" "prefix")
-    suffix = get_in_config("barcode" "suffix")
+    prefix = A.get_in_config("barcode" "prefix")
+    suffix = A.get_in_config("barcode" "suffix")
     return pad_num(sn)
 
 
 def num_2_qrcode():
-    prefix = get_in_config("QR_code" "prefix")
-    suffix = get_in_config("QR_code" "suffix")
+    prefix = A.get_in_config("QR_code" "prefix")
+    suffix = A.get_in_config("QR_code" "suffix")
     return str(prefix + pad_num(number) + suffix)
 
 
 def save_barcode(bc, filename):
     # options = [module_height = 8, text_distance = 2]
-    options = get_in_config("barcode" "save_options")
+    options = A.get_in_config("barcode" "save_options")
     bc.save(fileName, options)
 
 
 def get_bc_filename(s):
     """generate a name for a barcode file"""
-    suffix = get_in_config("barcode" "filename_suffix")
-    path = get_in_config("barcode" "save_path")
+    suffix = A.get_in_config("barcode" "filename_suffix")
+    path = A.get_in_config("barcode" "save_path")
     return os.path.join(path, s + suffix + ".png")
 
 
 def get_qr_filename(s):
     """generate a name for a QR code file"""
-    suffix = get_in_config("QR_code" "filename_suffix")
-    path = get_in_config("QR_code" "save_path")
+    suffix = A.get_in_config("QR_code" "filename_suffix")
+    path = A.get_in_config("QR_code" "save_path")
     return os.path.join(path, s + suffix + ".png")
 
 
@@ -56,8 +111,8 @@ def create_bar_code(s):
 
 def create_qr_code(s):
     """Create a QR code from a string"""
-    qrfont = get_in_config("QR_code" "font")
-    qrfont_size = get_in_config("QR_code" "font_size")
+    qrfont = A.get_in_config("QR_code" "font")
+    qrfont_size = A.get_in_config("QR_code" "font_size")
 
     qrCode = num_2_qrcode(s)
     qr = qrcode.QRCode(
@@ -97,53 +152,3 @@ def makeFailSticker(reason, code):
     draw.text((x, y), case, fill=color, font=font)
     return img
     # img.save(filesystem.get_reports_path() + '/fail/' + 'fail' + '.png')
-
-
-# This is probably unnecessary, there is another implementation in core.
-def dialog_print_codes():
-    """
-    Ask for a number,
-    how many to print
-    and QR or Bar code.
-    Then loop through an os.system call to print.
-    """
-
-    sn = input_string("Enter a serial Number to Print")
-    label_type = dialog_BC_or_QR()
-    fn = None
-
-    if label_type == "Bar Code":
-        code = create_bar_code(num_2_barcode(sn))
-        fn = get_bc_filename(sn)
-        save_barcode(code, fn)
-        fn = fn + ".png"  # so everyone else knows it's extension.
-
-    elif label_type == "QR Code":
-        code = create_qr_code(num_2_qrcode(sn))
-        fn = get_qr_filename(sn)
-        save_qr_code(code, fn)
-
-    count = D.input_count("Enter count to Print")
-
-    cmd_name, print_command = D.print_command_radio()
-
-    if ynbox(
-        "You are ready to print %d %s label(s) of %s to %s?"
-        % (count, label_type, sn, cmd_name)
-    ):
-
-        command = print_command % fn
-        for i in range(0, count):
-            os.system(command)
-
-    os.remove(fn)
-
-
-def dialog_BC_or_QR():
-    return D.select_choice(
-        "Which would you like to print?",
-        [
-            ("Bar Code", ""),
-            ("QR Code", ""),
-        ],
-    )

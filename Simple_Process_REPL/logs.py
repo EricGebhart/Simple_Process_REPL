@@ -18,20 +18,19 @@ down into the particle.py code.
 
 """
 
-message_fmt = (
-    '[%(asctime)s] %(levelname)-8s %(name)-12s %(message)s')
+message_fmt = "[%(asctime)s] %(levelname)-8s %(name)-12s %(message)s"
 
-stdout_format = ('%(message)s')
+stdout_format = "%(message)s"
 
 # message_fmt = '[%(asctime)s] %(levelname)-8s %(name)-12s %(message)s'
 # message_fmt = '[%(levelname)s] %(name)s %(asctime)s - %(message)s'
-message_fmt = '[%(name)s] %(asctime)s - %(message)s'
+message_fmt = "[%(name)s] %(asctime)s - %(message)s"
 
 
 def validate_loglevel(loglevel):
     nloglevel = getattr(logging, loglevel.upper(), None)
     if not isinstance(nloglevel, int):
-        raise ValueError('Invalid log level: %s' % nloglevel)
+        raise ValueError("Invalid log level: %s" % nloglevel)
     return nloglevel
 
 
@@ -48,10 +47,9 @@ def start_logging(loglevel):
     handlers = [stdout_handler]
     logger = logging.getLogger()
 
-    logging.basicConfig(encoding='utf-8',
-                        format=message_fmt,
-                        level=nloglevel,
-                        handlers=handlers)
+    logging.basicConfig(
+        encoding="utf-8", format=message_fmt, level=nloglevel, handlers=handlers
+    )
 
     return logger()
 
@@ -61,6 +59,11 @@ def set_level(logger, lvl):
     logger.setLevel(validate_loglevel(lvl))
 
 
+def log_lvl(lvl):
+    """Change the logging level."""
+    set_level(logging.getLogger(), lvl)
+
+
 def add_file_handler(logger, loglevel, filename):
     """
     Takes a logger, a string loglevel, and a filename,
@@ -68,7 +71,7 @@ def add_file_handler(logger, loglevel, filename):
     """
     nloglevel = validate_loglevel(loglevel)
     formatter = logging.Formatter(message_fmt)
-    fh = logging.FileHandler(filename, mode='w', encoding='utf-8')
+    fh = logging.FileHandler(filename, mode="w", encoding="utf-8")
     # if we set these, then changing the root level has no effect.
     # fh.setLevel(nloglevel)
     fh.setFormatter(formatter)
@@ -84,6 +87,6 @@ def setup_logger():
     log.addHandler(out_hdlr)
     log.setLevel(logging.INFO)
 
-    log.info('logger setup to info')
+    log.info("logger setup to info")
 
     return log

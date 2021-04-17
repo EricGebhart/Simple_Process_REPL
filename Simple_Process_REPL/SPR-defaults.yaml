@@ -76,6 +76,11 @@ dialogs :
     serial_must      : 'Serial Number must be 8 digits.'
     continue         : 'Ready to Continue ?'
     process_finish   : 'Turn the Power Switch Off and Disconnect the Test Battery and USB.'
+    hellomsg         : "You have received this message because your autoexec attribute is
+        set to 'hello' or None, or can't be found. Maybe make some new commands
+        to create some processes. When you get a command you want to run
+        automatically set autoexec exec/autoexec in the config file to it's name.
+        Here are the commands the interpreter currently recognizes."
 
 exec:
     # function name to autoexec when asked to run
