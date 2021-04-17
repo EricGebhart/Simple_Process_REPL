@@ -54,11 +54,12 @@ running in a loop or one time with no commands.
 # Application state, which will contain merged data from the application layer.
 AS = {
     "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""},
-    "BarQR-code": {
-        "src": []
-        "value": ""
-        "QR_code":{"code": None "filename": ""}
-        "barcode":{"code": None "filename": ""}}
+    "BarQR": {
+        "src": [],
+        "value": "",
+        "QR_code": {"code": None, "filename": ""},
+        "barcode": {"code": None, "filename": ""},
+    },
     "config": {},
     "args": {},
     "wifi-connected": False,
@@ -150,34 +151,27 @@ def islinux():
     return "Linux" == AS["platform"]
 
 
-def input_string_to(msg, keys):
+def _input_string_to(msg, keys):
     """Dialog to get a string and set it in the Application state with a value vector."""
-    v = keys + input_string("msg")
+    v = keys + D.input_string("msg")
     set_in(v)
 
 
-def input_string_to_v(v):
-    """varargs version of input_string_to which takes a vector,
-    the first entry should be a string which will be displayed in the dialog window."""
-    input_string_to(v[0], v[1:])
-
-
-def input_sn():
-    """Dialog to get a serial number and set it on the device."""
-    input_string_to("Enter a serial Number", ["device", "serial_number"])
+def input_string_to(v):
+    """varargs version of _input_string_to which takes a vector,
+    the first entry should be a string which will be displayed in the dialog window.
+    The rest will be used as the value vector to set in the Application state."""
+    _input_string_to(v[0], v[1:])
 
 
 BarCodeType = "barcode"
 QRCodeType = "QR_code"
 
-def set_bcqr_code_from(keys):
+
+def set_bcqr_from(keys):
     v = get_in(AS, keys)
-    set_bcqr_code(keys, v)
-
-
-def set_bcqr_code(keys, v):
-    set-in(["BarQR-code", "src", keys])
-    set-in(["BarQR-code", "value", v])
+    set_in(["BarQR", "src", keys])
+    set_in(["BarQR", "value", v])
 
 
 def get_bcqr(codetype=BarCodeType):
@@ -185,12 +179,12 @@ def get_bcqr(codetype=BarCodeType):
     try:
         v = get_in(AS, ["barQR", "value"])
         if codetype == BarCodeType:
-                code = bq.create_bar_code(bq.serial_num_2_barcode(v))])
+            code = bq.create_bar_code(bq.serial_num_2_barcode(v))
         elif codetype == QRCodeType:
-                code = q.create_qr_code(bq.serial_num_2_qrcode(v))])
+            code = bq.create_qr_code(bq.serial_num_2_qrcode(v))
 
         set_in(["barQR", codetype, "code", code])
-        set_in(["barQR", codetype, "saved" ""]))
+        set_in(["barQR", codetype, "saved", ""])
 
     except Exception as e:
         print(e)
@@ -208,7 +202,8 @@ def save_bcqr(codetype=BarCodeType):
         fn = bq.get_qr_filename(sn)
         bq.save_qr_code(code, fn)
 
-    set_in(["barQR", codetype, "saved", fn]))
+    set_in(["barQR", codetype, "saved", fn])
+    return fn
 
 
 def print_bcqr(codetype=BarCodeType):
@@ -217,12 +212,51 @@ def print_bcqr(codetype=BarCodeType):
     print_file(fn)
 
 
-def print_file(name):
-    """Given a name, prompt for the printer and print the file."""
-    cmd_name, print_command = print_command_radio()
-    command = print_command % name
-    logger.info("Printing file %s to %s" % (name, cmd_name))
-    os.system(command)
+def print_bcqr_loop(codetype=BarCodeType):
+    """print a code in a loop"""
+    fn = get_in(AS, ["device", codetype, "saved"])
+    print_file_loop(fn)
+
+
+def dialog_print_command(fname):
+    """Dialog to ask which print command to use."""
+    cmd_name, print_command = D.print_command_radio()
+    command = print_command % fname
+    return 1, cmd_name, command
+
+
+def dialog_print_loop(fname):
+    """Dialog to ask which print command to use and how many times to print it."""
+    cmd_name, command = dialog_print_command(fname)
+    count = D.input_count("How many to Print ?")
+    return cmd_name, command, count
+
+
+# has nothing to do with printing really.... Just the messages. -- Refactor.
+def _print_file(cmd_name, command, count):
+    """Internal use. Display print messages and loop or not over a system command."""
+    if count > 1:
+        logger.info("Printing file %s, %d times, to %s" % (fname, count, cmd_name))
+    else:
+        logger.info("Printing file %s to %s" % (fname, cmd_name))
+
+    if count > 1 and ynbox(
+        "You are ready to print %d times to %s?" % (count, cmd_name)
+    ):
+        for i in range(0, count):
+            os.system(command)
+    else:
+        os.system(command)
+
+
+def print_file(fname):
+    """Print a filename with a series of dialog prompts."""
+    _print_file(dialog_print_command(fname))
+
+
+def print_file_loop(fname):
+    """Print a filename A number of times with a series of dialog prompts."""
+    _print_file(dialog_print_loop(fname))
 
 
 def print_file_from(keys):
@@ -230,36 +264,33 @@ def print_file_from(keys):
     print_file(get_in(AS, keys))
 
 
+def print_file_loop_from(keys):
+    """Given a value vector, print the filename value held there, how ever many times they say."""
+    print_file_loop(get_in(AS, keys))
+
+
 def BC_or_QR():
+    """Dialog for Bar code or QR, normalized to Codetype."""
     label_type = bq.dialog_BC_or_QR()
     if label_type == "Bar Code":
-       return BarCodeType
+        return BarCodeType
     elif label_type == "QR Code":
-       return QRCodeType
+        return QRCodeType
 
 
-def print_codes():
-    """Ask for a number, then print some number of bar or qr codes.
-    See the `serial_number` section of the configuration."""
-
-    input_string_to("Enter a code to print", ["barQR", "value"])
+def dialog_save_bcqr():
+    """Ask which; Barcode or Qr code, then generate and save the png,
+    return the filename."""
     codetype = BC_or_QR()
     get_bcqr(codetype)
-    save_bcqr(codetype)
-    fn = get_in(AS, ["barQR", codetype, "saved", fn]))
+    return save_bcqr(codetype)
 
-    cmd_name, print_command = print_command_radio()
-    count = input_count("How many to Print ?")
-    command = print_command % fn
 
-    if ynbox(
-        "You are ready to print %d %s label(s) of %s to %s?" %
-            (count, label, sn, cmd_name)):
-
-        command = print_command % fn
-        for i in range(0, count):
-            os.system(command)
-
+def dialog_print_bcqr():
+    """Dialogs to generate, save, and print any number of the current barQR
+    value as a bar or QR code."""
+    fn = dialog_save_bcqr()
+    print_file_loop(fn)
 
 
 def mk_cmd(cmd, prefix=""):
@@ -608,9 +639,16 @@ _symbols = [
     ["cli-flash", D.cli_flash, "Dialog, ready to flash ?"],
     ["cli-failed", D.cli_failed, "Dialog, ready to flash ?"],
     ["cli-finish", D.cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
-
-    ["print-codes", print_codes, "Dialog to take a number, and print any number of barcodes or QR codes."],
-
+    [
+        "dialog-save-bcqr",
+        dialog_save_bcqr,
+        "Dialog to print the current barQR value as a QR code or barcode.",
+    ],
+    [
+        "dialog-print-bcqr",
+        dialog_print_bcqr,
+        "Dialog to print the current barQR value as a QR code or barcode.",
+    ],
     ["help", help, "Repl help, list symbols and their help."],
     ["quit", exit, "Quit"],
 ]
@@ -737,14 +775,45 @@ _specials = [
         "set-bcqr-from",
         set_bcqr_from,
         -1,
-        'Set the BarQR value to the value at the value vector given; set-bcqr-from device serial_number',
+        "Set the BarQR value to the value at the value vector given; set-bcqr-from device serial_number",
     ],
-    ["get-bcqr", get_bcqr, 1, 'load a barcode or QR code for the current value; get-bcqr "barcode"]',
-    ["save-bcqr", save_bcqr, 1, 'save the current barcode or QR code to a file; save-bcqr "barcode"]',
-    ["print-bcqr", save_bcqr, 1, 'print the current barcode or QR code file; print-bcqr "barcode"]',
+    [
+        "get-bcqr",
+        get_bcqr,
+        1,
+        "load a barcode or QR code for the current value; get-bcqr barcode",
+    ],
+    [
+        "save-bcqr",
+        save_bcqr,
+        1,
+        "save the current barcode or QR code to a file; save-bcqr barcode",
+    ],
+    [
+        "print-bcqr",
+        print_bcqr,
+        1,
+        "print the current barcode or QR code file; print-bcqr barcode",
+    ],
     ["print-file", print_file, 1, "Print a file; print-file foo.txt"],
-    ["print-file-from", print_file_from, -1,
-     "Print a file using the string stored at the value vector; print-file-from barQR QR_code saved"],
+    [
+        "print-file-loop",
+        print_file_loop,
+        1,
+        "Print a file more than once; print-file-loop foo.txt",
+    ],
+    [
+        "print-file-from",
+        print_file_from,
+        -1,
+        "Print a file using the string stored at the value vector; print-file-from barQR QR_code saved",
+    ],
+    [
+        "print-file-loop-from",
+        print_file_loop_from,
+        -1,
+        "Print a file more than once, using the string stored at the value vector; print-file-loop-from barQR QR_code saved",
+    ],
     ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
     ["_archive-log", archive_log, 1, "Archive the logfile."],
     ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],

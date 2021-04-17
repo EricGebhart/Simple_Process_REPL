@@ -85,3 +85,40 @@ exec:
     help: app-help
 
     functions :
+        input-sn :
+            fn  : input-string-to "Enter a Serial Number" device serial_number
+            doc : "Dialog, To set the device serial number."
+        input-bcqr :
+            fn  : input-string-to "Enter a code for barcode generation" BarQR value
+            doc : "Dialog, To set the value to be encoded into a bar or QR code."
+        print-codes :
+            fn  : input-bcqr dialog-print-bcqr
+            doc : "Dialogs, To input a string, then print bar or QR codes from it."
+        get-barcode :
+            fn  : get-bcqr barcode
+            doc : "Generate the current barcode."
+        save-barcode :
+            fn  : save-bcqr barcode
+            doc : "Save the current barcode."
+        print-barcode :
+            fn  : print-bcqr barcode
+            doc : "Print the currently saved barcode."
+        get-qrcode :
+            fn  : get-bcqr QR_code
+            doc : "Generate the current QR code."
+        save-qrcode :
+            fn  : save-bcqr QR_code
+            doc : "Save the current QR code."
+        print-qrcode :
+            fn  : print-bcqr QR_code
+            doc : "Print the currently saved QR code."
+
+        set-bcqr-from-serial :
+            fn  : set-bcqr-from device serial_number
+            doc : "set the bcqr value to that of the device serial number."
+        print-serial-qrcode :
+            fn  : set-bcqr-from-serial get-qrcode save-qrcode print-qrcode
+            doc : "Print the device serial number as a QR code."
+        print-serial-barcode :
+            fn  : set-bcqr-from-serial get-qrcode save-qrcode print-barcode
+            doc : "Print the device serial number as a barcode."

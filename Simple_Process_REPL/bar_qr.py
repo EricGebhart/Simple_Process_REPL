@@ -8,8 +8,8 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 def pad_num(sn):
     """make sure the number is the minimum length, pad from left with 0s."""
-    fmt = ("%%.%dd" % get_in_config("bcqr_minimum_length"))
-    return(fmt % sn)
+    fmt = "%%.%dd" % get_in_config("bcqr_minimum_length")
+    return fmt % sn
 
 
 def num_2_barcode(sn):
@@ -35,14 +35,14 @@ def get_bc_filename(s):
     """generate a name for a barcode file"""
     suffix = get_in_config("barcode" "filename_suffix")
     path = get_in_config("barcode" "save_path")
-    return os.path.join(path, s + suffix + '.png')
+    return os.path.join(path, s + suffix + ".png")
 
 
 def get_qr_filename(s):
     """generate a name for a QR code file"""
     suffix = get_in_config("QR_code" "filename_suffix")
-    path = r.get_in_config("QR_code" "save_path")
-    return os.path.join(path, s + suffix + '.png')
+    path = get_in_config("QR_code" "save_path")
+    return os.path.join(path, s + suffix + ".png")
 
 
 def save_qr_code(qrc, filename):
@@ -51,32 +51,34 @@ def save_qr_code(qrc, filename):
 
 def create_bar_code(s):
     """Create a barcode from a string"""
-    return barcode.get('code128', num_2_barcode(s), writer=ImageWriter())
+    return barcode.get("code128", num_2_barcode(s), writer=ImageWriter())
 
-​
+
 def create_qr_code(s):
     """Create a QR code from a string"""
-    qrfont = r.get_in_config("QR_code" "font")
-    qrfont_size = r.get_in_config("QR_code" "font_size")
+    qrfont = get_in_config("QR_code" "font")
+    qrfont_size = get_in_config("QR_code" "font_size")
 
     qrCode = num_2_qrcode(s)
-    qr = qrcode.QRCode(version=2,
-                       error_correction=qrcode.constants.ERROR_CORRECT_L,
-                       box_size=4,
-                       border=0)
+    qr = qrcode.QRCode(
+        version=2,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=4,
+        border=0,
+    )
 
     qr.add_data(qrCode)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")
-    backColor = 'rgb(255, 255, 255)'
+    backColor = "rgb(255, 255, 255)"
     # Left Top Right Bottom
     bimg = ImageOps.expand(img, border=(30, 0, 30, 40), fill=backColor)
 
     draw = ImageDraw.Draw(bimg)
     font = ImageFont.truetype(qrfont, size=qrfont_size)
     (x, y) = (34, 116)
-    color = 'rgb(0, 0, 0)'
+    color = "rgb(0, 0, 0)"
     draw.text((x, y), qrCode, fill=color, font=font)
 
     return bimg
@@ -85,11 +87,11 @@ def create_qr_code(s):
 def makeFailSticker(reason, code):
     img = Image.new("L", (200, 100), 255)
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype('DejaVuSans.ttf', size=24)
+    font = ImageFont.truetype("DejaVuSans.ttf", size=24)
     (x, y) = (1, 8)
-    color = 'rgb(0, 0, 0)'
-    draw.text((x, y), 'TEST FAIL', fill=color, font=font)
-    font = ImageFont.truetype('DejaVuSans.ttf', size=14)
+    color = "rgb(0, 0, 0)"
+    draw.text((x, y), "TEST FAIL", fill=color, font=font)
+    font = ImageFont.truetype("DejaVuSans.ttf", size=14)
     (x, y) = (1, 33)
     case = reason + ": " + str(code)
     draw.text((x, y), case, fill=color, font=font)
@@ -126,8 +128,9 @@ def dialog_print_codes():
     cmd_name, print_command = D.print_command_radio()
 
     if ynbox(
-        "You are ready to print %d %s label(s) of %s to %s?" %
-            (count, label_type, sn, cmd_name)):
+        "You are ready to print %d %s label(s) of %s to %s?"
+        % (count, label_type, sn, cmd_name)
+    ):
 
         command = print_command % fn
         for i in range(0, count):
