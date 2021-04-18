@@ -6,7 +6,7 @@ ssh:
     ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
 
 # anything less than this many digits get's left padded with 0's.
-bcqr_minumum_length: 6
+bcqr_minimum_length: 6
 
 QR_code:
     filename_suffix: 'QR'
@@ -25,12 +25,13 @@ barcode:
         text_distance: 2
 
 print_commands:
-    linux:
-        default: 'echo "Sorry I dont know how to print this %s"'
-    windows:
+    Linux:
         default: 'echo "Sorry I dont know how to print this %s"'
         brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
-    darwin:
+    Windows:
+        default: 'echo "Sorry I dont know how to print this %s"'
+        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
+    Darwin:
         default: 'echo "Sorry I dont know how to print this %s"'
         brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
 
@@ -62,7 +63,7 @@ waiting:
 
 
 dialogs :
-    title : 'Particle Board Interface'
+    title : 'Simple Process REPL'
     plugin_start     : 'Plug in a new device, press OK to start'
     ready_to_test    : 'Device: $device_id, press OK to test'
     ready_to_flash   : 'Device: $device_id, press OK to flash'
@@ -97,7 +98,7 @@ exec:
             fn  : input-string-to "Enter a Serial Number" device serial_number
             doc : "Dialog, To set the device serial number."
         input-bcqr :
-            fn  : input-string-to "Enter a code for barcode generation" BarQR value
+            fn  : input-string-to "Enter a code for barcode generation" barQR value
             doc : "Dialog, To set the value to be encoded into a bar or QR code."
         print-codes :
             fn  : input-bcqr dialog-print-bcqr

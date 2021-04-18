@@ -1,10 +1,10 @@
 # Create the barcode stickers and QR code stickers
-import Simple_Process_REPL.dialog_cli as D
 import barcode
 from barcode.writer import ImageWriter
 import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.dialog_cli as D
 import os
 
 BarCodeType = "barcode"
@@ -13,8 +13,8 @@ QRCodeType = "QR_code"
 
 def set_bcqr_from(keys):
     v = A.get_in(keys)
-    A.set_in(["BarQR", "src", keys])
-    A.set_in(["BarQR", "value", v])
+    A.set_in(["barQR", "src", str(keys)])
+    A.set_in(["barQR", "value", v])
 
 
 def get_bcqr(codetype=BarCodeType):
@@ -22,9 +22,9 @@ def get_bcqr(codetype=BarCodeType):
     try:
         v = A.get_in(["barQR", "value"])
         if codetype == BarCodeType:
-            code = create_bar_code(num_2_barcode(v))
+            code = create_bar_code(v)
         elif codetype == QRCodeType:
-            code = create_qr_code(num_2_qrcode(v))
+            code = create_qr_code(v)
 
         A.set_in(["barQR", codetype, "code", code])
         A.set_in(["barQR", codetype, "saved", ""])
@@ -41,6 +41,8 @@ def save_bcqr(codetype=BarCodeType):
     if codetype == BarCodeType:
         fn = get_bc_filename(sn)
         save_barcode(code, fn)
+        # because the extension is automatic on the save.
+        fn = "%s%s" % (fn, ".png")
     elif codetype == QRCodeType:
         fn = get_qr_filename(sn)
         save_qr_code(code, fn)
@@ -51,57 +53,81 @@ def save_bcqr(codetype=BarCodeType):
 
 def print_bcqr(codetype=BarCodeType):
     """Print the current 'barcode' or 'QR_code'."""
-    fn = A.get_in(["device", codetype, "saved"])
-    print_file(fn)
+    fn = A.get_in(["barQR", codetype, "saved"])
+    D.print_file(fn)
 
 
 def print_bcqr_loop(codetype=BarCodeType):
     """print a code in a loop"""
-    fn = A.get_in(["device", codetype, "saved"])
-    print_file_loop(fn)
+    fn = A.get_in(["barQR", codetype, "saved"])
+    D.print_file_loop(fn)
 
 
-def pad_num(sn):
-    """make sure the number is the minimum length, pad from left with 0s."""
-    fmt = "%%.%dd" % A.get_in_config("bcqr_minimum_length")
-    return fmt % sn
+def pad_num(n):
+    """make sure its a number and is the minimum length, pad from left with 0s."""
+    try:
+        min = int(A.get_in_config(["bcqr_minimum_length"]))
+    except Exception:
+        min = 10
+    fmt = "%%.%dd" % min
+    return fmt % int(n)
 
 
-def num_2_barcode(sn):
+def build_code(s, prefix, suffix):
     """turn a number into what we need for a barcode."""
-    prefix = A.get_in_config("barcode" "prefix")
-    suffix = A.get_in_config("barcode" "suffix")
-    return pad_num(sn)
+    if prefix is not None:
+        code = "%s%s" % (prefix, pad_num(s))
+    else:
+        code = pad_num(s)
+
+    if suffix is not None:
+        code = "%s%s" % (code, suffix)
+
+    return code
 
 
-def num_2_qrcode():
-    prefix = A.get_in_config("QR_code" "prefix")
-    suffix = A.get_in_config("QR_code" "suffix")
-    return str(prefix + pad_num(number) + suffix)
+def num_2_barcode(s):
+    """turn a number into what we need for a barcode."""
+    return build_code(
+        s,
+        A.get_in_config(["barcode", "prefix"]),
+        A.get_in_config(["barcode", "suffix"]),
+    )
+
+
+def num_2_qrcode(s):
+    return build_code(
+        s,
+        A.get_in_config(["QR_code", "prefix"]),
+        A.get_in_config(["QR_code", "suffix"]),
+    )
 
 
 def save_barcode(bc, filename):
     # options = [module_height = 8, text_distance = 2]
-    options = A.get_in_config("barcode" "save_options")
-    bc.save(fileName, options)
+    path = A.get_in_config(["barcode", "save_path"])
+    options = A.get_in_config(["barcode", "save_options"])
+    bc.save(filename, options)
 
 
 def get_bc_filename(s):
     """generate a name for a barcode file"""
-    suffix = A.get_in_config("barcode" "filename_suffix")
-    path = A.get_in_config("barcode" "save_path")
-    return os.path.join(path, s + suffix + ".png")
+    suffix = A.get_in_config(["barcode", "filename_suffix"])
+    path = A.get_in_config(["barcode", "save_path"])
+    os.makedirs(path, exist_ok=True)
+    return os.path.join(path, "%s%s" % (s, suffix))
 
 
 def get_qr_filename(s):
     """generate a name for a QR code file"""
-    suffix = A.get_in_config("QR_code" "filename_suffix")
-    path = A.get_in_config("QR_code" "save_path")
-    return os.path.join(path, s + suffix + ".png")
+    suffix = A.get_in_config(["QR_code", "filename_suffix"])
+    path = A.get_in_config(["QR_code", "save_path"])
+    os.makedirs(path, exist_ok=True)
+    return os.path.join(path, "%s%s%s" % (s, suffix, ".png"))
 
 
 def save_qr_code(qrc, filename):
-    qrc.save(fileName)
+    qrc.save(filename)
 
 
 def create_bar_code(s):
@@ -111,8 +137,8 @@ def create_bar_code(s):
 
 def create_qr_code(s):
     """Create a QR code from a string"""
-    qrfont = A.get_in_config("QR_code" "font")
-    qrfont_size = A.get_in_config("QR_code" "font_size")
+    qrfont = A.get_in_config(["QR_code", "font"])
+    qrfont_size = A.get_in_config(["QR_code", "font_size"])
 
     qrCode = num_2_qrcode(s)
     qr = qrcode.QRCode(

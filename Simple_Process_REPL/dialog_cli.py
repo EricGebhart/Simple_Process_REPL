@@ -23,7 +23,7 @@ def application_help():
     r.eval_cmd(A.get_in_config(["exec", "help"]))
 
 
-def myhelp():
+def help():
     "Everyone needs a little help now and then."
     print(
         """Internal command help.\n
@@ -45,13 +45,49 @@ def myhelp():
 def hello():
     "Just in case we don't know what to do."
     msgcli(A.get_in_config(["dialogs", "hellomsg"]))
-    myhelp()
+    help()
     msgcli(A.get_in_config(["dialogs", "continue"]))
+
+
+def input_string(msg):
+    """Get a string input"""
+    code, res = inputbox(
+        msg,
+        title=A.get_in_config(["dialogs", "title"]),
+        height=10,
+        width=50,
+    )
+    return res
+
+
+def input_count(msg):
+    """Give an input dialog that insists on an integer input.
+    A range box could work, but seemed cumbersome."""
+    while True:
+        code, res = inputbox(
+            msg,
+            title=A.get_in_config(["dialogs", "title"]),
+            height=10,
+            width=50,
+        )
+        try:
+            res = int(res)
+        except Exception:
+            msgbox("count must be an integer")
+            continue
+        break
+    return res
+
+
+def _input_count_to(msg, keys):
+    """Dialog to get a string and set it in the Application state with a value vector."""
+    v = keys + [input_count(msg)]
+    A.set_in(v)
 
 
 def _input_string_to(msg, keys):
     """Dialog to get a string and set it in the Application state with a value vector."""
-    v = keys + d.input_string("msg")
+    v = keys + [input_string(msg)]
     A.set_in(v)
 
 
@@ -62,16 +98,24 @@ def input_string_to(v):
     _input_string_to(v[0], v[1:])
 
 
-def dialog_print_command(fname):
+def input_count_to(v):
+    """varargs version of _input_count_to which takes a vector,
+    the first entry should be a string which will be displayed in the dialog window.
+    The rest will be used as the value vector to set in the Application state."""
+    _input_count_to(v[0], v[1:])
+
+
+def dialog_print(fname):
     """Dialog to ask which print command to use."""
     cmd_name, print_command = print_command_menu()
+    print("dp", print_command, fname)
     command = print_command % fname
-    return 1, cmd_name, command
+    return cmd_name, command
 
 
 def dialog_print_loop(fname):
     """Dialog to ask which print command to use and how many times to print it."""
-    cmd_name, command = dialog_print_command(fname)
+    cmd_name, command = dialog_print(fname)
     count = D.input_count("How many to Print ?")
     return cmd_name, command, count
 
@@ -127,17 +171,13 @@ def select_choice(msg, choices):
 
 def print_command_menu():
     """Give a menu of possible print commands for the current platform"""
-    p_p_cmds = A.get_in_config("print_commands", A.get_in(["platform"]))
+    p_dict = A.get_in_config(["print_commands", A.get_in(["platform"])])
+    p_p_cmds = list(p_dict.items())
 
-    rlist = tuple([(key, "") for key, cmd in p_p_cmds])
+    print(p_p_cmds)
+    rlist = [(key, "") for key, cmd in p_p_cmds]
     choice = select_choice("Which print command to use ?", rlist)
-    return choice, p_p_cmds[choice]
-
-
-def print_file(fn):
-    cmd_name, print_command = print_command_menu()
-    command = print_command % fn
-    os.system(command)
+    return choice, p_dict[choice]
 
 
 def BC_or_QR_menu():
@@ -170,42 +210,12 @@ def save_bcqr():
 def print_bcqr():
     """Dialogs to generate, save, and print any number of the current barQR
     value as a bar or QR code."""
-    fn = bq.save_bcqr()
+    fn = bq.print_bcqr()
     print_file_loop(fn)
 
 
-def input_string(msg):
-    """Get a string input"""
-    code, res = inputbox(
-        msg,
-        title=A.get_in_config(["dialogs", "title"]),
-        height=10,
-        width=50,
-    )
-    return res
-
-
-def input_count(msg):
-    """Give an input dialog that insists on an integer input.
-    A range box could work, but seemed cumbersome."""
-    while True:
-        code, res = inputbox(
-            msg,
-            title=A.get_in_config(["dialogs", "title"]),
-            height=10,
-            width=50,
-        )
-        try:
-            res = int(res)
-        except Exception:
-            msgbox("count must be an integer")
-            continue
-        break
-    return res
-
-
 # has nothing to do with printing really.... Just the messages. -- Refactor.
-def _print_file(cmd_name, command, count):
+def _print_file(fname, cmd_name, command, count=1):
     """Internal use. Display print messages and loop or not over a system command."""
     if count > 1:
         logger.info("Printing file %s, %d times, to %s" % (fname, count, cmd_name))
@@ -223,12 +233,14 @@ def _print_file(cmd_name, command, count):
 
 def print_file(fname):
     """Print a filename with a series of dialog prompts."""
-    _print_file(dialog_print_command(fname))
+    name, cmd = dialog_print(fname)
+    _print_file(fname, name, cmd, 1)
 
 
 def print_file_loop(fname):
     """Print a filename A number of times with a series of dialog prompts."""
-    _print_file(dialog_print_loop(fname))
+    name, cmd, count = dialog_print_loop(fname)
+    _print_file(fname, name, cmd, count)
 
 
 def print_file_from(keys):

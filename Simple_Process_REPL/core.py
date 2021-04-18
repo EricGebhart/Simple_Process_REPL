@@ -72,7 +72,7 @@ _symbols = [
         D.print_bcqr,
         "Dialog to print the current barQR value as a QR code or barcode.",
     ],
-    ["help", A.help, "Repl help, list symbols and their help."],
+    ["help", D.help, "Repl help, list symbols and their help."],
     ["quit", exit, "Quit"],
 ]
 
@@ -120,10 +120,16 @@ _specials = [
         'prompt for an input and set it to the value vector; input_string_to "some msg" "device" "serial_number"',
     ],
     [
+        "input-count-to",
+        D.input_count_to,
+        -1,
+        'prompt for an integer input and set it to the value vector; input_count_to "some msg" "device" "serial_number"',
+    ],
+    [
         "set-bcqr-from",
         bq.set_bcqr_from,
         -1,
-        "Set the BarQR value to the value at the value vector given; set-bcqr-from device serial_number",
+        "Set the barQR value to the value at the value vector given; set-bcqr-from device serial_number",
     ],
     [
         "get-bcqr",

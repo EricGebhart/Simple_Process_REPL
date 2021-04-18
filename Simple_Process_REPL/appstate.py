@@ -12,7 +12,7 @@ logger = logging.getLogger()
 # Application state, which will contain merged data from the application layer.
 AS = {
     "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""},
-    "BarQR": {
+    "barQR": {
         "src": [],
         "value": "",
         "QR_code": {"code": None, "filename": ""},
@@ -43,7 +43,36 @@ def set_in(keys):
     """Takes a list of keys ending with the value to assign
     into the Application State dictionary tree."""
     global AS
-    AS |= make_dict(keys)
+    AS = merge(AS, make_dict(keys))
+
+
+def merge(a, b, path=None, update=True):
+    """nice solution from stack overflow, non-destructive merge.
+    http://stackoverflow.com/questions/7204805/python-dictionaries-of-dictionaries-merge
+    """
+    if path is None:
+        path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass  # same leaf value
+            elif isinstance(a[key], list) and isinstance(b[key], list):
+                for idx, val in enumerate(b[key]):
+                    a[key][idx] = merge(
+                        a[key][idx],
+                        b[key][idx],
+                        path + [str(key), str(idx)],
+                        update=update,
+                    )
+            elif update:
+                a[key] = b[key]
+            else:
+                raise Exception("Conflict at %s" % ".".join(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a
 
 
 def make_dict(keys):
@@ -52,13 +81,13 @@ def make_dict(keys):
     """
     d = {}
     v = None
-    for x in keys.reverse():
+    for x in reversed(keys):
         if v is None:
             v = x
         else:
-            d[x] = v
+            d = {x: v}
             v = d
-    return d
+    return v
 
 
 def get_in(keys):
