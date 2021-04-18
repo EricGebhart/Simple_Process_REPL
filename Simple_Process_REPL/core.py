@@ -39,8 +39,6 @@ _symbols = [
         "Reset the application state with an empty device.",
     ],
     ["wait", device.wait, "Wait for the usb device to come back."],
-    ["show", A.show, "Same as: Showin device, something something."],
-    ["show-all", A.showall, "Show everything we know currently."],
     [
         "handshake",
         device.handshake,

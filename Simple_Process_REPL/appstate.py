@@ -1,4 +1,5 @@
-from system import platform
+import pkgutil
+from platform import system as platform
 from Simple_Process_REPL.options import create_parser
 import os
 import logging
@@ -88,32 +89,22 @@ def _get_in(dict_tree, keys):
 # could have been a partial.
 def get_in_config(keys):
     "Get stuff from the config, takes a list of keys."
-    return get_in(AS["config"], keys)
+    return _get_in(AS["config"], keys)
 
 
 def get_in_device(key):
     "Get to the device info, easier to read."
-    return get_in(AS["device"], [key])
-
-
-def showall():
-    "Show everything we have in our configuration and state."
-    logger.info(yaml.dump(AS))
+    return _get_in(AS["device"], [key])
 
 
 def showin(keys):
     """Show a sub-tree in the Application State"""
-    logger.info(yaml.dump(A.get_in(AS, keys)))
-
-
-def show():
-    "Show the Device data in the application state."
-    showin(["device"])
+    logger.info(yaml.dump(get_in(keys)))
 
 
 def archive_log(new_name):
     "Move/rename the current logfile to the filename given."
-    os.rename(A.get_in_config(["files", "logfile"]), new_name)
+    os.rename(get_in_config(["files", "logfile"]), new_name)
 
 
 def sync_functions():
@@ -139,37 +130,9 @@ def reset_device():
     AS["device"] = new_device
 
 
-def application_help():
-    """Print help as defined by the function set in ['exec', 'help']
-    in the config. This is a help function as defined by the
-    application layer, which is specific to the functionality
-    that we are interfacing with.
-    """
-    r.eval_cmd(get_in_config(["exec", "help"]))
-
-
-def help():
-    "Everyone needs a little help now and then."
-    print(
-        """Internal command help.\n
-            These are the defined symbols for this REPL. Symbols
-            may be listed to execute them in order.\n"""
-    )
-
-    application_help()
-
-    r.funcptr_help()
-
-    r.specials_help()
-
-    r.compound_help()
-
-    print("\n\n")
-
-
 def eval_default_process():
     "Run the autoexec process"
-    autoexec = A.get_in_config(["autoexec"])
+    autoexec = get_in_config(["autoexec"])
     if autoexec is not None:
         try:
             r.eval_cmd(autoexec)
@@ -185,7 +148,7 @@ def load_functions():
     by adding them to the symbol table."""
     # add in the user functions from the config file.
 
-    # fns = A.get_in_config(['exec', 'functions'])
+    # fns = get_in_config(['exec', 'functions'])
     # print(yaml.dump(fns))
 
     fns = get_in_config(["exec", "functions"])
@@ -251,19 +214,19 @@ def load_config(filename):
 
 def load_configs():
     global AS
-    cli_config = A.get_in(["args", "config_file"])
-    defaults = A.get_in(["defaults", "config_file"])
+    cli_config = get_in(["args", "config_file"])
+    defaults = get_in(["defaults", "config_file"])
     if cli_config is not None:
-        y = A.load_yaml_file(cli_config)
+        y = load_yaml_file(cli_config)
         if y is not None:
             AS["config"] |= y
     elif defaults is not None:
-        y = A.load_yaml_file(defaults)
+        y = load_yaml_file(defaults)
         if y is not None:
             AS["config"] |= y
 
 
-def init(symbols, specials, parser):
+def init(parser):
     """
     Parse the cli parameters,
     load the default config or the configuration given,
@@ -279,5 +242,3 @@ def init(symbols, specials, parser):
     AS["args"] = vars(parser.parse_args())
 
     load_configs()
-
-    # print(A.get_in_config(["files", "loglevel"]))

@@ -15,9 +15,9 @@ def check_connection():
         res = S.do_cmd(["nmcli", "device"])
         logger.debug(res)
         if len(re.findall("connected", res)):
-            A.get_in(["wifi-connected"]) = True
+            A.set_in(["wifi-connected", True])
         else:
-            A.get_in(["wifi-connected"]) = False
+            A.set_in(["wifi-connected", False])
             return False
         return True
     return False

@@ -1,10 +1,11 @@
 import os
 from dialog import Dialog
 import logging
-import Simple_Process_REPL.bar_qr as bq
 
 import regex as re
+import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.bar_qr as bq
 
 logger = logging.getLogger()
 
@@ -13,10 +14,39 @@ d = Dialog(dialog="dialog")
 inputbox = d.inputbox
 
 
+def application_help():
+    """Print help as defined by the function set in ['exec', 'help']
+    in the config. This is a help function as defined by the
+    application layer, which is specific to the functionality
+    that we are interfacing with.
+    """
+    r.eval_cmd(A.get_in_config(["exec", "help"]))
+
+
+def myhelp():
+    "Everyone needs a little help now and then."
+    print(
+        """Internal command help.\n
+            These are the defined symbols for this REPL. Symbols
+            may be listed to execute them in order.\n"""
+    )
+
+    application_help()
+
+    r.funcptr_help()
+
+    r.specials_help()
+
+    r.compound_help()
+
+    print("\n\n")
+
+
 def hello():
     "Just in case we don't know what to do."
     msgcli(A.get_in_config(["dialogs", "hellomsg"]))
-    help()
+    myhelp()
+    msgcli(A.get_in_config(["dialogs", "continue"]))
 
 
 def _input_string_to(msg, keys):

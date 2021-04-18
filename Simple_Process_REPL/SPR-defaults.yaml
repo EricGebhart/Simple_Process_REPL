@@ -90,6 +90,9 @@ exec:
     help: app-help
 
     functions :
+        show :
+            fn  : showin device
+            doc : "Show the device information."
         input-sn :
             fn  : input-string-to "Enter a Serial Number" device serial_number
             doc : "Dialog, To set the device serial number."
