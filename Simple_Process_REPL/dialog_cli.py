@@ -108,7 +108,6 @@ def input_count_to(v):
 def dialog_print(fname):
     """Dialog to ask which print command to use."""
     cmd_name, print_command = print_command_menu()
-    print("dp", print_command, fname)
     command = print_command % fname
     return cmd_name, command
 
@@ -174,7 +173,6 @@ def print_command_menu():
     p_dict = A.get_in_config(["print_commands", A.get_in(["platform"])])
     p_p_cmds = list(p_dict.items())
 
-    print(p_p_cmds)
     rlist = [(key, "") for key, cmd in p_p_cmds]
     choice = select_choice("Which print command to use ?", rlist)
     return choice, p_dict[choice]

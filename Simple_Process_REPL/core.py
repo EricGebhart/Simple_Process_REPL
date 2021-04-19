@@ -63,12 +63,12 @@ _symbols = [
     ["cli-failed", D.cli_failed, "Dialog, ready to flash ?"],
     ["cli-finish", D.cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
     [
-        "save-bcqr",
+        "dialog-save-bcqr",
         D.save_bcqr,
         "Dialog to print the current barQR value as a QR code or barcode.",
     ],
     [
-        "print-bcqr",
+        "dialog-print-bcqr",
         D.print_bcqr,
         "Dialog to print the current barQR value as a QR code or barcode.",
     ],
@@ -108,10 +108,22 @@ _specials = [
         "Show the value in the Application state; showin config files",
     ],
     [
+        "get-in",
+        A.get_in,
+        -1,
+        "Get a value vector in the application state; get-in foo bar 10",
+    ],
+    [
         "set-in",
         A.set_in,
         -1,
-        "Set a value vector in the application state; setin foo bar 10",
+        "Set a value vector in the application state; set-in foo bar 10",
+    ],
+    [
+        "set-in-from",
+        A.set_in_from,
+        -1,
+        "Set a value vector in the application state from another value vector; set-in-from foo bar from: bar baz",
     ],
     [
         "input-string-to",
@@ -219,15 +231,18 @@ def do_something():
     or Run commands given on the cli.
     """
 
-    commands = " ".join(A.get_in(["args", "commands"]))
+    commandstr = None
+    commands = A.get_in(["args", "commands"])
+    if len(commands) > 0:
+        commandstr = " ".join(commands)
 
     # Run the repl.
     if A.get_in(["args", "repl"]):
-        r.repl(A.get_in_config(["REPL", "prompt"]))
+        r.repl(A.get_in_config(["REPL", "prompt"]), commandstr)
 
     # if there aren't any commands on the cli
     # do the auto exec in a loop or once.
-    elif len(commands) == 0:
+    elif commandstr is not None:
         if A.get_in(["args", "interactive"]) is True:
             interactive_loop()
         else:
@@ -235,11 +250,11 @@ def do_something():
 
     # run the commands given on the cli.
     else:
-        logger.info("Attempting to do this: %s", commands)
+        logger.info("Attempting to do this: %s", commandstr)
         if A.get_in(["args", "interactive"]) is True:
-            interactive_loop(commands)
+            interactive_loop(commandstr)
         else:
-            r.eval_cmd(commands)
+            r.eval_cmd(commandstr)
 
 
 logger = logs.setup_logger()

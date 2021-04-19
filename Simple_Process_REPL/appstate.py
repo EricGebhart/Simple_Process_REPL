@@ -36,7 +36,7 @@ def set(d):
     the Application state.
     """
     global AS
-    AS |= d
+    AS = merge(AS, d)
 
 
 def set_in(keys):
@@ -44,6 +44,23 @@ def set_in(keys):
     into the Application State dictionary tree."""
     global AS
     AS = merge(AS, make_dict(keys))
+
+
+def set_in_from(keys):
+    """Takes 2 lists of keys separated with 'from:' the value to assign
+    into the Application State and where to get it from."""
+    global AS
+    set_keys = []
+    from_keys = []
+    dest = set_keys
+    for k in keys:
+        if k == "from:":
+            dest = from_keys
+            continue
+        dest += [k]
+
+    set_keys += [get_in(from_keys)]
+    set_in(set_keys)
 
 
 def merge(a, b, path=None, update=True):
