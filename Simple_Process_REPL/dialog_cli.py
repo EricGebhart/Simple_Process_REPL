@@ -115,7 +115,7 @@ def dialog_print(fname):
 def dialog_print_loop(fname):
     """Dialog to ask which print command to use and how many times to print it."""
     cmd_name, command = dialog_print(fname)
-    count = D.input_count("How many to Print ?")
+    count = input_count("How many to Print ?")
     return cmd_name, command, count
 
 
@@ -179,7 +179,7 @@ def print_command_menu():
 
 
 def BC_or_QR_menu():
-    return D.select_choice(
+    return select_choice(
         "Which would you like to print?",
         [
             ("Bar Code", ""),
@@ -324,3 +324,84 @@ def cli_test():
 def cli_flash():
     """cli: Ready to flash?"""
     msgcli(A.get_in_config(["dialogs", "ready_to_flash"]))
+
+
+# define all the symbols for the things we want to do.
+symbols = [
+    ["hello", hello, "Hello message."],
+    ["dialog-start", dialog_start, "Dialog, for ready to start ?"],
+    ["dialog-test", dialog_test, "Dialog, ready to test ?"],
+    ["dialog-flash", dialog_flash, "Dialog, ready to flash ?"],
+    ["dialog-failed", dialog_failed, "Dialog, ready to flash ?"],
+    ["dialog-finish", dialog_finish, "Dialog, Unplug, power off."],
+    ["cli-start", cli_start, "Dialog, for ready to start ?"],
+    ["cli-test", cli_test, "Dialog, ready to test ?"],
+    ["cli-flash", cli_flash, "Dialog, ready to flash ?"],
+    ["cli-failed", cli_failed, "Dialog, ready to flash ?"],
+    ["cli-finish", cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
+    [
+        "dialog-save-bcqr",
+        save_bcqr,
+        "Dialog to print the current barQR value as a QR code or barcode.",
+    ],
+    [
+        "dialog-print-bcqr",
+        print_bcqr,
+        "Dialog to print the current barQR value as a QR code or barcode.",
+    ],
+]
+
+
+# Name, function, number of args, help string
+# Commands we want in the repl which can take arguments.
+specials = [
+    ["msgbox", msgbox, 1, 'Give a dialog message box; msgbox "some message"'],
+    [
+        "msgcli",
+        msgcli,
+        1,
+        'Give a message to continue at the command line; msgbox "some message"',
+    ],
+    [
+        "input-string-to",
+        input_string_to,
+        -1,
+        'prompt for an input and set it to the value vector; input_string_to "some msg" "device" "serial_number"',
+    ],
+    [
+        "input-count-to",
+        input_count_to,
+        -1,
+        'prompt for an integer input and set it to the value vector; input_count_to "some msg" "device" "serial_number"',
+    ],
+    ["print-file", print_file, 1, "Print a file; print-file foo.txt"],
+    [
+        "print-file-loop",
+        print_file_loop,
+        1,
+        "Print a file more than once; print-file-loop foo.txt",
+    ],
+    [
+        "print-file-from",
+        print_file_from,
+        -1,
+        "Print a file using the string stored at the value vector; print-file-from barQR QR_code saved",
+    ],
+    [
+        "print-file-loop-from",
+        print_file_loop_from,
+        -1,
+        "Print a file more than once, using the string stored at the value vector; print-file-loop-from barQR QR_code saved",
+    ],
+]
+
+helptext = """The User interface, basic Dialogs, CLI prompts, etc."""
+
+
+def dialog_cli():
+    return {
+        "name": "dialog_cli",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+    }

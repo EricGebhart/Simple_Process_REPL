@@ -128,3 +128,41 @@ def _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func):
 
             ser.close()
     return result
+
+
+# Everything SPR needs from this module....
+symbols = [
+    ["wait", wait, "Wait for the usb device to come back."],
+    [
+        "handshake",
+        handshake,
+        "Look for the test start string, send the response, catch results.",
+    ],
+    [
+        "input-sn"
+        'ui/input-string-to "Enter a Serial Number" device serial_number'
+        "Dialog, To set the device serial number."
+    ],
+    ["pause", pause_a_sec, ("Pause/Sleep for 'pause_time' seconds")],
+]
+
+# Name, function, number of args, help string
+# Commands we want in the repl which can take arguments.
+specials = []
+
+
+helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
+
+state = {
+    "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""}
+}
+
+
+def device():
+    return {
+        "name": "device",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+        "state": state,
+    }

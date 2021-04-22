@@ -178,3 +178,115 @@ def makeFailSticker(reason, code):
     draw.text((x, y), case, fill=color, font=font)
     return img
     # img.save(filesystem.get_reports_path() + '/fail/' + 'fail' + '.png')
+
+
+# define all the symbols for the things we want to do.
+# These are really just convenience functions.
+symbols = [
+    [
+        "get-barcode",
+        "get-bcqr barcode",
+        "Generate the current barcode.",
+    ],
+    [
+        "save-barcode",
+        "save-bcqr barcode",
+        "Save the current barcode.",
+    ],
+    [
+        "print-barcode",
+        "print-bcqr barcode",
+        "Print the currently saved barcode.",
+    ],
+    [
+        "get-qrcode",
+        "get-bcqr QR_code",
+        "Generate the current QR code.",
+    ],
+    [
+        "save-qrcode",
+        "save-bcqr QR_code",
+        "Save the current QR code.",
+    ],
+    [
+        "print-qrcode",
+        "print-bcqr QR_code",
+        "Print the currently saved QR code.",
+    ],
+    [
+        "set-bcqr-from-serial",
+        "set-bcqr-from device serial_number",
+        "set the bcqr value to that of the device serial number.",
+    ],
+    [
+        "print-serial-qrcode",
+        "set-bcqr-from-serial get-qrcode save-qrcode print-qrcode",
+        "Print the device serial number as a QR code.",
+    ],
+    [
+        "print-serial-barcode",
+        "set-bcqr-from-serial get-qrcode save-qrcode print-barcode",
+        "Print the device serial number as a barcode.",
+    ],
+    [
+        "input-bcqr",
+        'ui/input-string-to "Enter a code for barcode generation" barQR value',
+        "Dialog, To set the value to be encoded into a bar or QR code.",
+    ],
+    [
+        "print-codes",
+        "input-bcqr dialog-print-bcqr",
+        "Dialogs, To input a string, then print bar or QR codes from it.",
+    ],
+]
+
+# Name, function, number of args, help string
+# Commands we want in the repl which can take arguments.
+# These are the functions we are really providing here.
+specials = [
+    [
+        "set-bcqr-from",
+        set_bcqr_from,
+        -1,
+        "Set the barQR value to the value at the value vector given; set-bcqr-from device serial_number",
+    ],
+    [
+        "get-bcqr",
+        get_bcqr,
+        1,
+        "load a barcode or QR code for the current value; get-bcqr barcode",
+    ],
+    [
+        "save-bcqr",
+        save_bcqr,
+        1,
+        "save the current barcode or QR code to a file; save-bcqr barcode",
+    ],
+    [
+        "print-bcqr",
+        print_bcqr,
+        1,
+        "print the current barcode or QR code file; print-bcqr barcode",
+    ],
+]
+
+helptext = """"Really, just do a sub-process shell command."""
+
+state = {
+    "barQR": {
+        "src": [],
+        "value": "",
+        "QR_code": {"code": None, "filename": "", "saved": ""},
+        "barcode": {"code": None, "filename": "", "saved": ""},
+    }
+}
+
+
+def bar_qr():
+    return {
+        "name": "bar_qr",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+        "state": state,
+    }

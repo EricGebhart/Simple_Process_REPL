@@ -46,3 +46,22 @@ def do_cmd(command, shell=False):
 
 def do_shell(commands, shell=True):
     do_cmd(commands)
+
+
+# Commands we want in the repl which can take arguments.
+symbols = []
+specials = [
+    ["sh", do_shell, -1, "Run a shell command; sh ls -l"],
+]
+
+helptext = """"Really, just do a sub-process shell command."""
+
+
+def subcmd():
+    return {
+        "name": "subcmd",
+        "symbols": [],
+        "specials": specials,
+        "doc": helptext,
+        "state": None,
+    }

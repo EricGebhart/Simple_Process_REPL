@@ -1,7 +1,9 @@
 import pkgutil
 from platform import system as platform
 from Simple_Process_REPL.options import create_parser
+import Simple_Process_REPL.logs as logs
 import os
+import time
 import logging
 import Simple_Process_REPL.repl as r
 from Simple_Process_REPL.dialog_cli import hello
@@ -11,22 +13,16 @@ logger = logging.getLogger()
 
 # Application state, which will contain merged data from the application layer.
 AS = {
-    "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""},
-    "barQR": {
-        "src": [],
-        "value": "",
-        "QR_code": {"code": None, "filename": ""},
-        "barcode": {"code": None, "filename": ""},
-    },
     "config": {},
     "args": {},
-    "wifi-connected": False,
     "defaults": {
         "config_file": "SPR-config.yaml",
         "loglevel": "info",
         "logfile": "SPR.log",
     },
     "platform": platform(),
+    "Libs": [],
+    "_symbols_": [],
 }
 
 
@@ -200,7 +196,7 @@ def load_functions():
     fns = get_in_config(["exec", "functions"])
     if fns is not None:
         for k, v in fns.items():
-            r.add_symbol(k, v["fn"], v["doc"])
+            r.def_symbol(k, v["doc"], v["fn"])
 
 
 def save_yaml_file(filename, dictionary):
@@ -221,11 +217,12 @@ def load_yaml_file(filename):
 def load_defaults(state_init, pkgname=None, yamlname=None):
     global AS
 
-    AS["config"] |= load_base_config()
-    AS |= state_init
+    AS["config"] = merge(AS["config"], load_base_config())
+    # AS |= state_init  #### destructive...
+    AS = merge(AS, state_init)
     if pkgname is None:
         return AS
-    AS["config"] |= load_pkg_config(pkgname, yamlname)
+    AS["config"] = merge(AS["config"], load_pkg_config(pkgname, yamlname))
     return AS
 
 
@@ -265,14 +262,14 @@ def load_configs():
     if cli_config is not None:
         y = load_yaml_file(cli_config)
         if y is not None:
-            AS["config"] |= y
+            AS["config"] = merge(AS["config"], y)
     elif defaults is not None:
         y = load_yaml_file(defaults)
         if y is not None:
-            AS["config"] |= y
+            AS["config"] = merge(AS["config"], y)
 
 
-def init(parser):
+def init(parser, logger):
     """
     Parse the cli parameters,
     load the default config or the configuration given,
@@ -288,3 +285,75 @@ def init(parser):
     AS["args"] = vars(parser.parse_args())
 
     load_configs()
+
+    logs.add_file_handler(
+        logger,
+        get_in_config(["files", "loglevel"]),
+        get_in_config(["files", "logfile"]),
+    )
+
+    logger.info("Hello there, ready to go.")
+
+    # load functions from the config into the interpreter.
+    load_functions()
+
+
+# define all the symbols for the things we want to do.
+symbols = [
+    [
+        "reset-device",
+        reset_device,
+        "Reset the application state with an empty device.",
+    ],
+    ["run", eval_default_process, "Run the default process command."],
+    [
+        "sync-funcs",
+        sync_functions,
+        "Copy the functions from the REPL into the state, automatic w/save.",
+    ],
+    ["show", "ls device", "Show the device information."],
+]
+
+# Name, function, number of args, help string
+# Commands we want in the repl which can take arguments.
+specials = [
+    ["save-config", save_config, 1, "Save the configuration; save-config filename"],
+    ["load-config", load_config, 1, "Load a configuration; save-config filename"],
+    [
+        "ls",
+        showin,
+        -1,
+        "list the values in the Application state; ls, ls config files",
+    ],
+    # [
+    #     "get-in",
+    #     get_in,
+    #     -1,
+    #     "Get a value vector in the application state; get-in foo bar 10",
+    # ],
+    [
+        "set-in",
+        set_in,
+        -1,
+        "Set a value vector in the application state; set-in foo bar 10",
+    ],
+    [
+        "set-in-from",
+        set_in_from,
+        -1,
+        "Set a value vector in the application state from another value vector; set-in-from foo bar from: bar baz",
+    ],
+    ["_archive-log", archive_log, 1, "Archive the logfile."],
+]
+
+helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
+
+
+def appstate():
+    return {
+        "name": "appstate",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+        "state": None,
+    }

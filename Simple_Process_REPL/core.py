@@ -4,13 +4,13 @@ import time
 import logging
 import Simple_Process_REPL.logs as logs
 import Simple_Process_REPL.repl as r
-
 import Simple_Process_REPL.appstate as A
-import Simple_Process_REPL.device as device
-import Simple_Process_REPL.subcmd as S
-import Simple_Process_REPL.dialog_cli as D
-import Simple_Process_REPL.network as N
-import Simple_Process_REPL.bar_qr as bq
+
+from Simple_Process_REPL.device import device
+from Simple_Process_REPL.subcmd import subcmd
+from Simple_Process_REPL.dialog_cli import dialog_cli
+from Simple_Process_REPL.network import network
+from Simple_Process_REPL.bar_qr import bar_qr
 
 """
 This file defines the symbol table for the interpreter,
@@ -25,165 +25,85 @@ The autoexec attribute in the configuration names the command(s) to run when
 running in a loop or one time with no commands.
 """
 
+logger = logs.setup_logger()
+
+Libs = []
+
+
+def import_lib(module, sublib, NS):
+    """Append to our list of libraries, in a namespace.
+    import_lib("spam.ham", "ham", "MyHam")
+    or
+    import_lib("ham", "ham", "ham")
+    or
+    import_lib("Simple_Process_REPL.bar_qr", "bar_qr", "bqr")
+    We are expecting spam.ham to have a function ham() which returns a
+    dictionary of stuff.  name, symbols, specials, helptext, state-dict.
+
+    * The symbols and specials are set on the interpreter.
+    * Add state structure to the Application State.
+    """
+    global AS
+
+    lib = __import__(module, globals(), locals(), [sublib], 0)
+    # get the SPR symbols and stuff from the module.
+    lib_record = getattr(lib, sublib)()
+
+    logger.debug("Import Lib: %s %s" % (lib, sublib))
+    logger.debug("Record: %s" % lib_record)
+
+    logger.debug("Importing SPR Library: %s\n %s\n as %s" % (sublib, lib, NS))
+    logger.info(
+        "\nImporting SPR Library: %s as %s\n %s\n"
+        % (lib_record["name"], NS, lib_record["doc"])
+    )
+    logger.info("Type 'help %s' for more information" % NS)
+
+    # give the symbols to the repl, to put in a Namespace
+    r.symbol_table[NS] = r.create_namespace(lib_record, NS)
+
+    # Add to the App State Structure if the lib wants.
+    # if it has a dictionary called state, merge it in.
+    # this can be config, or stateful stuff.
+    if lib_record.get("state", None) is not None:
+        A.set(lib_record["state"])
+
 
 # define all the symbols for the things we want to do.
 _symbols = [
-    ["hello", D.hello, "Hello message."],
-    # beginning of local functions.
-    ["wifi", N.connect_wifi, "Connect to wifi using nmtui if not connected."],
-    ["connect_tunnel", N.connect_tunnel, "Connect through an ssh tunnel."],
-    ["create_tunnel", N.create_tunnel, "Create an ssh tunnel."],
-    [
-        "reset-device",
-        A.reset_device,
-        "Reset the application state with an empty device.",
-    ],
-    ["wait", device.wait, "Wait for the usb device to come back."],
-    [
-        "handshake",
-        device.handshake,
-        "Look for the test start string, send the response, catch results.",
-    ],
-    ["pause", device.pause_a_sec, ("Pause/Sleep for 'pause_time' seconds")],
-    ["run", A.eval_default_process, "Run the default process command."],
-    [
-        "sync-funcs",
-        A.sync_functions,
-        "Copy the functions from the REPL into the state, automatic w/save.",
-    ],
-    # dialog functions
-    ["dialog-start", D.dialog_start, "Dialog, for ready to start ?"],
-    ["dialog-test", D.dialog_test, "Dialog, ready to test ?"],
-    ["dialog-flash", D.dialog_flash, "Dialog, ready to flash ?"],
-    ["dialog-failed", D.dialog_failed, "Dialog, ready to flash ?"],
-    ["dialog-finish", D.dialog_finish, "Dialog, Unplug, power off."],
-    ["cli-start", D.cli_start, "Dialog, for ready to start ?"],
-    ["cli-test", D.cli_test, "Dialog, ready to test ?"],
-    ["cli-flash", D.cli_flash, "Dialog, ready to flash ?"],
-    ["cli-failed", D.cli_failed, "Dialog, ready to flash ?"],
-    ["cli-finish", D.cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
-    [
-        "dialog-save-bcqr",
-        D.save_bcqr,
-        "Dialog to print the current barQR value as a QR code or barcode.",
-    ],
-    [
-        "dialog-print-bcqr",
-        D.print_bcqr,
-        "Dialog to print the current barQR value as a QR code or barcode.",
-    ],
-    ["help", D.help, "Repl help, list symbols and their help."],
+    ["ls-ns", r.list_namespaces, "list namespaces."],
     ["quit", exit, "Quit"],
 ]
 
 # Name, function, number of args, help string
 # Commands we want in the repl which can take arguments.
 _specials = [
-    ["save-config", A.save_config, 1, "Save the configuration; save-config filename"],
-    ["load-config", A.load_config, 1, "Load a configuration; save-config filename"],
-    ["msgbox", D.msgbox, 1, 'Give a dialog message box; msgbox "some message"'],
-    [
-        "msgcli",
-        D.msgcli,
-        1,
-        'Give a message to continue at the command line; msgbox "some message"',
-    ],
-    [
-        "loglvl",
-        logs.log_lvl,
-        1,
-        "Change the logging level; loglvl <debug|info|warning|error|critical>",
-    ],
-    ["log_info", logging.info, 1, 'Send a messag to logging; log_info "some message"'],
-    [
-        "log_debug",
-        logging.debug,
-        1,
-        'Send a debug message to logging log_debug "some debug message"',
-    ],
-    [
-        "showin",
-        A.showin,
-        -1,
-        "Show the value in the Application state; showin config files",
-    ],
-    [
-        "get-in",
-        A.get_in,
-        -1,
-        "Get a value vector in the application state; get-in foo bar 10",
-    ],
-    [
-        "set-in",
-        A.set_in,
-        -1,
-        "Set a value vector in the application state; set-in foo bar 10",
-    ],
-    [
-        "set-in-from",
-        A.set_in_from,
-        -1,
-        "Set a value vector in the application state from another value vector; set-in-from foo bar from: bar baz",
-    ],
-    [
-        "input-string-to",
-        D.input_string_to,
-        -1,
-        'prompt for an input and set it to the value vector; input_string_to "some msg" "device" "serial_number"',
-    ],
-    [
-        "input-count-to",
-        D.input_count_to,
-        -1,
-        'prompt for an integer input and set it to the value vector; input_count_to "some msg" "device" "serial_number"',
-    ],
-    [
-        "set-bcqr-from",
-        bq.set_bcqr_from,
-        -1,
-        "Set the barQR value to the value at the value vector given; set-bcqr-from device serial_number",
-    ],
-    [
-        "get-bcqr",
-        bq.get_bcqr,
-        1,
-        "load a barcode or QR code for the current value; get-bcqr barcode",
-    ],
-    [
-        "save-bcqr",
-        bq.save_bcqr,
-        1,
-        "save the current barcode or QR code to a file; save-bcqr barcode",
-    ],
-    [
-        "print-bcqr",
-        bq.print_bcqr,
-        1,
-        "print the current barcode or QR code file; print-bcqr barcode",
-    ],
-    ["print-file", D.print_file, 1, "Print a file; print-file foo.txt"],
-    [
-        "print-file-loop",
-        D.print_file_loop,
-        1,
-        "Print a file more than once; print-file-loop foo.txt",
-    ],
-    [
-        "print-file-from",
-        D.print_file_from,
-        -1,
-        "Print a file using the string stored at the value vector; print-file-from barQR QR_code saved",
-    ],
-    [
-        "print-file-loop-from",
-        D.print_file_loop_from,
-        -1,
-        "Print a file more than once, using the string stored at the value vector; print-file-loop-from barQR QR_code saved",
-    ],
     ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
-    ["_archive-log", A.archive_log, 1, "Archive the logfile."],
     ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
-    ["sh", S.do_shell, -1, "Run a shell command; sh ls -l"],
+    [
+        "help",
+        r.help,
+        -1,
+        "Get help for all, or a namespace or function; help <name>",
+    ],
+    [
+        "def",
+        r.def_symbol,
+        -1,
+        "Define a new function; def <name> 'helpstr' <list of commands>",
+    ],
+    [
+        "partial",
+        r.def_partial,
+        -1,
+        "Define a new partial function; def <name> 'helpstr' <list of commands>",
+    ],
+    [
+        "import",
+        import_lib,
+        3,
+        "import an SPRlib python module into a namespace; import spam.ham ham namespace.",
+    ],
 ]
 
 
@@ -257,9 +177,6 @@ def do_something():
             r.eval_cmd(commandstr)
 
 
-logger = logs.setup_logger()
-
-
 def init(symbols, specials, parser):
     """
     Parse the cli parameters,
@@ -268,19 +185,15 @@ def init(symbols, specials, parser):
     initialize the symbol tables for the interpreter.
     Finally, run in whatever mode we were told.
     """
-    A.init(parser)
+    A.init(parser, logger)
+    # make the symbol table available in the App State.
+    A.set({"_symbols_": r.symbol_table})  # don't like this. smells.
 
-    logs.add_file_handler(
-        logger,
-        A.get_in_config(["files", "loglevel"]),
-        A.get_in_config(["files", "logfile"]),
-    )
-
-    logger.info("Hello there, ready to go.")
-
-    A.load_functions()
-
-    r.init(_symbols, _specials)
-    r.init(symbols, specials)
+    # Add fundamental commands to the root level of the interpreter.
+    r.root_symbols(_symbols, _specials)
+    r.root_symbols(A.symbols, A.specials)
+    r.root_symbols(symbols, specials)
+    r.root_symbols(logs.symbols, logs.specials)
+    r.root_symbols(subcmd()["symbols"], subcmd()["specials"])
 
     do_something()

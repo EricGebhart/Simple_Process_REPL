@@ -149,10 +149,6 @@ if no commands are given on the cli.\n\n """
 
 
 symbols = [
-    ["print_config_val", print_config_val, "Example of using configuration variables."],
-    ["print_device_val", print_device_val, "Example of using device values."],
-    ["set_device_vals", set_device_vals, "Example of setting device values."],
-    ["archive-log", archive_log, "Archive the log to the the device id."],
     ["input-serial", input_serial, "Dialog to receive an 8 digit serial number."],
     ["app_help", app_help, "Additional Application layer help."],
 ]

@@ -90,3 +90,38 @@ def setup_logger():
     log.info("logger setup to info")
 
     return log
+
+
+symbols = []
+specials = [
+    [
+        "loglvl",
+        log_lvl,
+        1,
+        "Change the logging level; loglvl <debug|info|warning|error|critical>",
+    ],
+    [
+        "log-info",
+        logging.info,
+        1,
+        'Send a message to logging; log-info "some message"',
+    ],
+    [
+        "log-debug",
+        logging.debug,
+        1,
+        'Send a debug message to logging; log-debug "some message"',
+    ],
+]
+
+helptext = """"logging, change the level, send messages to the log."""
+
+
+def logs():
+    return {
+        "name": "subcmd",
+        "symbols": [],
+        "specials": specials,
+        "doc": helptext,
+        "state": None,
+    }

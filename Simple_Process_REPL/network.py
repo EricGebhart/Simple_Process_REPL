@@ -77,3 +77,50 @@ def connect_tunnel():
 def sendlog():
     "Send the log somewhere."
     pass
+
+
+# Everything SPR needs from this module....
+
+symbols = [
+    [
+        "wifi",
+        connect_wifi,
+        "Connect to wifi using dialogs if not connected.",
+    ],
+    [
+        "connect-tunnel",
+        connect_tunnel,
+        "Connect through an ssh tunnel. - not implemented",
+    ],
+    [
+        "create-tunnel",
+        create_tunnel,
+        "Create an ssh tunnel. - not implemented",
+    ],
+    [
+        "confirm-tunnel",
+        confirm_tunnel,
+        "Create an ssh tunnel. - not implemented",
+    ],
+    [
+        "sendlog",
+        sendlog,
+        "Send a log somewhere. - not implemented",
+    ],
+]
+
+specials = []
+
+helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
+
+state = {"wifi-connected": False}
+
+
+def network():
+    return {
+        "name": "network",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+        "state": state,
+    }
