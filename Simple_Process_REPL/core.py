@@ -72,6 +72,7 @@ def import_lib(module, sublib, NS):
 # define all the symbols for the things we want to do.
 _symbols = [
     ["ls-ns", r.list_namespaces, "list namespaces."],
+    ["ns-tree", r.list_namespace_tree, "list the namespaces and their symbols."],
     ["quit", exit, "Quit"],
 ]
 
@@ -132,7 +133,7 @@ def do_one(commands=None):
         if commands is None:
             A.eval_default_process()
         else:
-            r.eval_cmd(commands)
+            r.eval_cmds(commands)
 
         D.dialog_finish()
 
@@ -151,30 +152,30 @@ def do_something():
     or Run commands given on the cli.
     """
 
-    commandstr = None
     commands = A.get_in(["args", "commands"])
+
+    # Each of these should be a list of commands to execute.
+    startup_hook = []
+    shutdown_hook = []
+    startup_hook = A.get_in(["config", "exec", "hooks", "startup"])
+    shutdown_hook = A.get_in(["config", "exec", "hooks", "startup"])
+
     if len(commands) > 0:
-        commandstr = " ".join(commands)
+        startup_hook += [" ".join(commands)]
+
+    logger.info("Attempting to do this: %s", startup_hook)
+    logger.debug("startup hook: %s", startup_hook)
 
     # Run the repl.
     if A.get_in(["args", "repl"]):
-        r.repl(A.get_in_config(["REPL", "prompt"]), commandstr)
+        r.repl(A.get_in_config(["REPL", "prompt"]), startup_hook)
 
-    # if there aren't any commands on the cli
-    # do the auto exec in a loop or once.
-    elif commandstr is not None:
-        if A.get_in(["args", "interactive"]) is True:
-            interactive_loop()
-        else:
-            do_one()
-
-    # run the commands given on the cli.
+    if A.get_in(["args", "interactive"]) is True:
+        interactive_loop(startup_hook)
     else:
-        logger.info("Attempting to do this: %s", commandstr)
-        if A.get_in(["args", "interactive"]) is True:
-            interactive_loop(commandstr)
-        else:
-            r.eval_cmd(commandstr)
+        r.eval_cmds(startup_hook)
+
+    eval_cmds(shutdown_hook)
 
 
 def init(symbols, specials, parser):

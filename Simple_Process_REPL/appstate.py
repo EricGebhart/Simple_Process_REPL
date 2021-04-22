@@ -320,10 +320,10 @@ specials = [
     ["save-config", save_config, 1, "Save the configuration; save-config filename"],
     ["load-config", load_config, 1, "Load a configuration; save-config filename"],
     [
-        "ls",
+        "as",
         showin,
         -1,
-        "list the values in the Application state; ls, ls config files",
+        "list the values in the Application state; as, as config files",
     ],
     # [
     #     "get-in",

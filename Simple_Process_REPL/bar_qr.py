@@ -11,14 +11,8 @@ BarCodeType = "barcode"
 QRCodeType = "QR_code"
 
 
-def set_bcqr_from(keys):
-    v = A.get_in(keys)
-    A.set_in(["barQR", "src", str(keys)])
-    A.set_in(["barQR", "value", v])
-
-
-def get_bcqr(codetype=BarCodeType):
-    "Get a bar code for the current barQR value."
+def gen(codetype=BarCodeType):
+    "Generate a bar code for the current barQR value."
     try:
         v = A.get_in(["barQR", "value"])
         if codetype == BarCodeType:
@@ -33,7 +27,7 @@ def get_bcqr(codetype=BarCodeType):
         print(e)
 
 
-def save_bcqr(codetype=BarCodeType):
+def save(codetype=BarCodeType):
     "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
     sn = A.get_in(["barQR", "value"])
     code = A.get_in(["barQR", codetype, "code"])
@@ -57,7 +51,7 @@ def print_bcqr(codetype=BarCodeType):
     D.print_file(fn)
 
 
-def print_bcqr_loop(codetype=BarCodeType):
+def print_loop(codetype=BarCodeType):
     """print a code in a loop"""
     fn = A.get_in(["barQR", codetype, "saved"])
     D.print_file_loop(fn)
@@ -184,13 +178,13 @@ def makeFailSticker(reason, code):
 # These are really just convenience functions.
 symbols = [
     [
-        "get-barcode",
-        "get-bcqr barcode",
+        "gen-barcode",
+        "gen barcode",
         "Generate the current barcode.",
     ],
     [
         "save-barcode",
-        "save-bcqr barcode",
+        "save barcode",
         "Save the current barcode.",
     ],
     [
@@ -199,13 +193,13 @@ symbols = [
         "Print the currently saved barcode.",
     ],
     [
-        "get-qrcode",
-        "get-bcqr QR_code",
+        "gen-qrcode",
+        "gen QR_code",
         "Generate the current QR code.",
     ],
     [
         "save-qrcode",
-        "save-bcqr QR_code",
+        "save QR_code",
         "Save the current QR code.",
     ],
     [
@@ -214,28 +208,28 @@ symbols = [
         "Print the currently saved QR code.",
     ],
     [
-        "set-bcqr-from-serial",
-        "set-bcqr-from device serial_number",
+        "set-from-serial",
+        "set-in-from barQR value from: device serial_number",
         "set the bcqr value to that of the device serial number.",
     ],
     [
         "print-serial-qrcode",
-        "set-bcqr-from-serial get-qrcode save-qrcode print-qrcode",
+        "set-from-serial gen-qrcode save-qrcode print-qrcode",
         "Print the device serial number as a QR code.",
     ],
     [
         "print-serial-barcode",
-        "set-bcqr-from-serial get-qrcode save-qrcode print-barcode",
+        "set-from-serial gen-qrcode save-qrcode print-barcode",
         "Print the device serial number as a barcode.",
     ],
     [
-        "input-bcqr",
+        "input",
         'ui/input-string-to "Enter a code for barcode generation" barQR value',
         "Dialog, To set the value to be encoded into a bar or QR code.",
     ],
     [
         "print-codes",
-        "input-bcqr dialog-print-bcqr",
+        "ui/input-bcqr ui/print-bcqr",
         "Dialogs, To input a string, then print bar or QR codes from it.",
     ],
 ]
@@ -245,32 +239,27 @@ symbols = [
 # These are the functions we are really providing here.
 specials = [
     [
-        "set-bcqr-from",
-        set_bcqr_from,
-        -1,
-        "Set the barQR value to the value at the value vector given; set-bcqr-from device serial_number",
-    ],
-    [
-        "get-bcqr",
-        get_bcqr,
+        "gen",
+        gen,
         1,
-        "load a barcode or QR code for the current value; get-bcqr barcode",
+        "Generate a barcode or QR code for the current value; gen barcode",
     ],
     [
-        "save-bcqr",
-        save_bcqr,
+        "save",
+        save,
         1,
-        "save the current barcode or QR code to a file; save-bcqr barcode",
+        "Save the current barcode or QR code to a file; save barcode",
     ],
     [
-        "print-bcqr",
+        "print",
         print_bcqr,
         1,
-        "print the current barcode or QR code file; print-bcqr barcode",
+        "print the current barcode or QR code file; print barcode",
     ],
 ]
 
-helptext = """"Really, just do a sub-process shell command."""
+helptext = """"Bar Code and QR Code functionality, set codes,
+                create codes, save codes, and print codes."""
 
 state = {
     "barQR": {

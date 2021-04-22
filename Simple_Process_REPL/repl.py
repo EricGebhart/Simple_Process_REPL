@@ -174,7 +174,7 @@ def get_ns(s):
 def _get_symbol(s):
     "Quietly, Try to get a symbol's definition."
     global symbol_table
-    logger.info("Getting Symbol: %s" % s)
+    logger.debug("Getting Symbol: %s" % s)
     n = None
     namespace = None
     # does start with a namespace?
@@ -212,7 +212,6 @@ def isstype(v, s):
 
 def all_fptr_help(st):
     """Print help for a python function."""
-    print("""These symbols are pointers to functions.\n""")
     for k, v in sorted(st.items()):
         if v["stype"] not in ["fptr", "voidfptr"]:
             continue
@@ -232,7 +231,6 @@ def fptr_help(k, v):
 def all_dolist_help(st):
     """give the doc and source for all the compound symbols."""
     if len(st.items()) > 0:
-        print("\n\nHere are the symbols which are defined in the configuration.\n")
         for k, v in sorted(st.items()):
             dolist_help(k, v)
 
@@ -251,10 +249,23 @@ def namespace_help(key, ns):
     all_dolist_help(ns["symbols"])
 
 
+def list_namespace_tree():
+    print("\n Root Namespace: ")
+    for k, v in sorted(symbol_table.items()):
+        if not isstype(v, "namespace"):
+            print("   %s" % k)
+    print("\n")
+    for k, v in sorted(symbol_table.items()):
+        if isstype(v, "namespace"):
+            print("\n%10s %15s: \n%s\n" % (k, v["name"], v["doc"]))
+            for j, v in sorted(v["symbols"].items()):
+                print("   %s" % j)
+
+
 def list_namespaces():
     for k, v in sorted(symbol_table.items()):
         if isstype(v, "namespace"):
-            print(k, v)
+            print("%10s %15s: \n%s\n" % (k, v["name"], v["doc"]))
 
 
 def help(args=None):
@@ -440,19 +451,15 @@ def eval_list(commands):
     It's either a command with arguments or
     a list of commands.
     """
-    logger.info("eval list: %s" % commands)
+    logger.debug("eval list: %s" % commands)
 
     # if it's a partial expand it.
     first_sym = _get_symbol(commands[0])
-    logger.info("eval list: %s" % commands)
 
     if isstype(first_sym, "partial"):
-        logger.info("Partial: %s --> %s" % (commands[0], commands))
+        logger.debug("Partial: %s --> %s" % (commands[0], commands))
         eval_list(parse(first_sym["fn"]) + commands[1:])
         return
-
-    logger.info("eval list: %s" % commands)
-    logger.info("EVAL LIST: %s" % commands)
 
     if do_fptrs(commands) is False:
         for cmd in commands:
@@ -462,6 +469,12 @@ def eval_list(commands):
 def eval_cmd(commandstr):
     """Evaluate a commandstr."""
     eval_list(parse(commandstr))
+
+
+def eval_cmds(commands):
+    """Evaluate a commandstr."""
+    for c in commands:
+        eval_list(parse(c))
 
 
 def repl_message():
@@ -519,7 +532,7 @@ def repl(prompt="SPR:> ", init=None):
     HistoryConsole()
 
     if init is not None:
-        eval_list(parse(init))
+        eval_cmds(init)
 
     while True:
         try:

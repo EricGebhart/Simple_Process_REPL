@@ -93,5 +93,11 @@ exec:
     functions :
 
     hooks:
-        startup: ""
+        startup:
+          - import Simple_Process_REPL.dialog_cli dialog_cli ui
+          - import Simple_Process_REPL.device device dev
+          - import Simple_Process_REPL.device device dev
+          - import Simple_Process_REPL.network network nw
+          - import Simple_Process_REPL.bar_qr bar_qr bcqr
+
         shutdown: ""

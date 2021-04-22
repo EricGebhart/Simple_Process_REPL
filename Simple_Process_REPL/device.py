@@ -139,9 +139,9 @@ symbols = [
         "Look for the test start string, send the response, catch results.",
     ],
     [
-        "input-sn"
-        'ui/input-string-to "Enter a Serial Number" device serial_number'
-        "Dialog, To set the device serial number."
+        "input-sn",
+        'ui/input-string-to "Enter a Serial Number" device serial_number',
+        "Dialog, To set the device serial number.",
     ],
     ["pause", pause_a_sec, ("Pause/Sleep for 'pause_time' seconds")],
 ]
@@ -151,7 +151,7 @@ symbols = [
 specials = []
 
 
-helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
+helptext = """Functions for basic device interaction. waiting, handshaking, etc."""
 
 state = {
     "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""}

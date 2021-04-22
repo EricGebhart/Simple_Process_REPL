@@ -107,6 +107,24 @@ specials = [
         'Send a message to logging; log-info "some message"',
     ],
     [
+        "log-warning",
+        logging.warning,
+        1,
+        'Send a Warning message to logging; log-warning "some message"',
+    ],
+    [
+        "log-error",
+        logging.error,
+        1,
+        'Send an error message to logging; log-error "some message"',
+    ],
+    [
+        "log-critical",
+        logging.critical,
+        1,
+        'Send a critical message to logging; log-critical "some message"',
+    ],
+    [
         "log-debug",
         logging.debug,
         1,
@@ -114,12 +132,12 @@ specials = [
     ],
 ]
 
-helptext = """"logging, change the level, send messages to the log."""
+helptext = """"Logging. Change the logging level and send messages to the log."""
 
 
 def logs():
     return {
-        "name": "subcmd",
+        "name": "logs",
         "symbols": [],
         "specials": specials,
         "doc": helptext,

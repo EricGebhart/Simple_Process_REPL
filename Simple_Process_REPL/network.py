@@ -111,7 +111,8 @@ symbols = [
 
 specials = []
 
-helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
+helptext = """Networking. Wifi so far, dialogs and other things.
+                SSH is not implemented"""
 
 state = {"wifi-connected": False}
 

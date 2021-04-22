@@ -340,12 +340,12 @@ symbols = [
     ["cli-failed", cli_failed, "Dialog, ready to flash ?"],
     ["cli-finish", cli_finish, "Dialog, Turn out the lights, Unplug, power off."],
     [
-        "dialog-save-bcqr",
+        "save-bcqr",
         save_bcqr,
         "Dialog to print the current barQR value as a QR code or barcode.",
     ],
     [
-        "dialog-print-bcqr",
+        "print-bcqr",
         print_bcqr,
         "Dialog to print the current barQR value as a QR code or barcode.",
     ],
@@ -395,7 +395,9 @@ specials = [
     ],
 ]
 
-helptext = """The User interface, basic Dialogs, CLI prompts, etc."""
+helptext = """The User interface using the cli and dialog.
+              basic dialog windows, message boxes, wifi and print menus,
+              CLI prompts, etc."""
 
 
 def dialog_cli():
