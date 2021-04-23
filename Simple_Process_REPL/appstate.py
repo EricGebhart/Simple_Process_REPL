@@ -306,12 +306,12 @@ symbols = [
         "Reset the application state with an empty device.",
     ],
     ["run", eval_default_process, "Run the default process command."],
+    ["showns", "as/show _symbols_", "Partial..noworkie here yet..; showns nw"],
     [
         "sync-funcs",
         sync_functions,
         "Copy the functions from the REPL into the state, automatic w/save.",
     ],
-    ["show", "as device", "Show the device information."],
 ]
 
 # Name, function, number of args, help string
@@ -320,7 +320,7 @@ specials = [
     ["save-config", save_config, 1, "Save the configuration; save-config filename"],
     ["load-config", load_config, 1, "Load a configuration; save-config filename"],
     [
-        "as",
+        "show",
         showin,
         -1,
         "Show the Application state data tree, or any subtree or value; as config files",

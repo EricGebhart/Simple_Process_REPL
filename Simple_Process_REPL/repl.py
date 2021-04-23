@@ -229,11 +229,11 @@ def all_fptr_help(st):
 def fptr_help(k, v):
     """Format an fptr symbol's help."""
     fn = v["fn"]
-    print("    {0[0]:20} --- {0[1]}".format([k, v["doc"]]))
+    print("\n {0[0]:20}\n----------------\n{0[1]}".format([k, v["doc"]]))
     try:
-        print("              %s-doc: %s" % (fn.__name__, fn.__doc__))
+        print("  Python Function:  %s\n Docstring:\n    %s" % (fn.__name__, fn.__doc__))
     except Exception:
-        print("              doc: %s" % (fn.__doc__))
+        print("  Function Docstring:\n    %s" % (fn.__doc__))
 
 
 def all_dolist_help(st):
@@ -246,45 +246,62 @@ def all_dolist_help(st):
 def dolist_help(k, v):
     """Format an dolist symbol's help."""
     if isstype(v, "dolist") or isstype(v, "partial"):
-        print("    {0[0]:20} --- {0[1]}".format([k, v["doc"]]))
-        print("             Source: [%s]" % v["fn"])
+        print("\n {0[0]:20}\n--------------\n{0[1]}".format([k, v["doc"]]))
+        print("    Source: [%s]" % v["fn"])
 
 
 def namespace_help(key, ns):
     """Format an namespace symbol's help."""
-    print("\n\nNamespace %s: %s\n %s\n\n" % (key, ns["name"], ns["doc"]))
+    print("\n\nNamespace: %s\n   Module: %s\n    %s\n\n" % (key, ns["name"], ns["doc"]))
     all_fptr_help(ns["symbols"])
     all_dolist_help(ns["symbols"])
 
 
-def list_namespace_tree():
+def list_root_namespace():
     print("\n Root Namespace: ")
     for k, v in sorted(symbol_table.items()):
         if not isstype(v, "namespace"):
             print("   %s" % k)
+
+
+def list_namespace_tree():
+    list_root_namespace
     print("\n")
     for k, v in sorted(symbol_table.items()):
         if isstype(v, "namespace"):
-            print("\n%10s %15s: \n%s\n" % (k, v["name"], v["doc"]))
+            print(
+                "\n%-10s %15s:\n---------------------------\n%s\n"
+                % (k, v["name"], v["doc"])
+            )
             for j, v in sorted(v["symbols"].items()):
                 print("   %s" % j)
 
 
-def list_namespaces():
-    for k, v in sorted(symbol_table.items()):
+def list_namespaces(ns=symbol_table):
+    for k, v in sorted(ns.items()):
         if isstype(v, "namespace"):
-            print("%10s %15s: \n%s\n" % (k, v["name"], v["doc"]))
+            print(
+                "\n%-10s %15s: \n---------------------------\n%s"
+                % (k, v["name"], v["doc"])
+            )
 
 
 def help(args=None):
     global symbol_table
+    print("\nSPR Help\n=============================================")
+    print("Root commands and namespaces. help <ns> for namespace help\n")
     if args is None or len(args) == 0:
         all_fptr_help(symbol_table)
         all_dolist_help(symbol_table)
+        # list_root_namespace()
 
-        for k, v in sorted(symbol_table.items()):
-            if isstype(v, "namespace"):
-                namespace_help(k, v)
+        print("\nNamespaces: help <ns> for more information\n")
+        list_namespaces()
+
+        # for k, v in sorted(symbol_table.items()):
+        #     if isstype(v, "namespace"):
+        #         namespace_help(k, v)
+
     else:
         for sym in args:
             s = symbol_table.get(sym)

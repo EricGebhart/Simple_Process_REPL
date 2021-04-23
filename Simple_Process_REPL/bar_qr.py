@@ -176,63 +176,7 @@ def makeFailSticker(reason, code):
 
 # define all the symbols for the things we want to do.
 # These are really just convenience functions.
-symbols = [
-    [
-        "gen-barcode",
-        "gen barcode",
-        "Generate the current barcode.",
-    ],
-    [
-        "save-barcode",
-        "save barcode",
-        "Save the current barcode.",
-    ],
-    [
-        "print-barcode",
-        "print-bcqr barcode",
-        "Print the currently saved barcode.",
-    ],
-    [
-        "gen-qrcode",
-        "gen QR_code",
-        "Generate the current QR code.",
-    ],
-    [
-        "save-qrcode",
-        "save QR_code",
-        "Save the current QR code.",
-    ],
-    [
-        "print-qrcode",
-        "print-bcqr QR_code",
-        "Print the currently saved QR code.",
-    ],
-    [
-        "set-from-serial",
-        "set-in-from barQR value from: device serial_number",
-        "set the bcqr value to that of the device serial number.",
-    ],
-    [
-        "print-serial-qrcode",
-        "set-from-serial gen-qrcode save-qrcode print-qrcode",
-        "Print the device serial number as a QR code.",
-    ],
-    [
-        "print-serial-barcode",
-        "set-from-serial gen-qrcode save-qrcode print-barcode",
-        "Print the device serial number as a barcode.",
-    ],
-    [
-        "input",
-        'ui/input-string-to "Enter a code for barcode generation" barQR value',
-        "Dialog, To set the value to be encoded into a bar or QR code.",
-    ],
-    [
-        "print-codes",
-        "ui/input-bcqr ui/print-bcqr",
-        "Dialogs, To input a string, then print bar or QR codes from it.",
-    ],
-]
+symbols = []
 
 # Name, function, number of args, help string
 # Commands we want in the repl which can take arguments.
