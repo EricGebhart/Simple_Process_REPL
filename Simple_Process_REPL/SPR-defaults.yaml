@@ -95,6 +95,7 @@ exec:
     hooks:
         startup:
           - import Simple_Process_REPL.dialog_cli dialog_cli ui
+          - import Simple_Process_REPL.subcmd subcmd sh
           - import Simple_Process_REPL.logs logs log
           - import Simple_Process_REPL.device device dev
           - import Simple_Process_REPL.network network nw

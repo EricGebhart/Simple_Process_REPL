@@ -52,12 +52,12 @@ def do_shell(commands, shell=True):
 
 # Commands we want in the repl which can take arguments.
 symbols = [
-    ["ls", "sh ls -l", "Run a shell command; ls"],
+    ["ls", "sh/do ls -l", "Run a shell command; ls"],
 ]
 
 specials = [
-    ["sh", do_shell, -1, "Run a shell command; sh ls -l"],
-    ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
+    ["do", do_shell, -1, "Run a shell command; do ls -l"],
+    ["rm", os.remove, 1, "Remove a file; rm foo.txt"],
     ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
 ]
 

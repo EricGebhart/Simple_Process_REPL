@@ -311,7 +311,7 @@ symbols = [
         sync_functions,
         "Copy the functions from the REPL into the state, automatic w/save.",
     ],
-    ["show", "ls device", "Show the device information."],
+    ["show", "as device", "Show the device information."],
 ]
 
 # Name, function, number of args, help string
@@ -323,7 +323,7 @@ specials = [
         "as",
         showin,
         -1,
-        "list the values in the Application state; as, as config files",
+        "Show the Application state data tree, or any subtree or value; as config files",
     ],
     # [
     #     "get-in",

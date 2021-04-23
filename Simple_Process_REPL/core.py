@@ -188,8 +188,7 @@ def init(symbols, specials, parser):
 
     # Add fundamental commands to the root level of the interpreter.
     r.root_symbols(_symbols, _specials)
-    r.root_symbols(A.symbols, A.specials)
+    r.root_symbols(A.symbols, A.specials)  ## appstate stuff is core.
     r.root_symbols(symbols, specials)
-    r.root_symbols(subcmd()["symbols"], subcmd()["specials"])
 
     do_something()
