@@ -1,6 +1,4 @@
 from sys import exit
-import os
-import time
 import logging
 import Simple_Process_REPL.logs as logs
 import Simple_Process_REPL.repl as r
@@ -79,8 +77,6 @@ _symbols = [
 # Name, function, number of args, help string
 # Commands we want in the repl which can take arguments.
 _specials = [
-    ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
-    ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
     [
         "help",
         r.help,
@@ -194,7 +190,6 @@ def init(symbols, specials, parser):
     r.root_symbols(_symbols, _specials)
     r.root_symbols(A.symbols, A.specials)
     r.root_symbols(symbols, specials)
-    r.root_symbols(logs.symbols, logs.specials)
     r.root_symbols(subcmd()["symbols"], subcmd()["specials"])
 
     do_something()

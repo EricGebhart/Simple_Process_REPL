@@ -137,8 +137,7 @@ def append_symbols(st, slist):
 
 
 def append_specials(st, slist):
-    """
-    Given a symbol table and a list of specials append them to the
+    """Given a symbol table and a list of specials append them to the
     symbol table. each symbol should be in the form of
     ['name', function | str, nargs, 'help string']
     """
@@ -148,10 +147,19 @@ def append_specials(st, slist):
 
 
 def def_symbol(name, helpstr, commandstr):
+    """define a new symbol which is a 'dolist' of other symbols.
+    def myhelp 'helptext' help log help bcqr"""
     _def_symbol(name, helpstr, commandstr, stype="dolist")
 
 
 def def_partial(name, helpstr, commandstr):
+    """define a new function from an fptr function which has some
+    of it's arguments filled in.
+
+    partial get-bar-code-from 'helptxt' set-in-from barQR value from:
+
+    will create a new function get-bar-code-from that takes a value vector
+    just like set-in-from would. Because it is."""
     _def_symbol(name, helpstr, commandstr, stype="partial")
 
 

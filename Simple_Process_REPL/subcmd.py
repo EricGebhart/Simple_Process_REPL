@@ -1,5 +1,7 @@
 import Simple_Process_REPL.appstate as A
 import subprocess
+import os
+import time
 import logging
 
 logger = logging.getLogger()
@@ -55,6 +57,8 @@ symbols = [
 
 specials = [
     ["sh", do_shell, -1, "Run a shell command; sh ls -l"],
+    ["rm-file", os.remove, 1, "Remove a file; rm-file foo.txt"],
+    ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
 ]
 
 helptext = """"Shell stuff. Do a sub process. hope it works."""
