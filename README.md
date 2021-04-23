@@ -1,30 +1,107 @@
 # Simple Process REPL
 
+Get your favorite python libraries that do things, add a dictionary, and start 
+scripting process applications that do composeable things out of them.
+
+This is also a fun thing to embed in your application and wire it up. like you would
+lua or python in a C project. Only it's SPR in your python.
+
+
     pip install Simple_Process_REPL
     
 This is a stupid simple, configurable, application interface.
-You will need to install dialog. 
+You will need to install dialog. tkinter is coming probably.
 
 on Arch Linux
-```sudo pacman -S dialog```
+    sudo pacman -S dialog
 
-or on OSX/OSXI
-```brew install dialog```
+or on Apple
+    brew install dialog
 
 
 To start the REPL;
 
-    SPR -r 
+    SPR -r
 
-To create a new application copy main.py, import some libraries,
-write some functions, fill in the symbol table and the special's table
-as needed.  Create a _Config.yaml_ to your liking.
+To get an app, write some functions, fill in the symbol table and the 
+special's table as needed.  Create a _Config.yaml_ which imports your 
+new python module, and configures stuff to your liking.
+
+
+This is out of date. Refactored out this complexity. imports are
+the way to go. PBR will catchup in a bit.
 
 [The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
 is an application built from the Simple_Process_REPL.
 
+To create an application, it is no longer necessary to create anything more than
+a config file and possible write a standalone python library of your favorite
+functionalities, which can then be imported by SPR. Cool right!?
+
+## libraries
+
+There are a few libraries included within SPR, they are imported by SPR
+into their various namespaces as defined in the Startup hook in 
+"config exec hooks startup" setting which can be any valid SPR code.
+but which is most importantly used to import the various core libraries.
+
+The easiest thing to do is start a module that imports the libraries you want
+to work with. Add the SPR stuff at the bottom, write some functions, and
+start playing, by importing it directly into SPR.
+
+
+### The SPR blurb for a library.
+
+Here is the SPR import code stolen from the subcmd module. There are 
+explanations for the data structures.  Essentially symbols are
+void function pointers (parameterless functions) or a list of commands.
+
+Specials are functions which take a variable number, or a specific number
+of arguments.  
+
+The last function, _subcmd_, is the import loader. SPR calls this when the module is 
+imported.  This command imports the subcmd module into the __sh__ namespace 
+in SPR. I have named them after the module they live in. It seems to be a reasonable
+idea.
+
+    import Simple_Process_REPL.subcmd subcmd sh
+    
+Add this to the bottom of your module, change the names to match
+your stuff. Then SPR can import it.
+
+```python
+def do_shell(commands, shell=True):
+    do_cmd(commands)
+
+
+# Commands we want in the repl which can take arguments.
+symbols = [
+    ["ls", "sh/do ls -l", "Run a shell command; ls"],
+]
+
+specials = [
+    ["do", do_shell, -1, "Run a shell command; do ls -l"],
+    ["rm", os.remove, 1, "Remove a file; rm foo.txt"],
+    ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
+]
+
+helptext = """"Shell stuff. Do a sub process. hope it works."""
+
+
+def subcmd():
+    return {
+        "name": "subcmd",
+        "symbols": symbols,
+        "specials": specials,
+        "doc": helptext,
+        "state": None,
+    }
+```
 
 ## Yet another application framework.
+
+Strangely, This has simplified itself, and now exists as an application which
+can be easily extended with any python library just by creating a dictionary.
 
 This is at it's heart a simple Read Eval Print Loop. It has 4 ways
 of running, and it automatically manages Application state, yaml 
@@ -49,16 +126,15 @@ autoexec setting in the config.  The default autoexec is to provide help.
 
 The Simple Process REPL uses YAML for it's configuration files. 
 
-Everything is specified there,
-there is very little in common with the cli. If no config file is given, the default
-_SPR-config.yaml_ will be loaded if found. The primary purpose of the cli is to 
-designate the fashion you would like for the REPL to run. 
+Everything is specified there.
+Most importantly the python libraries to import are there, among other things.
 
 All necessary defaults are set within the package with SPR-defaults.yaml.
 When building an application, that application's defaults will be merged 
 into the Simple_Process_REPL's default configuration before loading a locally defined
 SPR-config.yaml. An application can over-ride the configuration file name with a setting
-in the defaults section of the Application State.
+in the defaults section of the Application State. A config file can also be given on
+the command line at invokation.
 
 
 ## 4 modes of running
@@ -93,31 +169,60 @@ in the REPL is obtained with the help symbol/function.
 The easiest way to understand this is system is by using the REPL. 
 It will show you how it works. `SPR -r` 
  
-Then type _help_ and/or _showin_.
+Then type these commands and read as you go.
+ * _ls-ns_ 
+ * _ns-tree_ 
+ * _help_ 
+ * _help sh_
+ * _help sh/do_
+ * _help nw_
+ * _help as_
+ * _help ui_
+ * _help bcqr_
+ * _as_.
+ * _help device_
+ * _as_ device
+ * _dev/input_sn_
+ * _as_ device
+ * _as_ foo
+ * _set-in_ foo bar 10
+ * _as_ foo
+ * _set-in_ foo bar 10
 
 Once in the REPL at the prompt; __SPR:>,
 _help_ shows all the commands known with their documentation. 
 
 ## Symbols/Commands/functions
 
-There are three kinds.
+There are several kinds.
 
- * Symbols which point at directly at parameter-less functions
- * Symbols which are lists of symbols, _compound commands_.
- * Symbols which are _special_ because they take parameters.
+ * Symbols which point at directly at parameter-less functions, _voidfptr_
+ * Symbols which are lists of symbols, _dolist_s.
+ * Symbols which point at functions which take parameters. _fptr_
+ * Symbols which point at list of symbols, but which resolve to partially completed 
+   fptr commands, these are called _partial_s.
 
 ### symbol/functions.
 These commands are just python functions, whatever it is they do.
 Usually, manipulate the application state, and/or interact with something.
 
-### Compound commands
+### dolist commands
 
-Compound commands are commands defined outside of python code. They are strings which
+_dolist_ commands are commands defined outside of python code. They are strings which
 can be parsed and evaluated by the REPL/interpreter.
 
-Compound commands can be built from other compound commands and _special_ commands.
-Compound commands can be defined in yaml, in python code, or interactively in the REPL.
+_dolist_ commands can be built from other _dolist_ commands and _fptr_ commands.
+_dolist_ commands can be defined in yaml, in python code, or interactively in the REPL.
 
+### Partial commands
+
+_partial_ commands are built from _fptr_ commands.
+_partial_ commands are like dolist commands. Except that the first symbol in
+the list is an fptr symbol, and the list is not everything the fptr function needs.
+when using a partial, they act just like fptr functions, you just have to leave off
+some or all of the first arguments.
+
+_partial_ commands can only be defined in SPR code.
 
 ## The REPL
 
@@ -126,14 +231,14 @@ interactively create/execute a process step by step.
 `help` at the REPL prompt. 
 
  * Builtins __help__
- * __show__, __showin__, and __show-all__ are quite handy.
+ * __as__, __ls-ns__ are quite handy.
  * REPL prompt: persistent history and tab completion. 
  * The __loglvl__ command can change the logging level interactively.
  * Defining a symbol of a special works. - Super cool.
-    * `msgbox "Hello World"` 
-    * `def mymsg "my special msg" msgbox "Hello World"`
- * __log-info__ and __log-debug__ allow sending of arbitrary messages to the log.
- * __sh__ for running shell commands. - There are known bugs.
+    * `ui/msgbox "Hello World"` 
+    * `def mymsg "my special msg" ui/msgbox "Hello World"`
+ * __log/info__ and __log/debug__ allow sending of arbitrary messages to the log.
+ * __sh/do__ for running shell commands. - There are known bugs.
 
 ### Application State. 
 
@@ -156,11 +261,11 @@ AS = {
  * defaults is used by argparse to supply default options to the command line.
  * device is an imaginary device. Which we can wait for and handshake with.
 
-The command: **show-all** or **showin** in the REPL will give it to you in yaml.
+The command: **as** in the REPL will give it to you in yaml.
 **help** will give you the documentation for every command you can do, even the ones you just created. 
-The easiest way to access it is `showin device` or `showin config serial`
-with `showin key1 key2,...` is the command to find sub-section or attributes in the REPL.
-`showin config` , `showin defaults`, or just __showin__ which is the same as __show-all__.
+The easiest way to access it is `as device` or `as config serial`
+with `as key1 key2,...` is the command to find sub-section or attributes in the REPL.
+`as config` , `as defaults`, or just __as__ 
 
 For an Application layer, it is only necessary to provide a structure as desired, which
 will be merged directly onto this structure.
@@ -204,7 +309,7 @@ The symbols _start_, _domore_ and _doevenmore_ can be defined in the YAML
 configuration file, it is not necessary to modify python code unless new 
 functionality needs to be introduced.
 
-## Special Symbols
+## Symbols which point at functions which take parameters.
 
 The interpreter is not very bright and has no way of grouping things together which
 makes it difficult to execute commands which take arguments. Specials are symbols 
@@ -251,6 +356,7 @@ to add with a new function and an entry in the symbol table.
 
    * dialogs - There are some python dialog, and cli interface functionalities. 
    * wifi, - Uses network manager (nmcli) for linux. Non-functional on other platforms.
+   * bar & QR codes - It has structure in the App State, and dialogs to input codes, create, save and print barcodes and QRcodes.
    * Waiting and handshaking.
         * __wait__ looks for the actual device path i/o event with a _timeout_.
         * __pause__ sleeps for _pause_time_. 
