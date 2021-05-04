@@ -9,14 +9,14 @@ import Simple_Process_REPL.appstate as A
 logger = logging.getLogger()
 
 
-def pause_a_sec():
-    "sleep for configured number of some # of seconds."
+def pause():
+    "Sleep for configured number of some # of seconds."
     time.sleep(A.get_in_config(["waiting", "pause_time"]))
 
 
 def wait_for_file(path, timeout):
     """
-    look for a file at path for the given timeout period.
+    Look for a file at path for the given timeout period.
     returns True or False, works for /dev/ttyUSB...
     """
     start = time.time()
@@ -130,39 +130,6 @@ def _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func):
     return result
 
 
-# Everything SPR needs from this module....
-symbols = [
-    ["wait", wait, "Wait for the usb device to come back."],
-    [
-        "handshake",
-        handshake,
-        "Look for the test start string, send the response, catch results.",
-    ],
-    [
-        "input-sn",
-        'ui/input-string-to "Enter a Serial Number" device serial_number',
-        "Dialog, To set the device serial number.",
-    ],
-    ["pause", pause_a_sec, ("Pause/Sleep for 'pause_time' seconds")],
-]
-
-# Name, function, number of args, help string
-# Commands we want in the repl which can take arguments.
-specials = []
-
-
-helptext = """Functions for basic device interaction. waiting, handshaking, etc."""
-
-state = {
+_SPR_AS_ = {
     "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""}
 }
-
-
-def device():
-    return {
-        "name": "device",
-        "symbols": symbols,
-        "specials": specials,
-        "doc": helptext,
-        "state": state,
-    }

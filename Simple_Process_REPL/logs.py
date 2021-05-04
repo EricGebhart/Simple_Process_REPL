@@ -92,56 +92,9 @@ def setup_logger():
     return log
 
 
-symbols = []
-specials = [
-    [
-        "lvl",
-        log_lvl,
-        1,
-        "Change the logging level; loglvl <debug|info|warning|error|critical>",
-    ],
-    [
-        "info",
-        logging.info,
-        1,
-        'Send a message to logging; log-info "some message"',
-    ],
-    [
-        "warning",
-        logging.warning,
-        1,
-        'Send a Warning message to logging; log-warning "some message"',
-    ],
-    [
-        "error",
-        logging.error,
-        1,
-        'Send an error message to logging; log-error "some message"',
-    ],
-    [
-        "critical",
-        logging.critical,
-        1,
-        'Send a critical message to logging; log-critical "some message"',
-    ],
-    [
-        "debug",
-        logging.debug,
-        1,
-        'Send a debug message to logging; log-debug "some message"',
-    ],
-]
-
-helptext = (
-    """Application Logging. Change the logging level and send messages to the log."""
-)
-
-
-def logs():
-    return {
-        "name": "logs",
-        "symbols": [],
-        "specials": specials,
-        "doc": helptext,
-        "state": None,
-    }
+info = logging.info
+warning = logging.warning
+error = logging.error
+critical = logging.critical
+debug = logging.debug
+level = log_lvl

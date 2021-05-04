@@ -41,7 +41,7 @@ images:
 
 files:
     logfile       : 'SPR.log'
-    loglevel      : 'info'
+    loglevel      : 'debug'
 
     config_file   : 'SPRConfig.yaml'
 
@@ -94,12 +94,66 @@ exec:
 
     hooks:
         startup:
-          - import Simple_Process_REPL.appstate appstate as
-          - import Simple_Process_REPL.dialog_cli dialog_cli ui
-          - import Simple_Process_REPL.subcmd subcmd sh
-          - import Simple_Process_REPL.logs logs log
-          - import Simple_Process_REPL.device device dev
-          - import Simple_Process_REPL.network network nw
-          - import Simple_Process_REPL.bar_qr bar_qr bq
+          - namespace as "Application State functionality"
+            Simple_Process_REPL.appstate
+            save_config showin set_in set_in_from merge_yaml build_AS
+            eval_default_process sync_functions reset_device archive_log
+
+          - namespace ui "User interface using dialog and cli"
+            Simple_Process_REPL.dialog_cli
+            msgcli
+            msgbox
+            ynbox
+            print_file_loop_from
+            print_file_from
+            print_file_loop
+            print_file
+            input_count_to
+            input_string_to
+            hello
+            dialog_start
+            dialog_test
+            dialog_flash
+            dialog_failed
+            dialog_finish
+            cli_start
+            cli_test
+            cli_flash
+            cli_failed
+            cli_finish
+            save_bcqr
+            print_bcqr
+
+          - namespace sh "subprocesses, shell etc."
+            Simple_Process_REPL.subcmd
+            do rm sleep
+
+          - namespace log "logger controls and messages"
+            Simple_Process_REPL.logs
+            level info warning error critical debug
+
+          - namespace dev "Device interaction, waiting for, handshaking."
+            Simple_Process_REPL.device
+            wait handshake pause
+
+          - namespace nw "Networking stuff, Wifi"
+            Simple_Process_REPL.network connect_wifi
+            connect_tunnel create_tunnel sendlog
+
+          - namespace bq "Bar and QR code generation and printing"
+            Simple_Process_REPL.bar_qr
+            gen save
+
+          - namespace pb "Particle Board interface"
+            Simple_Process_REPL.particle_main
+            reset_usb add product_add claim flash_image
+            release
+            flash_tinker flash_test cloud_status get_usb_and_id
+            archive_log input_serial particle_help
+            dfu listen list identify inspect login
+            logout update setup_done _doctor _flash pcmd
+
+          - as/build-AS
+
 
         shutdown: ""

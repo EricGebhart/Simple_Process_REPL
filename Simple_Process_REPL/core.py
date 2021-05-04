@@ -1,14 +1,16 @@
 from sys import exit
-import logging
+
+# import logging
 import Simple_Process_REPL.logs as logs
 import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.appstate as A
 
-from Simple_Process_REPL.device import device
-from Simple_Process_REPL.subcmd import subcmd
-from Simple_Process_REPL.dialog_cli import dialog_cli
-from Simple_Process_REPL.network import network
-from Simple_Process_REPL.bar_qr import bar_qr
+# from Simple_Process_REPL.device import device
+# from Simple_Process_REPL.subcmd import subcmd
+import Simple_Process_REPL.dialog_cli as D
+
+# from Simple_Process_REPL.network import network
+# from Simple_Process_REPL.bar_qr import bar_qr
 
 """
 This file defines the symbol table for the interpreter,
@@ -26,45 +28,6 @@ running in a loop or one time with no commands.
 logger = logs.setup_logger()
 
 Libs = []
-
-
-def import_lib(module, sublib, NS):
-    """Append to our list of libraries, in a namespace.
-    import_lib("spam.ham", "ham", "MyHam")
-    or
-    import_lib("ham", "ham", "ham")
-    or
-    import_lib("Simple_Process_REPL.bar_qr", "bar_qr", "bqr")
-    We are expecting spam.ham to have a function ham() which returns a
-    dictionary of stuff.  name, symbols, specials, helptext, state-dict.
-
-    * The symbols and specials are set on the interpreter.
-    * Add state structure to the Application State.
-    """
-    global AS
-
-    lib = __import__(module, globals(), locals(), [sublib], 0)
-    # get the SPR symbols and stuff from the module.
-    lib_record = getattr(lib, sublib)()
-
-    logger.debug("Import Lib: %s %s" % (lib, sublib))
-    logger.debug("Record: %s" % lib_record)
-
-    logger.debug("Importing SPR Library: %s\n %s\n as %s" % (sublib, lib, NS))
-    logger.info(
-        "\nImporting SPR Library: %s as %s\n %s\n"
-        % (lib_record["name"], NS, lib_record["doc"])
-    )
-    logger.info("Type 'help %s' for more information" % NS)
-
-    # give the symbols to the repl, to put in a Namespace
-    r.symbol_table[NS] = r.create_namespace(lib_record, NS)
-
-    # Add to the App State Structure if the lib wants.
-    # if it has a dictionary called state, merge it in.
-    # this can be config, or stateful stuff.
-    if lib_record.get("state", None) is not None:
-        A.set(lib_record["state"])
 
 
 # define all the symbols for the things we want to do.
@@ -90,16 +53,28 @@ _specials = [
         "Define a new function; def <name> 'helpstr' <list of commands>",
     ],
     [
+        "import",
+        r.import_lib,
+        -1,
+        "Import a python library into the current namespace.; import spam.ham ham eggs",
+    ],
+    [
         "partial",
         r.def_partial,
         -1,
-        "Define a new partial function; def <name> 'helpstr' <list of commands>",
+        "Define a new partial function; def <name> 'helpstr' <list of partial command>",
     ],
     [
-        "import",
-        import_lib,
-        3,
-        "import an SPRlib python module into a namespace; import spam.ham ham namespace.",
+        "in-ns",
+        r.in_ns,
+        1,
+        "change to a different namespace or '/'; in-ns <namespace>",
+    ],
+    [
+        "namespace",
+        r.create_namespace,
+        -1,
+        "Create a Namespace and import some python into it; namespace spam spam.ham ham eggs.",
     ],
 ]
 
@@ -134,7 +109,7 @@ def do_one(commands=None):
         D.dialog_finish()
 
     except Exception as e:
-        logger.error("Device Failed")
+        logger.error("Process Failed")
         logger.error(e)
         D.dialog_failed()
         D.dialog_finish()
@@ -159,7 +134,6 @@ def do_something():
     if len(commands) > 0:
         startup_hook += [" ".join(commands)]
 
-    logger.info("Attempting to do this: %s", startup_hook)
     logger.debug("startup hook: %s", startup_hook)
 
     # Run the repl.
@@ -171,7 +145,7 @@ def do_something():
     else:
         r.eval_cmds(startup_hook)
 
-    eval_cmds(shutdown_hook)
+    r.eval_cmds(shutdown_hook)
 
 
 def init(symbols, specials, parser):
@@ -184,7 +158,7 @@ def init(symbols, specials, parser):
     """
     A.init(parser, logger)
     # make the symbol table available in the App State.
-    A.set({"_symbols_": r.symbol_table})  # don't like this. smells.
+    A.set({"_Root_": r.Root})
 
     # Add fundamental commands to the root level of the interpreter.
     r.root_symbols(_symbols, _specials)

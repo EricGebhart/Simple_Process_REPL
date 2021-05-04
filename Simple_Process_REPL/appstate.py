@@ -3,7 +3,6 @@ from platform import system as platform
 from Simple_Process_REPL.options import create_parser
 import Simple_Process_REPL.logs as logs
 import os
-import time
 import logging
 import Simple_Process_REPL.repl as r
 from Simple_Process_REPL.dialog_cli import hello
@@ -21,8 +20,8 @@ AS = {
         "logfile": "SPR.log",
     },
     "platform": platform(),
-    "Libs": [],
-    "_symbols_": [],
+    # "Libs": [],
+    "_Root_": [],
 }
 
 
@@ -103,8 +102,16 @@ def make_dict(keys):
     return v
 
 
+def build_AS():
+    """Merge the _SPR_AS_ trees from the modules into the application state."""
+    global AS
+    logger.info("Building Application state from Namespaces.")
+    merge(AS, r.merge_ns_states())
+
+
 def get_in(keys):
     """Get something out of the Application state."""
+    global AS
     return _get_in(AS, keys)
 
 
@@ -116,10 +123,14 @@ def _get_in(dict_tree, keys):
        any of the keys in the path is not found.
     """
 
-    logger.debug(keys)
+    # logger.info("_get_in")
+    # logger.info(dict_tree.keys())
+    # logger.info(keys)
+    # logger.info("_get_in")
+
     try:
         for key in keys:
-            logger.debug("key %s" % key)
+            # logger.info("key %s" % key)
             dict_tree = dict_tree[key]
 
         return dict_tree
@@ -139,9 +150,13 @@ def get_in_device(key):
     return _get_in(AS["device"], [key])
 
 
-def showin(keys):
+def showin(*keys):
     """Show a sub-tree in the Application State"""
-    logger.info(yaml.dump(get_in(keys)))
+    if len(keys) == 0:
+        qqc = AS
+    else:
+        qqc = get_in(*keys)
+    logger.info(yaml.dump(qqc))
 
 
 def archive_log(new_name):
@@ -183,6 +198,10 @@ def eval_default_process():
             raise Exception(e)
     else:
         hello()
+
+
+def merge_yaml(y):
+    merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
 def load_functions():
@@ -292,68 +311,5 @@ def init(parser, logger):
         get_in_config(["files", "logfile"]),
     )
 
-    logger.info("Hello there, ready to go.")
-
     # load functions from the config into the interpreter.
     load_functions()
-
-
-# define all the symbols for the things we want to do.
-symbols = [
-    [
-        "reset-device",
-        reset_device,
-        "Reset the application state with an empty device.",
-    ],
-    ["run", eval_default_process, "Run the default process command."],
-    ["showns", "as/show _symbols_", "Partial..noworkie here yet..; showns nw"],
-    [
-        "sync-funcs",
-        sync_functions,
-        "Copy the functions from the REPL into the state, automatic w/save.",
-    ],
-]
-
-# Name, function, number of args, help string
-# Commands we want in the repl which can take arguments.
-specials = [
-    ["save-config", save_config, 1, "Save the configuration; save-config filename"],
-    ["load-config", load_config, 1, "Load a configuration; save-config filename"],
-    [
-        "show",
-        showin,
-        -1,
-        "Show the Application state data tree, or any subtree or value; as config files",
-    ],
-    # [
-    #     "get-in",
-    #     get_in,
-    #     -1,
-    #     "Get a value vector in the application state; get-in foo bar 10",
-    # ],
-    [
-        "set-in",
-        set_in,
-        -1,
-        "Set a value vector in the application state; set-in foo bar 10",
-    ],
-    [
-        "set-in-from",
-        set_in_from,
-        -1,
-        "Set a value vector in the application state from another value vector; set-in-from foo bar from: bar baz",
-    ],
-    ["_archive-log", archive_log, 1, "Archive the logfile."],
-]
-
-helptext = """Functions to set, get, copy, and show data in the Application State Data Structure."""
-
-
-def appstate():
-    return {
-        "name": "appstate",
-        "symbols": symbols,
-        "specials": specials,
-        "doc": helptext,
-        "state": None,
-    }

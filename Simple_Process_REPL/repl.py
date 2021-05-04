@@ -5,6 +5,7 @@ import regex as re
 import os
 import atexit
 import code
+from inspect import signature, _empty
 
 # The same configuration can be stored as instructions in a file read
 # by the library with a single call. If myreadline.rc contains:
@@ -90,7 +91,7 @@ the number of args will not be validated.
 """
 
 
-symbol_table = {}
+Root = {}
 all_symbols = []  # for the readline completer.
 stypes = ["fptr", "voidfptr", "partial", "dolist", "namespace"]
 
@@ -99,26 +100,103 @@ logger = logging.getLogger()
 
 def root_symbols(symbols, specials):
     """add symbols to the symbol table as a namespace."""
-    global symbol_table
-    append_specials(append_symbols(symbol_table, symbols), specials)
-    # print(symbol_table.keys())
+    global Root
+    append_specials(append_symbols(Root, symbols), specials)
+    # print(Root.keys())
 
 
-def create_namespace(librec, NS):
-    """
-    Given a symbol record create a namespace and add it to the symbol table.
-    each symbol should be in the form of
-    ['name', function | str, 'help string']
-    """
+def append_funcs(st, module, funclist):
+    """Import a python module and add the function list to the given symbol table."""
+    # get the SPR symbols and stuff from the module.
+    lib = __import__(module, globals(), locals(), funclist, 0)
+
+    # logger.info("Append Funcs: %s %d" % (funclist, len(funclist)))
+    for fname in list(funclist):
+        if type(fname) is not str:
+            logger.info("Not str: %s" % str(fname))
+            return
+        else:
+            f = getattr(lib, fname)
+
+        # figure out if it's a var args [a*], or an [a b c*] varargs.
+        # and how many args. Just to be nice and check later.
+        # also stash the parameters in case do_fptrs() wants to get fancy.
+        signature, nargs, vargs, def_index = get_fsig(f)
+
+        name = fname.replace("_", "-")  # cause I don't like hitting shift.
+
+        st[name] = dict(
+            fn=f,
+            doc=f.__doc__,
+            signature=signature,
+            nargs=nargs,
+            vargs=vargs,
+            def_index=def_index,
+            stype="fptr",
+        )
+
+    return st
+
+
+def merge_ns_states():
+    """Loop through the namespaces and merge their _SPR_AS_ trees into one
+    big dict tree."""
+    global Root
+    res = {}
+    for k, v in sorted(Root.items()):
+        if isstype(v, "namespace"):
+
+            lib = __import__(v["name"], globals(), locals(), ["_SPR_AS_"], 0)
+            _AS_ = getattr(lib, "_SPR_AS_", None)
+            if _AS_ is not None:
+                # Note: 3.9, also destructive, so no overlap between modules.
+                res |= _AS_
+
+    return res
+
+
+def import_lib(module, *funclist):
+    """import functions from a python module."""
+    global NS
+    append_funcs(NS["symbols"], module, *funclist)
+
+
+def create_namespace(name, docstr, module, *funclist):
+    global Root
+    logger.info("Creating Name Space: %s" % name)
+    logger.info(*funclist)
     ns = {
-        "symbols": append_specials(
-            append_symbols({}, librec["symbols"]), librec["specials"]
-        ),
-        "doc": librec["doc"],
-        "name": librec["name"],
+        "symbols": append_funcs({}, module, *funclist),
+        "doc": docstr,
+        "name": module,
+        "funclist": funclist,
         "stype": "namespace",
     }
-    return ns
+    Root[name] = ns
+    in_ns(name)
+
+
+def in_ns(ns=None):
+    """Change into a namespace Only one level of depth of Namespaces for now."""
+    global Root
+    global NS
+    global Current_NS
+    # logger.info("Root: %s" % Root.keys())
+
+    # logger.info("%s" % Root[ns])
+    # for k in Root[ns].keys():
+    #     try:
+    #         logger.debug("%s" % Root[ns][k].keys())
+    #     except Exception:
+    #         pass
+
+    if ns is None or ns == "/":
+        Current_NS = "/"
+        NS = Root
+    else:
+        Current_NS = ns
+        NS = Root[ns]
+    logger.info("In Namespace: %s" % Current_NS)
 
 
 def append_symbols(st, slist):
@@ -136,13 +214,51 @@ def append_symbols(st, slist):
     return st
 
 
+def find_first_parameter_with_default(parameters):
+    """find the index of the first parameter with a default value."""
+    res = 0
+    count = 0
+    for k in parameters.keys():
+        # logger.info(parameters[k])
+        count += 1
+        if parameters[k].default == _empty:
+            continue
+        else:
+            res = count
+            break
+    return res
+
+
+def get_fsig(f):
+    sig = signature(f)
+    parameters = sig.parameters
+    nargs = len(parameters)
+    varargs = False
+    def_index = 0
+    if nargs > 0:
+        last_arg_key = list(sig.parameters.keys())[nargs - 1]
+        last_arg_kind = parameters[last_arg_key].kind.name
+        varargs = last_arg_kind in ["VAR_POSITIONAL", "VAR_KEYWORD"]
+        def_index = find_first_parameter_with_default(parameters)
+    return str(sig), nargs, varargs, def_index
+
+
 def append_specials(st, slist):
     """Given a symbol table and a list of specials append them to the
     symbol table. each symbol should be in the form of
     ['name', function | str, nargs, 'help string']
     """
     for name, function, nargs, helptext in slist:
-        st[name] = dict(fn=function, nargs=nargs, doc=helptext, stype="fptr")
+        sig, nargs, vargs, def_index = get_fsig(function)
+        st[name] = dict(
+            fn=function,
+            signature=sig,
+            nargs=nargs,
+            vargs=vargs,
+            def_index=def_index,
+            doc=helptext,
+            stype="fptr",
+        )
     return st
 
 
@@ -166,22 +282,22 @@ def def_partial(name, helpstr, commandstr):
 def _def_symbol(name, helpstr, commandstr, stype="dolist"):
     """Define a new symbol in the symbol table."""
     logging.info("define symbol: %s, %s, %s, %s" % (name, commandstr, helpstr, stype))
-    symbol_table[name] = dict(fn=commandstr, doc=helpstr, stype=stype)
+    Root[name] = dict(fn=commandstr, doc=helpstr, stype=stype)
 
 
 def get_ns(s):
-    global symbol_table
+    global Root
     namespace = None
     name = s
     if s.find("/") >= 0:
         ns, name = s.split("/")
-        namespace = symbol_table.get(ns)
+        namespace = Root.get(ns)
     return name, namespace
 
 
 def _get_symbol(s):
     "Quietly, Try to get a symbol's definition."
-    global symbol_table
+    global Root
     logger.debug("Getting Symbol: %s" % s)
     n = None
     namespace = None
@@ -194,7 +310,7 @@ def _get_symbol(s):
     if namespace is not None:
         symbol = namespace["symbols"].get(n)
     else:
-        symbol = symbol_table[s]
+        symbol = Root[s]
 
     logger.debug("Got Symbol: %s" % symbol)
 
@@ -228,12 +344,12 @@ def all_fptr_help(st):
 
 def fptr_help(k, v):
     """Format an fptr symbol's help."""
-    fn = v["fn"]
-    print("\n {0[0]:20}\n----------------\n{0[1]}".format([k, v["doc"]]))
-    try:
-        print("  Python Function:  %s\n Docstring:\n    %s" % (fn.__name__, fn.__doc__))
-    except Exception:
-        print("  Function Docstring:\n    %s" % (fn.__doc__))
+    if "signature" in v.keys():
+        sig = "%s%s" % (k, v["signature"])
+    else:
+        sig = k
+    print("\n%-20s" % sig)
+    print("----------------\n%s" % v["doc"])
 
 
 def all_dolist_help(st):
@@ -258,66 +374,68 @@ def namespace_help(key, ns):
 
 
 def list_root_namespace():
+    """List the non namespace stuff in the Root namespace."""
     print("\n Root Namespace: ")
-    for k, v in sorted(symbol_table.items()):
+    for k, v in sorted(Root.items()):
         if not isstype(v, "namespace"):
             print("   %s" % k)
 
 
 def list_namespace_tree():
-    list_root_namespace
+    list_root_namespace()
     print("\n")
-    for k, v in sorted(symbol_table.items()):
+    for k, v in sorted(Root.items()):
         if isstype(v, "namespace"):
             print(
-                "\n%-10s %15s:\n---------------------------\n%s\n"
+                "\n%-10s %15s:\n---------------------------\n%s"
                 % (k, v["name"], v["doc"])
             )
             for j, v in sorted(v["symbols"].items()):
                 print("   %s" % j)
 
 
-def list_namespaces(ns=symbol_table):
+def list_namespaces(ns=Root):
     for k, v in sorted(ns.items()):
         if isstype(v, "namespace"):
             print(
-                "\n%-10s %15s: \n---------------------------\n%s"
+                "\n%-10s %20s: \n---------------------------------------------\n%s"
                 % (k, v["name"], v["doc"])
             )
 
 
+def helpful_cmds():
+    print("Helpful Commands: ls-ns, ns-tree, help <ns>, as/showin, def, help as")
+
+
 def help(args=None):
-    global symbol_table
+    global Root
     print("\nSPR Help\n=============================================")
-    print("Root commands and namespaces. help <ns> for namespace help\n")
-    if args is None or len(args) == 0:
-        all_fptr_help(symbol_table)
-        all_dolist_help(symbol_table)
-        # list_root_namespace()
-
-        print("\nNamespaces: help <ns> for more information\n")
-        list_namespaces()
-
-        # for k, v in sorted(symbol_table.items()):
-        #     if isstype(v, "namespace"):
-        #         namespace_help(k, v)
+    sym = args
+    helpful_cmds()
+    if args is None:  # or len(args) == 0:
+        all_fptr_help(Root)
+        all_dolist_help(Root)
+        print("=============================================")
+        helpful_cmds()
+        # list_namespaces()
 
     else:
-        for sym in args:
-            s = symbol_table.get(sym)
-            if isstype(s, "namespace"):
-                namespace_help(sym, s)
-            if isstype(s, "dolist"):
-                dolist_help(sym, s)
-            if isstype(s, ["fptr", "partial", "voidfptr"]):
-                fptr_help(sym, s)
+        # for sym in args:
+        # logger.info("Sym in args: " % (sym, args))
+        s = _get_symbol(sym)
+        if isstype(s, "namespace"):
+            namespace_help(sym, s)
+        if isstype(s, "dolist"):
+            dolist_help(sym, s)
+        if isstype(s, ["fptr", "partial", "voidfptr"]):
+            fptr_help(sym, s)
 
 
 def all_symbol_names():
     """Return a list of all symbol names. for readline, prompt completion."""
     res = []
-    res.extend(list(symbol_table.keys()))
-    for k, v in sorted(symbol_table.items()):
+    res.extend(list(Root.keys()))
+    for k, v in sorted(Root.items()):
         if isstype(v, "namespace"):
             res.extend(v["symbols"].keys())
 
@@ -356,53 +474,77 @@ def do_fptrs(commands):
     on to be evaluated elsewhere.
     """
     command = commands[0]
-    special = isa_fptr(command)
+    fptr = isa_fptr(command)
 
     # logging.debug("do specials: %s" % command)
     # logging.debug("do specials: %s" % commands)
-    # logging.debug("do specials: %s" % str(special))
+    # logging.debug("do specials: %s" % str(fptr))
 
-    if special is None:
+    if fptr is None:
         return False
 
     # logging.info("keys: %s" % str(special.keys()))
     # # logging.debug("nargs: %s" % str(special['nargs']))
 
-    spfunc = special["fn"]
-    spnargs = special["nargs"]
-    nargs = len(commands[1:])
+    # logger.info("DO_FPTR %s" % fptr)
+    fn = fptr["fn"]
+    fnargs = fptr["nargs"]
+    vargs = fptr["vargs"]
+    def_index = fptr["def_index"]
+    # sig = fptr["signature"]
+    nargs = len(commands) - 1
 
-    if spnargs != -1 and spnargs != nargs:
-        msg = "Command %s takes %d arguments" % (command, spnargs)
-        raise SyntaxError(msg)
+    # logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
+    # "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
+    # % (command, func, sig, fnargs, nargs, vargs)
 
-    else:
-        # commands with 3 arguments, sort-of.
-        # def actually takes variable args. which turns into 3 args.
-        if command == "def" or command == "partial":
-            commandstr = " ".join(commands[3:])
-            spfunc(commands[1], commands[2], commandstr)
+    if command == "def" or command == "partial":
+        commandstr = " ".join(commands[3:])
+        fn(commands[1], commands[2], commandstr)
+        return True
 
-        # commands with var args. ;-) they get a list to deal with.
-        elif spnargs == -1:
-            spfunc(commands[1:])
+    if vargs and nargs == 0:
+        # logger.info("vargs and nargs=0.func() %s" % fn)
+        fn()
+        # logger.info("After no args func()")
+
+    elif vargs:
+        if fnargs == 1:
+            # logger.info("vargs 1 %s" % commands[1:])
+            fn(commands[1:])
+        if fnargs == 2:
+            fn(commands[1], commands[2:])
+        if fnargs == 3:
+            fn(commands[1], commands[2], commands[3:])
+        if fnargs == 4:
+            fn(commands[1], commands[2], commands[3], commands[4:])
+        if fnargs == 5:
+            fn(commands[1], commands[2], commands[3], commands[4], commands[5:])
+
+        return True
+
+    elif nargs <= fnargs and nargs >= def_index - 1:
 
         # commands with 4 arguments.
-        elif spnargs == 4:
-            spfunc(commands[1], commands[2], commands[3], commands[4])
+        if nargs == 4:
+            fn(commands[1], commands[2], commands[3], commands[4])
 
         # commands with 3 arguments.
-        elif spnargs == 3:
-            spfunc(commands[1], commands[2], commands[3])
+        elif nargs == 3:
+            fn(commands[1], commands[2], commands[3])
 
         # commands with 2 arguments.
-        elif spnargs == 2:
-            spfunc(commands[1], commands[2])
+        elif nargs == 2:
+            fn(commands[1], commands[2])
 
         # commands with 1 argument.
-        elif spnargs == 1:
-            spfunc(commands[1])
-    return True
+        elif nargs == 1:
+            fn(commands[1])
+
+        elif nargs == 0:
+            fn()
+
+        return True
 
 
 def atom(token):
@@ -420,7 +562,7 @@ def atom(token):
             try:
                 return complex(token.replace("i", "j", 1))
             except ValueError:
-                # A parameter less function in the symbol_table
+                # A parameter less function in the Root symbol table
                 # if valid_command_ck(token):
                 return token
             # else:
@@ -457,7 +599,7 @@ def parse(commandstr):
 
 
 def eval_symbol(s):
-    "Execute a function in the symbol_table."
+    "Execute a function in the symbol table."
     logger.debug("eval symbol: %s" % s)
     symbol = get_symbol(s)
 
@@ -549,7 +691,6 @@ def repl(prompt="SPR:> ", init=None):
     An input loop. nothing fancy. It does have history and
     completion at least.
     """
-    repl_message()
 
     all_symbols = all_symbol_names()
     readline.parse_and_bind("tab: complete")
@@ -558,6 +699,8 @@ def repl(prompt="SPR:> ", init=None):
 
     if init is not None:
         eval_cmds(init)
+
+    repl_message()
 
     while True:
         try:

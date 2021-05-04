@@ -29,6 +29,7 @@ setup(
     license="MIT",
     entry_points={"console_scripts": ["SPR=Simple_Process_REPL.__main__:main"]},
     install_requires=[
+	"serial"
         "pythondialog",
         "pyYAML",
         "regex",

@@ -154,21 +154,23 @@ symbols = [
 ]
 
 
-def MySpecial(x):
-    print(x)
+# def MySpecial(x):
+#     print(x)
 
 
-# Name, function, number of args, help string
-# Commands we want in the repl which can take arguments.
-# look in core.py for examples.
-specials = [
-    [
-        "MySpecialCMD",
-        MySpecial,
-        1,
-        "Takes one argument does something special.",
-    ]
-]
+# # Name, function, number of args, help string
+# # Commands we want in the repl which can take arguments.
+# # look in core.py for examples.
+# specials = [
+#     [
+#         "MySpecialCMD",
+#         MySpecial,
+#         1,
+#         "Takes one argument does something special.",
+#     ]
+# ]
+
+specials = []
 
 # get the default parser for the application and add to it if needed.
 parser = None

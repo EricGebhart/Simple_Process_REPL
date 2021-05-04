@@ -8,6 +8,16 @@ logger = logging.getLogger()
 AS = A.AS
 
 
+def rm(filename):
+    """remove file at path."""
+    os.remove(filename)
+
+
+def sleep(s):
+    """Sleep for x seconds"""
+    time.sleep(s)
+
+
 def mk_cmd(cmd, prefix=""):
     """
     Put together a command list for subprocess.run.
@@ -46,29 +56,6 @@ def do_cmd(command, shell=False):
     return stdout
 
 
-def do_shell(commands, shell=True):
-    do_cmd(commands)
-
-
-# Commands we want in the repl which can take arguments.
-symbols = [
-    ["ls", "sh/do ls -l", "Run a shell command; ls"],
-]
-
-specials = [
-    ["do", do_shell, -1, "Run a shell command; do ls -l"],
-    ["rm", os.remove, 1, "Remove a file; rm foo.txt"],
-    ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
-]
-
-helptext = """"Shell stuff. Do a sub process. hope it works."""
-
-
-def subcmd():
-    return {
-        "name": "subcmd",
-        "symbols": symbols,
-        "specials": specials,
-        "doc": helptext,
-        "state": None,
-    }
+def do(*commands):
+    """A varargs wrapper for do_cmd using subprocess to run shell commands."""
+    do_cmd(*commands)

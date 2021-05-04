@@ -6,6 +6,9 @@ from PIL import Image, ImageDraw, ImageFont, ImageOps
 import Simple_Process_REPL.appstate as A
 import Simple_Process_REPL.dialog_cli as D
 import os
+import logging
+
+logger = logging.getLogger()
 
 BarCodeType = "barcode"
 QRCodeType = "QR_code"
@@ -24,7 +27,7 @@ def gen(codetype=BarCodeType):
         A.set_in(["barQR", codetype, "saved", ""])
 
     except Exception as e:
-        print(e)
+        logger.error(e)
 
 
 def save(codetype=BarCodeType):
@@ -43,18 +46,6 @@ def save(codetype=BarCodeType):
 
     A.set_in(["barQR", codetype, "saved", fn])
     return fn
-
-
-def print_bcqr(codetype=BarCodeType):
-    """Print the current 'barcode' or 'QR_code'."""
-    fn = A.get_in(["barQR", codetype, "saved"])
-    D.print_file(fn)
-
-
-def print_loop(codetype=BarCodeType):
-    """print a code in a loop"""
-    fn = A.get_in(["barQR", codetype, "saved"])
-    D.print_file_loop(fn)
 
 
 def pad_num(n):
@@ -171,41 +162,9 @@ def makeFailSticker(reason, code):
     case = reason + ": " + str(code)
     draw.text((x, y), case, fill=color, font=font)
     return img
-    # img.save(filesystem.get_reports_path() + '/fail/' + 'fail' + '.png')
 
 
-# define all the symbols for the things we want to do.
-# These are really just convenience functions.
-symbols = []
-
-# Name, function, number of args, help string
-# Commands we want in the repl which can take arguments.
-# These are the functions we are really providing here.
-specials = [
-    [
-        "gen",
-        gen,
-        1,
-        "Generate a barcode or QR code for the current value; gen barcode",
-    ],
-    [
-        "save",
-        save,
-        1,
-        "Save the current barcode or QR code to a file; save barcode",
-    ],
-    [
-        "print",
-        print_bcqr,
-        1,
-        "print the current barcode or QR code file; print barcode",
-    ],
-]
-
-helptext = """"Bar Code and QR Code functionality, set codes,
-                create codes, save codes, and print codes."""
-
-state = {
+_SPR_AS_ = {
     "barQR": {
         "src": [],
         "value": "",
@@ -213,13 +172,3 @@ state = {
         "barcode": {"code": None, "filename": "", "saved": ""},
     }
 }
-
-
-def bar_qr():
-    return {
-        "name": "bar_qr",
-        "symbols": symbols,
-        "specials": specials,
-        "doc": helptext,
-        "state": state,
-    }
