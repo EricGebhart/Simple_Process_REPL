@@ -1,5 +1,4 @@
 import Simple_Process_REPL.appstate as r
-from Particle_Board_REPL.options import define_help_text
 import Particle_Board_REPL.particle as P
 import regex as re
 import logging
@@ -10,19 +9,6 @@ import os
 The purpose of this module is to Serve as a liaison between the
 Interpreter/REPL and the device interface layer, which in this case is
 defined in particle.py
-
-The Repl module requires two symbol tables, and a dictionary of
-defaults, as well as any stateful data the application would like to keep.
-In this case it is the _device_ dictionary below.
-
-In many cases particle functions may be used directly in the symbol table.
-In other cases where additional functionality,
-or data use is needed, the function would be defined here.
-
-The symbol table of these functions is defined and passed to
-to the repl core module which is reponsible for similar things
-as well as parsing the command line, setting up logging, and
-executing the process as desired.
 """
 
 # This is a map which is merged with the application state map.
@@ -181,8 +167,7 @@ if no commands are given on the cli.\n\n """
     )
 
 
-# nicer names in this namespace. not pretty, but easy.
-
+# nicer names in this name space. not pretty, but easy.
 dfu = P.dfu_mode
 listen = P.listen
 list = P.list_usb
