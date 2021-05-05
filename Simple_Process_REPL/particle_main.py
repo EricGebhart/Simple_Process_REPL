@@ -1,5 +1,6 @@
-import Simple_Process_REPL.appstate as r
-import Particle_Board_REPL.particle as P
+import Simple_Process_REPL.appstate as A
+from Simple_Process_REPL.dialog_cli import ynbox, inputbox
+import Simple_Process_REPL.particle as P
 import regex as re
 import logging
 import os
@@ -23,8 +24,8 @@ logger = logging.getLogger()
 
 def see_images():
     """Ask if the test images are seen, fail if not."""
-    yno_msg = r.get_in_config(["dialogs", "images_seen"])
-    if not r.ynbox(yno_msg):
+    yno_msg = A.get_in_config(["dialogs", "images_seen"])
+    if not ynbox(yno_msg):
         raise Exception("Failure: Test images not Seen.")
 
 
@@ -36,86 +37,87 @@ def input_serial():
     """
     see_images()
 
-    msg = r.get_in_config(["dialogs", "input_serial"])
+    msg = A.get_in_config(["dialogs", "input_serial"])
     while True:
-        code, res = r.inputbox(
-            msg, title=r.get_in_config(["dialogs", "title"]), height=10, width=50
+        code, res = inputbox(
+            msg, title=A.get_in_config(["dialogs", "title"]), height=10, width=50
         )
         if re.match(r"^\d{8}$", res):
             yno_msg = "%s : %s" % (
-                r.get_in_config(["dialogs", "serial_is_correct"]),
+                A.get_in_config(["dialogs", "serial_is_correct"]),
                 res,
             )
-            if r.ynbox(yno_msg):
+            if ynbox(yno_msg):
                 break
         else:
-            r.msgbox(r.get_in_config(["dialogs", "serial_must"]))
+            msgbox(A.get_in_config(["dialogs", "serial_must"]))
 
-    os.system("clear")
-    logger.info("Serial Number Entered is: %s" % res)
-    return res
+            os.system("clear")
+            logger.info("Serial Number Entered is: %s" % res)
+            A.set_in(["device", "serial", res])
+        return res
 
 
 def flash_image():
     "Flash the flash image"
-    P.flash(r.get_in_config(["images", "flash"]))
+    P.flash(A.get_in_config(["images", "flash"]))
 
 
 def flash_tinker():
     "Flash the tinker image"
-    P.flash(r.get_in_config(["images", "tinker"]))
+    P.flash(A.get_in_config(["images", "tinker"]))
 
 
 def flash_test():
     "Flash the test image"
-    P.flash(r.get_in_config(["images", "test"]))
+    P.flash(A.get_in_config(["images", "test"]))
 
 
 def product_add():
     """ product device add product id - associate the device wit a product"""
-    P.product_add(r.get_in_config(["particle", "product"]), r.get_in_device("id"))
+    P.product_add(A.get_in_config(["particle", "product"]), A.get_in_device("id"))
 
 
 def claim():
     "Claim the device, cloud claim"
-    P.claim(r.get_in_device("id"))
+    P.claim(A.get_in_device("id"))
 
 
 def add():
     "Claim the device, device add"
-    P.add(r.get_in_device("id"))
+    P.add(A.get_in_device("id"))
 
 
 def release():
     "Release the claim on a device."
-    P.release(r.get_in_device("id"))
+    P.release(A.get_in_device("id"))
 
 
 def name(n):
     """Name/Rename the current device."""
-    P.name(r.get_in_device("id"), n)
+    P.name(A.get_in_device("id"), n)
 
 
 def name_from(varpath):
     """Name/Rename the device from a variable in the Application state."""
-    n = r.get_in(varpath)
+    n = A.get_in(varpath)
     logger.info("Naming device: %s" % n)
     name(n)
 
 
 def cloud_status():
     "Check to see if the device is connected to the cloud"
-    P.cloud_status(r.get_in_device("id"))
+    P.cloud_status(A.get_in_device("id"))
 
 
 def reset_usb():
     "Reset the usb device."
-    P.reset_usb(r.get_in_device("id"))
+    P.reset_usb(A.get_in_device("id"))
 
 
 def list_usb_w_timeout():
     "Do a serial list repeatedly for timeout period"
-    P.list_usb_w_timeout(r.get_in_config(["waiting", "timeout"]))
+    P.list_usb_w_timeout(A.get_in_config(["waiting", "timeout"]))
 
 
 def get_usb_and_id():
@@ -126,22 +128,20 @@ def get_usb_and_id():
     and the id is needed by many things.
     """
     # PB['usb_device'], PB['device_id'] = P.get_usb_and_id()
-    path, name, id = P.get_w_timeout(r.get_in_config(["waiting", "timeout"]))
-
-    r.set({"device": {"path": path, "name": name, "id": id}})
-    r.show()
+    path, name, id = P.get_w_timeout(A.get_in_config(["waiting", "timeout"]))
+    A.set({"device": {"path": path, "name": name, "id": id}})
 
 
 def wait_for_plist():
     """Wait for particle serial list to succeed with timeout, doesn't
     really work."""
     # we don't care about the results, just to wait.
-    P.get_w_timeout(r.get_in_config(["waiting", "timeout"]))
+    P.get_w_timeout(A.get_in_config(["waiting", "timeout"]))
 
 
 def archive_log():
     "Move the current logfile to one named after the current device."
-    r.archive_log("%s.log" % r.get_in_device("id"))
+    archive_log("%s.log" % A.get_in_device("id"))
 
 
 def do_pcmd(cmds):

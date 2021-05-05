@@ -131,7 +131,7 @@ def do_something():
     startup_hook = A.get_in(["config", "exec", "hooks", "startup"])
     shutdown_hook = A.get_in(["config", "exec", "hooks", "shutdown"])
 
-    if len(commands) > 0:
+    if commands is not None and len(commands) > 0:
         startup_hook += [" ".join(commands)]
 
     logger.debug("startup hook: %s", startup_hook)

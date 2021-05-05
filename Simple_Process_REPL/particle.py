@@ -4,7 +4,7 @@ import os
 import subprocess
 import logging
 import time
-import Particle_Board_REPL.core as r
+import Simple_Process_REPL.subcmd as s
 
 logger = logging.getLogger()
 
@@ -15,7 +15,7 @@ def do_pcmd_w_timeout(cmd, timeout):
     because it returns 0 no matter what happens."""
     start = time.time()
     while True:
-        command = r.mk_cmd(cmd, prefix="particle")
+        command = s.mk_cmd(cmd, prefix="particle")
         res = subprocess.run(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
         print(res)
@@ -63,7 +63,7 @@ def get_w_timeout(timeout):
 
 def do_pcmd(cmd):
     """run a particle command, read and return it's output."""
-    return r.do_cmd(r.mk_cmd(cmd, prefix="particle"))
+    return s.do_cmd(s.mk_cmd(cmd, prefix="particle"))
 
 
 # this doesn't actually work because particle returns 0

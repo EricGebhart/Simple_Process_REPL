@@ -151,7 +151,6 @@ def merge_ns_states():
             if _AS_ is not None:
                 # Note: 3.9, also destructive, so no overlap between modules.
                 res |= _AS_
-
     return res
 
 

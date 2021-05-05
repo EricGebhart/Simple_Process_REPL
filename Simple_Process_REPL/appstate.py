@@ -106,13 +106,9 @@ def build_AS():
     """Merge the _SPR_AS_ trees from the modules into the application state."""
     global AS
 
-    # makes no sense, I'm getting this message twice.
-    # import traceback
-    # logger.info(traceback.print_stack())
-
     logger.info("Building Application state from Namespaces.")
 
-    merge(AS, r.merge_ns_states())
+    AS = merge(AS, r.merge_ns_states())
 
 
 def get_in(keys):

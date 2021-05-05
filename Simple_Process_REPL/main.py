@@ -1,7 +1,6 @@
 import Simple_Process_REPL.core as r
 import Simple_Process_REPL.appstate as A
 
-
 """
 The purpose of this module is to Serve as a liaison between the
 Interpreter/REPL and the Application interface layer. This is where

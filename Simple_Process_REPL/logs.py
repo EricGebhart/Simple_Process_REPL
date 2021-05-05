@@ -69,6 +69,7 @@ def add_file_handler(logger, loglevel, filename):
     Takes a logger, a string loglevel, and a filename,
     to create and add a file handler to a logger.
     """
+
     nloglevel = validate_loglevel(loglevel)
     formatter = logging.Formatter(message_fmt)
     fh = logging.FileHandler(filename, mode="w", encoding="utf-8")
