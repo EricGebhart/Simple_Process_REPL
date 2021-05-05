@@ -91,6 +91,18 @@ def release():
     P.release(r.get_in_device("id"))
 
 
+def name(n):
+    """Name/Rename the current device."""
+    P.name(r.get_in_device("id"), n)
+
+
+def name_from(varpath):
+    """Name/Rename the device from a variable in the Application state."""
+    n = r.get_in(varpath)
+    logger.info("Naming device: %s" % n)
+    name(n)
+
+
 def cloud_status():
     "Check to see if the device is connected to the cloud"
     P.cloud_status(r.get_in_device("id"))

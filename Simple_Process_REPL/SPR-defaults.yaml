@@ -151,6 +151,7 @@ exec:
             get_usb_and_id archive_log input_serial particle_help
             dfu listen list identify inspect login
             logout update setup_done _doctor _flash pcmd
+            name name_from
 
           - as/build-AS
 

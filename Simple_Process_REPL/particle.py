@@ -188,6 +188,11 @@ def reset_usb(device_id):
     do_pcmd("usb reset {}".format(device_id))
 
 
+def name(device_id, n):
+    """Name/Rename a device"""
+    do_pcmd("device rename %s %s" % (device_id, n))
+
+
 def flash(image):
     """flash an image. (dfu, flash --usb)"""
     logger.info("Flashing device with: %s" % image)

@@ -34,21 +34,21 @@ def set(d):
     AS = merge(AS, d)
 
 
-def set_in(keys):
+def set_in(*keys):
     """Takes a list of keys ending with the value to assign
     into the Application State dictionary tree."""
     global AS
-    AS = merge(AS, make_dict(keys))
+    AS = merge(AS, make_dict(*keys))
 
 
-def set_in_from(keys):
+def set_in_from(*keys):
     """Takes 2 lists of keys separated with 'from:' the value to assign
     into the Application State and where to get it from."""
     global AS
     set_keys = []
     from_keys = []
     dest = set_keys
-    for k in keys:
+    for k in keys[0]:
         if k == "from:":
             dest = from_keys
             continue
@@ -105,6 +105,8 @@ def make_dict(keys):
 def build_AS():
     """Merge the _SPR_AS_ trees from the modules into the application state."""
     global AS
+
+    # makes no sense, I'm getting this message twice.
     # import traceback
     # logger.info(traceback.print_stack())
 
