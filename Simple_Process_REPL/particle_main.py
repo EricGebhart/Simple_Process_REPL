@@ -1,5 +1,5 @@
 import Simple_Process_REPL.appstate as A
-from Simple_Process_REPL.dialog_cli import ynbox, inputbox
+from Simple_Process_REPL.dialog_cli import ynbox, inputbox, msgbox
 import Simple_Process_REPL.particle as P
 import regex as re
 import logging

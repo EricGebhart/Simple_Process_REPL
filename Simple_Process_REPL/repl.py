@@ -372,7 +372,7 @@ def namespace_help(key, ns):
     all_dolist_help(ns["symbols"])
 
 
-def list_root_namespace():
+def list_namespace(ns=Root):
     """List the non namespace stuff in the Root namespace."""
     print("\n Root Namespace: ")
     for k, v in sorted(Root.items()):
@@ -381,7 +381,7 @@ def list_root_namespace():
 
 
 def list_namespace_tree():
-    list_root_namespace()
+    list_namespace()
     print("\n")
     for k, v in sorted(Root.items()):
         if isstype(v, "namespace"):
