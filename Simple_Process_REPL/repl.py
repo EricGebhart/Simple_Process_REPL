@@ -94,6 +94,8 @@ the number of args will not be validated.
 Root = {}
 all_symbols = []  # for the readline completer.
 stypes = ["fptr", "voidfptr", "partial", "dolist", "namespace"]
+Current_NS = "/"
+NS = Root
 
 logger = logging.getLogger()
 
@@ -162,8 +164,8 @@ def import_lib(module, *funclist):
 
 def create_namespace(name, docstr, module, *funclist):
     global Root
-    logger.info("Creating Name Space: %s" % name)
-    logger.info(*funclist)
+    logger.info("Creating Namespace: %s from Python module: %s" % (name, module))
+    # logger.info(*funclist)
     ns = {
         "symbols": append_funcs({}, module, *funclist),
         "doc": docstr,
@@ -195,7 +197,7 @@ def in_ns(ns=None):
     else:
         Current_NS = ns
         NS = Root[ns]
-    logger.info("In Namespace: %s" % Current_NS)
+    # logger.info("In Namespace: %s" % Current_NS)
 
 
 def append_symbols(st, slist):
@@ -381,6 +383,7 @@ def list_namespace(ns=Root):
 
 
 def list_namespace_tree():
+    """List the namespaces and all of their symbols """
     list_namespace()
     print("\n")
     for k, v in sorted(Root.items()):
@@ -393,7 +396,11 @@ def list_namespace_tree():
                 print("   %s" % j)
 
 
-def list_namespaces(ns=Root):
+def list_namespaces(ns=None):
+    """List the name spaces"""
+    # So that the signature shows up nicely in the doc.
+    if ns is None:
+        ns = Root
     for k, v in sorted(ns.items()):
         if isstype(v, "namespace"):
             print(
@@ -403,10 +410,12 @@ def list_namespaces(ns=Root):
 
 
 def helpful_cmds():
+    """Print a list of helpful commands"""
     print("Helpful Commands: ls-ns, ns-tree, help <ns>, as/showin, def, help as")
 
 
 def help(args=None):
+    """Help for everything."""
     global Root
     print("\nSPR Help\n=============================================")
     sym = args

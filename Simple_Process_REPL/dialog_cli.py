@@ -241,14 +241,14 @@ def print_file_loop(fname):
     _print_file(fname, name, cmd, count)
 
 
-def print_file_from(keys):
+def print_file_from(*keys):
     """Given a value vector, print the filename value held there."""
-    print_file(A.get_in(keys))
+    print_file(A.get_in(keys[0]))
 
 
-def print_file_loop_from(keys):
+def print_file_loop_from(*keys):
     """Given a value vector, print the filename value held there, how ever many times they say."""
-    print_file_loop(A.get_in(keys))
+    print_file_loop(A.get_in(keys[0]))
 
 
 def continue_to_next():
