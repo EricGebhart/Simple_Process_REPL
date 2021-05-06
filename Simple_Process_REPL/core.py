@@ -1,4 +1,6 @@
 from sys import exit
+import pkgutil
+import regex as re
 
 # import logging
 import Simple_Process_REPL.logs as logs
@@ -30,11 +32,42 @@ logger = logs.setup_logger()
 Libs = []
 
 
+def load_file(filename):
+    """load an SPR file into the application."""
+    with open(filename, "r") as reader:
+        load(reader)
+
+
+def is_blank_line(line):
+    """test if text is blank or not."""
+    return re.match(r"^[\s]*$", line)
+
+
+def load(reader):
+    """Load a text reader (hopefully an spr file) into the interpreter."""
+    txt = ""
+    for line in reader:
+        logger.info(line)
+        if is_blank_line(line):
+            if len(txt) > 0:
+                r.eval_cmd(txt)
+            txt = ""
+        else:
+            txt += re.sub("\n", " ", line)
+
+
+def quit_spr():
+    shutdown_hook = []
+    shutdown_hook = A.get_in(["config", "exec", "hooks", "shutdown"])
+    r.eval_cmds(shutdown_hook)
+    exit()
+
+
 # define all the symbols for the things we want to do.
 _symbols = [
     ["ls-ns", r.list_namespaces, "list namespaces."],
     ["ns-tree", r.list_namespace_tree, "list the namespaces and their symbols."],
-    ["quit", exit, "Quit"],
+    ["quit", quit_spr, "Quit"],
 ]
 
 
@@ -70,6 +103,12 @@ _specials = [
         r.in_ns,
         1,
         "change to a different namespace or '/'; in-ns <namespace>",
+    ],
+    [
+        "load",
+        load_file,
+        1,
+        "Load an spr code file; load <filename>",
     ],
     [
         "namespace",
@@ -118,35 +157,48 @@ def do_one(commands=None):
 
 def do_something():
     """
-    Maybe start the REPL,
-    or Run the autoexec in a loop,
-    or Run the autoexec once,
-    or Run commands given on the cli.
+    Get the startup and shutdown hooks from the config.
+    load :
+        core.spr
+        startup hook
+        Load/run a file if given on the cli with -f
+
+    Maybe:
+      Start the REPL and run the commands given on the cli.
+      Loop over something, the cli commands or the autoexec.
+      Do something one time. the cli commands or the autoexec,
     """
+
+    core = pkgutil.get_data(__name__, "core.spr")
+    logger.info(core)
+    load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
 
     commands = A.get_in(["args", "commands"])
 
     # Each of these should be a list of commands to execute.
     startup_hook = []
-    shutdown_hook = []
     startup_hook = A.get_in(["config", "exec", "hooks", "startup"])
-    shutdown_hook = A.get_in(["config", "exec", "hooks", "shutdown"])
-
-    if commands is not None and len(commands) > 0:
-        startup_hook += [" ".join(commands)]
 
     logger.debug("startup hook: %s", startup_hook)
 
-    # Run the repl.
+    r.eval_cmds(startup_hook)
+
+    # Load a file if we got one.
+    filereader = A.get_in(["args", "file"])
+
+    if filereader:
+        load(filereader)
+
+    # Maybe Run the repl.
     if A.get_in(["args", "repl"]):
-        r.repl(A.get_in_config(["REPL", "prompt"]), startup_hook)
+        r.repl(A.get_in_config(["REPL", "prompt"]), None)
 
+    # or run in a loop
     if A.get_in(["args", "interactive"]) is True:
-        interactive_loop(startup_hook)
-    else:
-        r.eval_cmds(startup_hook)
+        interactive_loop(commands)
 
-    r.eval_cmds(shutdown_hook)
+    else:
+        do_one(commands)
 
 
 def init(symbols, specials, parser):

@@ -1,0 +1,70 @@
+namespace as "Application State functionality"
+    Simple_Process_REPL.appstate
+    showin
+    set_in
+    set_in_from
+    merge_yaml
+    build_AS
+    eval_default_process
+    save_config
+    load_config
+    sync_functions
+    reset_device
+    archive_log
+
+namespace ui "User interface using dialog and cli"
+    Simple_Process_REPL.dialog_cli
+    msgcli
+    msgbox
+    ynbox
+    print_file_loop_from
+    print_file_from
+    print_file_loop
+    print_file
+    input_count_to
+    input_string_to
+    hello
+    dialog_start
+    dialog_test
+    dialog_flash
+    dialog_failed
+    dialog_finish
+    cli_start
+    cli_test
+    cli_flash
+    cli_failed
+    cli_finish
+    save_bcqr
+    print_bcqr
+
+namespace sh "subprocesses, shell etc."
+    Simple_Process_REPL.subcmd
+    do rm sleep
+
+namespace log "logger controls and messages"
+    Simple_Process_REPL.logs
+    level info warning error critical debug
+
+namespace dev "Device interaction, waiting for, handshaking."
+    Simple_Process_REPL.device
+    wait handshake pause
+
+namespace nw "Networking stuff, Wifi"
+    Simple_Process_REPL.network connect_wifi
+    connect_tunnel create_tunnel sendlog
+
+namespace bq "Bar and QR code generation and printing"
+    Simple_Process_REPL.bar_qr
+    gen save
+
+namespace pb "Particle Board interface"
+    Simple_Process_REPL.particle_main
+    particle_help archive_log
+    reset_usb add product_add claim flash_image
+    release flash_tinker flash_test cloud_status
+    get_usb_and_id archive_log input_serial
+    dfu listen list identify inspect login
+    logout update setup_done _doctor _flash pcmd
+    name name_from
+
+as/build-AS

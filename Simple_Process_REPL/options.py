@@ -99,7 +99,18 @@ def create_parser(defaults):
     parser = get_argp()
 
     parser.add_argument(
-        "--config-file", dest="config_file", type=argparse.FileType(mode="r")
+        "--config-file",
+        dest="config_file",
+        help="Yaml configuration file to load.",
+        type=argparse.FileType(mode="r"),
+    )
+
+    parser.add_argument(
+        "-f",
+        "--file",
+        dest="file",
+        help="Filename of spr code to execute",
+        type=argparse.FileType(mode="r"),
     )
 
     parser.add_argument(
@@ -109,13 +120,18 @@ def create_parser(defaults):
         help="logfile to use",
     )
 
-    parser.add_argument("-r", "--repl", action="store_true", help="Start a REPL")
+    parser.add_argument(
+        "-r",
+        "--repl",
+        action="store_true",
+        help="Start a REPL",
+    )
 
     parser.add_argument(
         "-i",
         "--interactive",
         action="store_true",
-        help="Loop, to configure multiple devices.",
+        help="Loop, like Awk, do the autoexec or the cli commands in a loop.",
     )
 
     parser.add_argument("commands", nargs="*")
