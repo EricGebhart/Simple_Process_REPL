@@ -29,12 +29,17 @@ setup(
     license="MIT",
     entry_points={"console_scripts": ["SPR=Simple_Process_REPL.__main__:main"]},
     install_requires=[
-        "serial" "pythondialog",
+        "pyserial",
+        "pythondialog",
         "pyYAML",
         "regex",
         "python-barcode",
         "qrcode",
         "PIL",
+        "opencv-python",
+        "numpy",
+        "Image",
+        "Pyzbar",
         # "brother_ql",
     ],
 )

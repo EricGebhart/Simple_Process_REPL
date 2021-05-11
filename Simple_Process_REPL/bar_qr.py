@@ -7,6 +7,9 @@ import Simple_Process_REPL.appstate as A
 import os
 import logging
 
+import cv2
+from pyzbar import pyzbar
+
 logger = logging.getLogger()
 
 BarCodeType = "barcode"
@@ -164,3 +167,77 @@ def makeFailSticker(reason, code):
     case = reason + ": " + str(code)
     draw.text((x, y), case, fill=color, font=font)
     return img
+
+
+def read_barcodes(frame):
+    success = False
+    barcodes = pyzbar.decode(frame)
+    for barcode in barcodes:
+        x, y, w, h = barcode.rect
+        barcode_info = barcode.data.decode("utf-8")
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        font = cv2.FONT_HERSHEY_DUPLEX
+        cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 2.0, (255, 255, 255), 1)
+
+        A.set_in([Root, "value", barcode_info])
+        logging.info("Read Code: %s" % barcode_info)
+        success = True
+
+    return frame, success
+
+
+# Need to take a closer look at this stuff. It's not very nice.
+# read barcodes did show a nice green rectangle and the code but
+# now it goes away as soon as it matches, so no help.
+# maybe a way to get the rectangle back?  I don't know.
+# needs some expermenting I think.
+def read_barcode_from_camera():
+    """read a Bar or QR code from the camera and store it in the Application state."""
+    camera = cv2.VideoCapture(0)
+    ret = True
+    while ret:
+        ret, frame = camera.read()
+        frame, res = read_barcodes(frame)
+        # frame, res = read_code(frame)
+        if res:
+            break
+        cv2.imshow("Barcode/QR code reader", frame)
+        if cv2.waitKey(1) & 0xFF == 27:
+            break
+    camera.release()
+    cv2.destroyAllWindows()
+    return frame
+
+
+def read_code(image):
+    # initialize the cv2 QRCode detector
+    res = False
+    detector = cv2.QRCodeDetector()
+    # detect and decode
+    data, vertices_array, binary_qrcode = detector.detectAndDecode(image)
+    # if there is a QR code
+    # print the data
+    if vertices_array is not None:
+        A.set_in([Root, "value", data])
+        res = True
+
+    return image, res
+
+
+def video_to_frames(video, path_output_dir):
+    # extract frames from a video and save to directory as 'x.png' where
+    # x is the frame index
+    vidcap = cv2.VideoCapture(video)
+    count = 0
+    while vidcap.isOpened():
+        success, image = vidcap.read()
+        if success:
+            cv2.imwrite(os.path.join(path_output_dir, "%d.png") % count, image)
+            count += 1
+        else:
+            break
+    cv2.destroyAllWindows()
+    vidcap.release()
+
+
+# video_to_frames('../somepath/myvid.mp4', '../somepath/out')

@@ -53,7 +53,7 @@ namespace nw "Networking stuff, Wifi"
 
 namespace bq "Bar and QR code generation and printing"
     Simple_Process_REPL.bar_qr
-    gen save
+    gen save read_barcode_from_camera
 
 namespace pb "Particle Board interface"
     Simple_Process_REPL.particle_main
