@@ -1,0 +1,32 @@
+config:
+    REPL:
+        prompt        : 'SPR:> '
+
+    ssh:
+        pemfile       : 'server.pem'
+        ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
+
+    files:
+        logfile       : 'SPR.log'
+        loglevel      : 'debug'
+
+        config_file   : 'SPRConfig.yaml'
+
+    exec:
+        # function name to autoexec when asked to run
+
+        autoexec : ui/hello
+
+        help:
+
+        functions :
+
+        hooks:
+            startup:
+
+            #- as/showin config
+            #- ui/msgbox "Where ami"
+
+            shutdown:
+
+            - ui/msgbox "Goodbye have a nice day!"
