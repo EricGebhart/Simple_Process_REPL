@@ -23,9 +23,9 @@ exec:
     hooks:
         startup:
 
-          # - as/showin config
-          #- ui/msgbox "Where ami"
+        #- as/showin config
+        #- ui/msgbox "Where ami"
 
         shutdown:
 
-          - ui/msgbox "Goodbye have a nice day!"
+        - ui/msgbox "Goodbye have a nice day!"

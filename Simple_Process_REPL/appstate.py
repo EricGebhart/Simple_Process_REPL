@@ -232,8 +232,10 @@ def load_yaml_file(filename):
 def load_defaults(state_init, pkgname=None, yamlname=None):
     global AS
 
-    AS["config"] = merge(AS["config"], load_base_config())
-    # AS |= state_init  #### destructive...
+    bc = load_base_config()
+    if bc:
+        AS["config"] = merge(AS["config"], bc)
+        # AS |= state_init  #### destructive...
     AS = merge(AS, state_init)
     if pkgname is None:
         return AS
@@ -255,6 +257,8 @@ def load_pkg_config(pkgname, yamlname):
         some_yaml = yaml.load(
             pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader
         )
+    except FileNotFoundError:
+        pass
     except Exception as e:
         print(e)
     return some_yaml
