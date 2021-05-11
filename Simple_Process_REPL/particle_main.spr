@@ -1,0 +1,39 @@
+def id-it
+    "Id the board. get, reset then identify. Need the reset and pauses for consistent success"
+    pb/get pb/reset dev/wait pb/pause pb/pause pb/identify
+
+def id-it-w-dialog
+    "Give a start dialog, get, then identify."
+    ui/dialog-start pb/id-it
+
+def setup
+    "Update the os and mark the setup bit done."
+    pb/update dev/wait pb/pause pb/setup-done
+
+def nuke
+    "Try to reset the board to a sane state."
+    pb/tinker dev/wait pb/update dev/wait pb/get pb/id-it
+
+def testit
+    "flash the test, handshake and process the results."
+    pb/flash-test dev/wait pb/pause dev/handshake
+
+def ckit
+    "Id, and check it over, cloud status and inspect."
+    pb/id-it pb/cloud-status pb/inspect
+
+def claimit
+    "Do a product add followed by device add."
+    pb/product-add dev/wait pb/add
+
+def claimit-3ways
+    "Do a product add, device add, cloud claim."
+    pb/product-add dev/wait pb/add dev/wait claim
+
+def full-without-dialogs
+    "This is the whole process, dialogs only at the beginning and end."
+    pb/id-it pb/setup pb/add dev/wait pb/testit pb/flash as/archive-log
+
+def full-with-dialogs
+    "This is the whole process, dialogs everywhere."
+    id-it-w-dialog pb/setup pb/add dev/wait ui/dialog-test pb/testit ui/dialog-flash pb/flash as/archive-log

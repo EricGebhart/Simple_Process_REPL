@@ -128,8 +128,3 @@ def _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func):
 
             ser.close()
     return result
-
-
-_SPR_AS_ = {
-    "device": {"id": "", "name": "", "path": "", "serial_number": "", "last_id": ""}
-}

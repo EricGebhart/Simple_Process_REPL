@@ -65,6 +65,7 @@ def quit_spr():
 
 # define all the symbols for the things we want to do.
 _symbols = [
+    ["ns", r.ns, "Show the current namespace."],
     ["ls-ns", r.list_namespaces, "list namespaces."],
     ["ns-tree", r.list_namespace_tree, "list the namespaces and their symbols."],
     ["quit", quit_spr, "Quit"],
@@ -169,19 +170,17 @@ def do_something():
       Do something one time. the cli commands or the autoexec,
     """
 
-    core = pkgutil.get_data(__name__, "core.spr")
-    logger.info(core)
     load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
 
     commands = A.get_in(["args", "commands"])
 
     # Each of these should be a list of commands to execute.
-    startup_hook = []
     startup_hook = A.get_in(["config", "exec", "hooks", "startup"])
 
     logger.debug("startup hook: %s", startup_hook)
 
-    r.eval_cmds(startup_hook)
+    if startup_hook:
+        r.eval_cmds(startup_hook)
 
     # Load a file if we got one.
     filereader = A.get_in(["args", "file"])

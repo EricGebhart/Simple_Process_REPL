@@ -1,0 +1,7 @@
+def input-code
+    "Dialog to get a string to encode to a bar or QR code"
+    ui/input-string-to bar-QR value
+
+def print-codes
+    "Dialogs to get a string, encode it, and print it as some number of Bar or QR codes."
+    bq/input-code ui/print-bcqr

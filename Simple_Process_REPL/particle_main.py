@@ -8,8 +8,8 @@ import os
 
 """
 The purpose of this module is to Serve as a liaison between the
-Interpreter/REPL and the device interface layer, which in this case is
-defined in particle.py
+Interpreter/REPL and the device interface layer, the particle-cli,
+which in this case is defined in particle.py
 """
 
 # This is a map which is merged with the application state map.

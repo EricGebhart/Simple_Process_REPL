@@ -5,97 +5,26 @@ ssh:
     pemfile       : 'server.pem'
     ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
 
-# anything less than this many digits get's left padded with 0's.
-bcqr_minimum_length: 6
-
-QR_code:
-    filename_suffix: 'QR'
-    prefix: 'K1'
-    suffix: 'A'
-    save_path: 'qrcodes'
-    font: DejaVuSans.ttf
-    font_size: 18
-barcode:
-    filename_suffix: 'BC'
-    prefix: ''
-    suffix: ''
-    save_path: 'barcodes'
-    save_options:
-        module_height: 8
-        text_distance: 2
-
-print_commands:
-    Linux:
-        default: 'echo "Sorry I dont know how to print this %s"'
-        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
-    Windows:
-        default: 'echo "Sorry I dont know how to print this %s"'
-        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
-    Darwin:
-        default: 'echo "Sorry I dont know how to print this %s"'
-        brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
-
-images:
-    flash   : 'foo.bin'
-    test    : 'fooTest.bin'
-
 files:
     logfile       : 'SPR.log'
     loglevel      : 'debug'
 
     config_file   : 'SPRConfig.yaml'
 
-serial:
-    baudrate      : 9600
-
-test:
-    start_string    : 'Initial response from Test'
-    response_string : '!'
-    fail_regex      : '^F:.*'
-    done_regex      : '^I:Test All Done'
-    do_qqc_regex    : '^I:Now Setting Serial Number'
-    do_qqc_func     : input-serial
-
-#number of seconds to wait for a response from board and from the test.
-waiting:
-    timeout      : 30
-    pause_time   : 5
-
-
-dialogs :
-    title : 'Simple Process REPL'
-    plugin_start     : 'Plug in a new device, press OK to start'
-    ready_to_test    : 'Device: $device_id, press OK to test'
-    ready_to_flash   : 'Device: $device_id, press OK to flash'
-    device_failed    : 'Device Failed!'
-    device_success   : 'Device Succeeded!'
-    start_again      : 'Setup another device ? '
-    continue_to_next : 'Choice?  Press Y/y to congure another device: '
-    input_serial     : 'Please input the 8 digit serial number.'
-    images_seen      : 'Please verify the test image is shown on the screen.'
-    serial_is_correct : 'This serial number is correct?'
-    serial_must      : 'Serial Number must be 8 digits.'
-    continue         : 'Ready to Continue ?'
-    process_finish   : 'Turn the Power Switch Off and Disconnect the Test Battery and USB.'
-    hellomsg         : "You have received this message because your autoexec attribute is
-        set to 'hello' or None, or can't be found. Maybe make some new commands
-        to create some processes. When you get a command you want to run
-        automatically set autoexec exec/autoexec in the config file to it's name.
-        Here are the commands the interpreter currently recognizes."
-
 exec:
     # function name to autoexec when asked to run
 
-    autoexec : hello
+    autoexec : ui/hello
 
-    help: app-help
+    help:
 
     functions :
 
     hooks:
         startup:
 
-          - ui/msgbox "Where ami"
+          # - as/showin config
+          #- ui/msgbox "Where ami"
 
         shutdown:
 

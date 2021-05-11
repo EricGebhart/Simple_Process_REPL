@@ -4,7 +4,6 @@ from barcode.writer import ImageWriter
 import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import Simple_Process_REPL.appstate as A
-import Simple_Process_REPL.dialog_cli as D
 import os
 import logging
 
@@ -13,18 +12,20 @@ logger = logging.getLogger()
 BarCodeType = "barcode"
 QRCodeType = "QR_code"
 
+Root = "bar-QR"
+
 
 def gen(codetype=BarCodeType):
     "Generate a bar code for the current barQR value."
     try:
-        v = A.get_in(["barQR", "value"])
+        v = A.get_in([Root, "value"])
         if codetype == BarCodeType:
             code = create_bar_code(v)
         elif codetype == QRCodeType:
             code = create_qr_code(v)
 
-        A.set_in(["barQR", codetype, "code", code])
-        A.set_in(["barQR", codetype, "saved", ""])
+        A.set_in([Root, codetype, "code", code])
+        A.set_in([Root, codetype, "saved", ""])
 
     except Exception as e:
         logger.error(e)
@@ -32,19 +33,19 @@ def gen(codetype=BarCodeType):
 
 def save(codetype=BarCodeType):
     "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
-    sn = A.get_in(["barQR", "value"])
-    code = A.get_in(["barQR", codetype, "code"])
+    sn = A.get_in([Root, "value"])
+    code = A.get_in([Root, codetype, "code"])
 
     if codetype == BarCodeType:
-        fn = get_bc_filename(sn)
-        save_barcode(code, fn)
+        fname = get_bc_filename(sn)
+        save_barcode(code, fname)
         # because the extension is automatic on the save.
-        fn = "%s%s" % (fn, ".png")
+        fname = "%s%s" % (fname, ".png")
     elif codetype == QRCodeType:
-        fn = get_qr_filename(sn)
-        save_qr_code(code, fn)
+        fname = get_qr_filename(sn)
+        save_qr_code(code, fname)
 
-    A.set_in(["barQR", codetype, "saved", fn])
+    A.set_in([Root, codetype, "saved", fname])
     return fn
 
 
@@ -151,6 +152,7 @@ def create_qr_code(s):
 
 
 def makeFailSticker(reason, code):
+    """make a failure sticker.  Currently Unused"""
     img = Image.new("L", (200, 100), 255)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype("DejaVuSans.ttf", size=24)
@@ -162,13 +164,3 @@ def makeFailSticker(reason, code):
     case = reason + ": " + str(code)
     draw.text((x, y), case, fill=color, font=font)
     return img
-
-
-_SPR_AS_ = {
-    "barQR": {
-        "src": [],
-        "value": "",
-        "QR_code": {"code": None, "filename": "", "saved": ""},
-        "barcode": {"code": None, "filename": "", "saved": ""},
-    }
-}

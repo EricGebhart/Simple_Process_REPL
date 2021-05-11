@@ -15,9 +15,9 @@ def check_connection():
         res = S.do_cmd(["nmcli", "device"])
         logger.debug(res)
         if len(re.findall("connected", res)):
-            A.set_in(["wifi-connected", True])
+            A.set_in(["network", "wifi-connected", True])
         else:
-            A.set_in(["wifi-connected", False])
+            A.set_in(["network", "wifi-connected", False])
             return False
         return True
     return False
@@ -77,6 +77,3 @@ def connect_tunnel():
 def sendlog():
     "Send the log somewhere."
     pass
-
-
-_SPR_AS_ = {"wifi-connected": False}

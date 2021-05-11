@@ -20,7 +20,9 @@ def application_help():
     application layer, which is specific to the functionality
     that we are interfacing with.
     """
-    r.eval_cmd(A.get_in_config(["exec", "help"]))
+    helpfn = A.get_in_config(["exec", "help"])
+    if helpfn:
+        r.eval_cmd(A.get_in_config(["exec", "help"]))
 
 
 def help():
@@ -32,21 +34,14 @@ def help():
     )
 
     application_help()
-
-    r.funcptr_help()
-
-    r.specials_help()
-
-    r.compound_help()
-
-    print("\n\n")
+    r.help()
 
 
 def hello():
     "Just in case we don't know what to do."
     msgcli(A.get_in_config(["dialogs", "hellomsg"]))
     help()
-    msgcli(A.get_in_config(["dialogs", "continue"]))
+    # msgcli(A.get_in_config(["dialogs", "continue"]))
 
 
 def input_string(msg):

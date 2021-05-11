@@ -3,8 +3,6 @@ namespace as "Application State functionality"
     showin
     set_in
     set_in_from
-    merge_yaml
-    build_AS
     eval_default_process
     save_config
     load_config
@@ -37,7 +35,7 @@ namespace ui "User interface using dialog and cli"
     save_bcqr
     print_bcqr
 
-namespace sh "subprocesses, shell etc."
+namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
     do rm sleep
 
@@ -66,5 +64,3 @@ namespace pb "Particle Board interface"
     dfu listen list identify inspect login
     logout update setup_done _doctor _flash pcmd
     name name_from
-
-as/build-AS

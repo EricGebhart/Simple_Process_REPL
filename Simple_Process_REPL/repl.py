@@ -1,3 +1,4 @@
+import pkgutil
 import traceback
 import readline
 import logging
@@ -6,6 +7,7 @@ import os
 import atexit
 import code
 from inspect import signature, _empty
+from Simple_Process_REPL.appstate import load_pkg_yaml
 
 # The same configuration can be stored as instructions in a file read
 # by the library with a single call. If myreadline.rc contains:
@@ -157,9 +159,47 @@ def merge_ns_states():
 
 
 def import_lib(module, *funclist):
-    """import functions from a python module."""
+    """import functions from a python module into the current namespace."""
     global NS
     append_funcs(NS["symbols"], module, *funclist)
+    import_lib_spr(module)
+
+
+def is_blank_line(line):
+    """test if text is blank or not."""
+    return re.match(r"^[\s]*$", line)
+
+
+def load(reader):
+    """Load a text reader (hopefully an spr file) into the interpreter."""
+    txt = ""
+    for line in reader:
+        if len(line) == 0 or is_blank_line(line):
+            if len(txt) > 0:
+                eval_cmd(txt)
+                txt = ""
+        else:
+            # get rid of newlines so the interpreter
+            # sees a continuous line.
+            txt += re.sub("\n", " ", line)
+
+
+def import_lib_spr(module):
+    """Look for an spr file with the same name in the module and load it if found."""
+    root, name = module.split(".")
+    sprname = name + ".spr"
+    yname = name + ".yaml"
+    logger.info("import spr %s: %s" % (root, sprname))
+    try:
+        init = pkgutil.get_data(root, sprname).decode("utf-8").split("\n")
+        load(init)
+    except Exception:
+        pass
+
+    try:
+        load_pkg_yaml(module, yname)
+    except Exception:
+        pass
 
 
 def create_namespace(name, docstr, module, *funclist):
@@ -175,6 +215,21 @@ def create_namespace(name, docstr, module, *funclist):
     }
     Root[name] = ns
     in_ns(name)
+    import_lib_spr(module)
+
+
+def ns():
+    """Which namespace are we in?"""
+    global Current_NS
+    global NS
+    ns = NS
+    if Current_NS == "/":
+        print("\nNamepace: %s\n SPR Root Namespace.\n\n" % Current_NS)
+    else:
+        print(
+            "\nNamespace: %s\n   Module: %s\n    %s\n\n"
+            % (Current_NS, ns["name"], ns["doc"])
+        )
 
 
 def in_ns(ns=None):
@@ -197,7 +252,7 @@ def in_ns(ns=None):
     else:
         Current_NS = ns
         NS = Root[ns]
-    # logger.info("In Namespace: %s" % Current_NS)
+    logger.info("In Namespace: %s" % Current_NS)
 
 
 def append_symbols(st, slist):
@@ -281,15 +336,23 @@ def def_partial(name, helpstr, commandstr):
 
 
 def _def_symbol(name, helpstr, commandstr, stype="dolist"):
-    """Define a new symbol in the symbol table."""
-    logging.info("define symbol: %s, %s, %s, %s" % (name, commandstr, helpstr, stype))
-    Root[name] = dict(fn=commandstr, doc=helpstr, stype=stype)
+    """Define a new symbol in the symbol table of the current namespace."""
+    global NS
+    logging.info(
+        "Define: %s/%s, %s, %s, %s" % (Current_NS, name, commandstr, helpstr, stype)
+    )
+    s = dict(fn=commandstr, doc=helpstr, stype=stype)
+    if NS == Root:
+        NS[name] = s
+    else:
+        NS["symbols"][name] = s
 
 
 def get_ns(s):
     global Root
     namespace = None
     name = s
+    ns = None
     if s.find("/") >= 0:
         ns, name = s.split("/")
         namespace = Root.get(ns)

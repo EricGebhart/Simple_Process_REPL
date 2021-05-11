@@ -102,15 +102,6 @@ def make_dict(keys):
     return v
 
 
-def build_AS():
-    """Merge the _SPR_AS_ trees from the modules into the application state."""
-    global AS
-
-    logger.info("Building Application state from Namespaces.")
-
-    AS = merge(AS, r.merge_ns_states())
-
-
 def get_in(keys):
     """Get something out of the Application state."""
     global AS
@@ -155,7 +146,8 @@ def get_in_device(key):
 def showin(*keys):
     """Show a sub-tree in the Application State"""
     if len(keys) == 0:
-        qqc = AS
+        # remove _Root_ from showing unless asked.
+        qqc = AS | {"_Root_": None}
     else:
         qqc = get_in(*keys)
     logger.info(yaml.dump(qqc))
@@ -203,6 +195,8 @@ def eval_default_process():
 
 
 def merge_yaml(y):
+    """Merge a yaml data structure into the Application state."""
+    logger.info("Merge Yaml: %s:" % y)
     merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
@@ -229,7 +223,7 @@ def save_yaml_file(filename, dictionary):
 def load_yaml_file(filename):
     "load a dictionary from a yaml file"
     if os.path.isfile(filename):
-        logger.info("Loading Configuration: %s" % filename)
+        logger.info("Loading YAML: %s" % filename)
         with open(filename) as f:
             someyaml = yaml.load(f, Loader=yaml.SafeLoader)
         return someyaml
@@ -247,15 +241,17 @@ def load_defaults(state_init, pkgname=None, yamlname=None):
     return AS
 
 
+def load_pkg_yaml(pkgname, yamlname):
+    """load a yaml file from a package into the application state."""
+    global AS
+    AS = merge(AS, load_pkg_config(pkgname, yamlname))
+
+
 # import pkg_resources
 def load_pkg_config(pkgname, yamlname):
     """load a configuration file from a package."""
-    logger.info("Loading Configuration: %s: %s" % (pkgname, yamlname))
+    logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
     return yaml.load(pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader)
-    # f = pkg_resources.resource_filename(pkgname, yamlname)
-    # print(f)
-    # print(load_yaml_file(f))
-    # return load_yaml_file(f)
 
 
 def load_base_config():
