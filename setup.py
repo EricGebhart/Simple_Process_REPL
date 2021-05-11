@@ -24,13 +24,12 @@ setup(
     author_email="e.a.gebhart@gmail.com",
     packages=["Simple_Process_REPL"],
     include_package_data=True,
-    package_data={"": ["*.yaml"]},
+    package_data={"": ["*.yaml", "*.spr", "*.txt"]},
     scripts=[],
     license="MIT",
     entry_points={"console_scripts": ["SPR=Simple_Process_REPL.__main__:main"]},
     install_requires=[
-	"serial"
-        "pythondialog",
+        "serial" "pythondialog",
         "pyYAML",
         "regex",
         "python-barcode",
