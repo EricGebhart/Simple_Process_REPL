@@ -1,0 +1,7 @@
+in-ns
+
+partial def "Define a New Symbol." -def-
+
+def quit "Quit SPR" -quit-
+
+partial import "Import an SPR/Python library." -import-

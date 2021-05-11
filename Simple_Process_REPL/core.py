@@ -32,94 +32,6 @@ logger = logs.setup_logger()
 Libs = []
 
 
-def load_file(filename):
-    """load an SPR file into the application."""
-    with open(filename, "r") as reader:
-        load(reader)
-
-
-def is_blank_line(line):
-    """test if text is blank or not."""
-    return re.match(r"^[\s]*$", line)
-
-
-def load(reader):
-    """Load a text reader (hopefully an spr file) into the interpreter."""
-    txt = ""
-    for line in reader:
-        logger.info(line)
-        if is_blank_line(line):
-            if len(txt) > 0:
-                r.eval_cmd(txt)
-            txt = ""
-        else:
-            txt += re.sub("\n", " ", line)
-
-
-def quit_spr():
-    shutdown_hook = []
-    shutdown_hook = A.get_in(["config", "exec", "hooks", "shutdown"])
-    r.eval_cmds(shutdown_hook)
-    exit()
-
-
-# define all the symbols for the things we want to do.
-_symbols = [
-    ["ns", r.ns, "Show the current namespace."],
-    ["ls-ns", r.list_namespaces, "list namespaces."],
-    ["ns-tree", r.list_namespace_tree, "list the namespaces and their symbols."],
-    ["quit", quit_spr, "Quit"],
-]
-
-
-# Name, function, number of args, help string
-# Commands we want in the repl which can take arguments.
-_specials = [
-    [
-        "help",
-        r.help,
-        -1,
-        "Get help for all, or a namespace or function; help <name>",
-    ],
-    [
-        "def",
-        r.def_symbol,
-        -1,
-        "Define a new function; def <name> 'helpstr' <list of commands>",
-    ],
-    [
-        "import",
-        r.import_lib,
-        -1,
-        "Import a python library into the current namespace.; import spam.ham ham eggs",
-    ],
-    [
-        "partial",
-        r.def_partial,
-        -1,
-        "Define a new partial function; def <name> 'helpstr' <list of partial command>",
-    ],
-    [
-        "in-ns",
-        r.in_ns,
-        1,
-        "change to a different namespace or '/'; in-ns <namespace>",
-    ],
-    [
-        "load",
-        load_file,
-        1,
-        "Load an spr code file; load <filename>",
-    ],
-    [
-        "namespace",
-        r.create_namespace,
-        -1,
-        "Create a Namespace and import some python into it; namespace spam spam.ham ham eggs.",
-    ],
-]
-
-
 # endless loop with dialog next y/n.
 def interactive_loop(commands=None):
     """Execute the autoexec command in an interactive
@@ -170,7 +82,7 @@ def do_something():
       Do something one time. the cli commands or the autoexec,
     """
 
-    load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
+    r.load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
 
     commands = A.get_in(["args", "commands"])
 
@@ -186,7 +98,7 @@ def do_something():
     filereader = A.get_in(["args", "file"])
 
     if filereader:
-        load(filereader)
+        r.load(filereader)
 
     # Maybe Run the repl.
     if A.get_in(["args", "repl"]):
@@ -215,7 +127,25 @@ def init(symbols, specials, parser):
     # A.set({"_Current_NS_": r.Current_NS})
 
     # Add fundamental commands to the root level of the interpreter.
-    r.root_symbols(_symbols, _specials)
+    r._import_(
+        "Simple_Process_REPL.repl",
+        [
+            "ns",
+            "ls_ns",
+            "ns_tree",
+            "help",
+            "_def_",
+            "_import_",
+            "partial",
+            "in_ns",
+            "namespace",
+            "load",
+            "_quit_",
+        ],
+    )
+
+    # define all the symbols for the things we want to do.
+    # r.root_symbols(_symbols, _specials)
     r.root_symbols(symbols, specials)
 
     do_something()

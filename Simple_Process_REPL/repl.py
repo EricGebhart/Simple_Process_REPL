@@ -7,7 +7,7 @@ import os
 import atexit
 import code
 from inspect import signature, _empty
-from Simple_Process_REPL.appstate import load_pkg_yaml
+from Simple_Process_REPL.appstate import load_pkg_yaml, get_in
 
 # The same configuration can be stored as instructions in a file read
 # by the library with a single call. If myreadline.rc contains:
@@ -29,67 +29,6 @@ except Exception:
 """
 This is a repl/interpreter with almost no syntax.
 It currently recognizes words, strings and numbers.
-
-The symbol tables are defined by the user.  To start,
-symbols which point to functions should be added to the symbol
-table.  From there, new symbols can be made by listing symbols
-together.  This is a poor mans lisp with no parentheses.
-
-There are two symbol tables. One is a table of what could
-be considered keywords to invoke functions, or lists of keywords
-which ultimately invoke functions.
-
-The other is a table of special symbols which take parameters.
-specials are functions which take arguments. Since we really have
-no syntax this is a difficulty. Specials operate on the entire
-command line and cannot be listed together like the normal
-symbols can. Finding a special consists of looking up the first
-word in the command, if found the special is evaluated with
-parameters given. If the command is not a special, it is passed
-on to be evaluated by normal symbol processing.
-
-The two specials defined here are 'def' and 'set'. def allows
-the creation of a new symbol in the symbol table, interactively
-from the repl.  ie. 'def some-new-command 'help string' some list
-of known symbols'
-
-In the user space, save and load a configuration file is at least recommended
-so that a configuration can be saved or loaded from the repl.
-
-The symbol table is the lookup table for any functions you wish
-to use in the repl, or in evaluating process strings.
-
-A symbol is one of two things.
-1. A function which will take no arguments or they are
-provided in the symbol definition.  Arguments are not rebound.
-2. A string of symbols.
-
-It is possible to expose any functionality you wish, with these
-limitations.
-
- Example:
- import repl as r
- symbols = [
-     ['wifi', connect_wifi, 'Connect to wifi using nmtui if not connected.']
-     ['list', P.list_usb,   'List the particle boards connected to USB.']
-     ['start', 'wifi list', 'Connect wifi and list the boards.']
- ]
- r.init_symbol_table(symbols)
-
-The specials table exists because it's handy to do things that take arguments.
-like loading or saving a config file or defining a new symbol.
-The normal symbols cannot be mixed with the special symbols, although
-it should be possible to create a symbol which invokes a special in
-a static argument manner.
-
-If the number of args is -1 that indicates a varargs function and
-the number of args will not be validated.
-
-    ['name', function, nargs, 'helpstr']
-
-    ['def', def_symbol, -1,
-     "Define a new function; def <name> 'helpstr' <list of commands>"]
-
 """
 
 
@@ -195,7 +134,7 @@ def import_lib_spr(module):
         pass
 
 
-def create_namespace(name, docstr, module, *funclist):
+def namespace(name, docstr, module, *funclist):
     global Root
     logger.info("Creating Namespace: %s from Python module: %s" % (name, module))
     # logger.info(*funclist)
@@ -211,7 +150,7 @@ def create_namespace(name, docstr, module, *funclist):
     import_lib_spr(module)
 
 
-def import_lib(module, *funclist):
+def _import_(module, *funclist):
     """import functions from a python module into the current namespace."""
     global NS
     if NS == Root:
@@ -322,13 +261,13 @@ def append_specials(st, slist):
     return st
 
 
-def def_symbol(name, helpstr, commandstr):
+def _def_(name, helpstr, commandstr):
     """define a new symbol which is a 'dolist' of other symbols.
     def myhelp 'helptext' help log help bcqr"""
     _def_symbol(name, helpstr, commandstr, stype="dolist")
 
 
-def def_partial(name, helpstr, commandstr):
+def partial(name, helpstr, commandstr):
     """define a new function from an fptr function which has some
     of it's arguments filled in.
 
@@ -449,7 +388,7 @@ def list_namespace(ns=Root):
             print("   %s" % k)
 
 
-def list_namespace_tree():
+def ns_tree():
     """List the namespaces and all of their symbols """
     list_namespace()
     print("\n")
@@ -463,7 +402,7 @@ def list_namespace_tree():
                 print("   %s" % j)
 
 
-def list_namespaces(ns=None):
+def ls_ns(ns=None):
     """List the name spaces"""
     # So that the signature shows up nicely in the doc.
     if ns is None:
@@ -492,7 +431,7 @@ def help(args=None):
         all_dolist_help(Root)
         print("=============================================")
         helpful_cmds()
-        # list_namespaces()
+        # ls_ns()
 
     else:
         # for sym in args:
@@ -759,6 +698,19 @@ class HistoryConsole(code.InteractiveConsole):
     def save_history(self, histfile):
         readline.set_history_length(1000)
         readline.write_history_file(histfile)
+
+
+def load_file(filename):
+    """load an SPR file into the application."""
+    with open(filename, "r") as reader:
+        load(reader)
+
+
+def _quit_():
+    shutdown_hook = get_in(["config", "exec", "hooks", "shutdown"])
+    if shutdown_hook:
+        eval_cmds(shutdown_hook)
+    exit()
 
 
 def repl(prompt="SPR:> ", init=None):
