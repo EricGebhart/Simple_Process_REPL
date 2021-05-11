@@ -1,0 +1,18 @@
+# Do stuff with SPR.
+import Simple_Process_REPL.appstate as A
+import os
+import logging
+
+logger = logging.getLogger()
+
+# Name where we keep our stuff.
+Root = "%s"
+
+# Get something out of my part of the config.
+# A.get_in_config([Root, "foo"])
+
+# Put something into my part of the Appstate.
+# A.set_in([Root, "foo" "bar" 10])
+
+# Get something out of my part of the Appstate.
+# A.get_in([Root, "foo" "bar"])

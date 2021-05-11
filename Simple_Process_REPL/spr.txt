@@ -1,0 +1,1 @@
+def foo "help text" ui/msgbox "hello"

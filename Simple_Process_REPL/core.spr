@@ -64,3 +64,7 @@ namespace pb "Particle Board interface"
     dfu listen list identify inspect login
     logout update setup_done _doctor _flash pcmd
     name name_from
+
+in-ns
+
+import Simple_Process_REPL.mkext new_spr_extension_project

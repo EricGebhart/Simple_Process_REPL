@@ -1,0 +1,30 @@
+import pathlib
+
+try:
+    # Use setup() from setuptools(/distribute) if available
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
+HERE = pathlib.Path(__file__).parent
+README = (HERE / "README.md").read_text()
+
+from Simple_Process_REPL import __version__
+
+setup(
+    name=%s,
+    version=__version__,
+    # Your name & email here
+    long_description=README,
+    long_description_content_type="text/markdown",
+    description="Fix Me!",
+    url="https://github.com/Fix Me!",
+    author="Fix Me",
+    author_email="Fix Me",
+    packages=["%s"],
+    include_package_data=True,
+    package_data={"": ["*.yaml", "*.spr"]},
+    scripts=[],
+    license="MIT",
+    install_requires=["Simple_Process_REPL"],
+)

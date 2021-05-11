@@ -251,7 +251,13 @@ def load_pkg_yaml(pkgname, yamlname):
 def load_pkg_config(pkgname, yamlname):
     """load a configuration file from a package."""
     logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
-    return yaml.load(pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader)
+    try:
+        some_yaml = yaml.load(
+            pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader
+        )
+    except Exception as e:
+        print(e)
+    return some_yaml
 
 
 def load_base_config():

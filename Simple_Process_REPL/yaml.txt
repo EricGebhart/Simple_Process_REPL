@@ -1,0 +1,5 @@
+%s:
+    foo: 10
+config:
+    %s:
+        bar: "this is bar"

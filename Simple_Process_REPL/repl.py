@@ -158,13 +158,6 @@ def merge_ns_states():
     return res
 
 
-def import_lib(module, *funclist):
-    """import functions from a python module into the current namespace."""
-    global NS
-    append_funcs(NS["symbols"], module, *funclist)
-    import_lib_spr(module)
-
-
 def is_blank_line(line):
     """test if text is blank or not."""
     return re.match(r"^[\s]*$", line)
@@ -215,6 +208,17 @@ def create_namespace(name, docstr, module, *funclist):
     }
     Root[name] = ns
     in_ns(name)
+    import_lib_spr(module)
+
+
+def import_lib(module, *funclist):
+    """import functions from a python module into the current namespace."""
+    global NS
+    if NS == Root:
+        append_funcs(NS, module, *funclist)
+    else:
+        append_funcs(NS["symbols"], module, *funclist)
+
     import_lib_spr(module)
 
 
