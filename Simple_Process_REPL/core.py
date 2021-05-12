@@ -1,18 +1,11 @@
-from sys import exit
 import pkgutil
-import regex as re
 
 # import logging
 import Simple_Process_REPL.logs as logs
 import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.appstate as A
 
-# from Simple_Process_REPL.device import device
-# from Simple_Process_REPL.subcmd import subcmd
 import Simple_Process_REPL.dialog as D
-
-# from Simple_Process_REPL.network import network
-# from Simple_Process_REPL.bar_qr import bar_qr
 
 """
 This file defines the symbol table for the interpreter,

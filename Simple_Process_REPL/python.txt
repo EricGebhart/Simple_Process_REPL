@@ -1,5 +1,6 @@
 # Do stuff with SPR.
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 import os
 import logging
 
@@ -7,6 +8,30 @@ logger = logging.getLogger()
 
 # Name where we keep our stuff.
 Root = "%s"
+
+yaml = u.dump_pkg_yaml(%s, "%s.yaml")
+
+# format and fill in as you wish.
+HelpText = (
+    """
+%s: - Some subtitle.  -
+
+I do this.
+
+%s uses these parts of the Application state.
+
+%yaml
+
+This is how I work.
+
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
+
 
 # Get something out of my part of the config.
 # A.get_in_config([Root, "foo"])

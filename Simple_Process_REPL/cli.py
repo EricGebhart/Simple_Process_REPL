@@ -1,9 +1,32 @@
-import os
 import logging
 import regex as re
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 
 logger = logging.getLogger()
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "dialog.yaml")
+
+HelpText = (
+    """
+cli: An interface to the commandline using python input().
+
+This module provides a few cli prompts, and messages.
+it is a partial match to the interface presented in the dialog module.
+
+There is currently no stateful data, although that should change.
+
+The cli uses the same parts of the configuration as the dialog module.
+
+%s
+
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
 
 
 def hello():

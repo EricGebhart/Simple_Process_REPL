@@ -3,9 +3,43 @@ import logging
 import regex as re
 
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 import Simple_Process_REPL.subcmd as S
 
 logger = logging.getLogger()
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "network.yaml")
+
+# format and fill in as you wish.
+HelpText = (
+    """
+network: - Network type stuff Currently only wifi for linux.  -
+
+Uses dialogs and nmcli, network-manager, to establish a wifi connection.
+
+network uses these parts of the Application state.
+
+%s
+
+connect-wifi always checks to see if there is a connection. If there is,
+it simply remembers it.
+
+The first time, on a fresh system, if network manager has never connected,
+connect-wifi will search for networks and present a menu of choices.
+This usually only happens once and only if the computer has never connected
+to the wifi in that location.
+
+At some point there may be some ssh type commands here. Currently none of them
+do anything.
+
+"""
+    % yaml
+)
+
+
+def help():
+    logger.info("network help")
+    print(HelpText)
 
 
 def check_connection():

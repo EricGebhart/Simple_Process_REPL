@@ -6,7 +6,8 @@ import os
 import atexit
 import code
 from inspect import signature, _empty
-from Simple_Process_REPL.appstate import load_pkg_yaml, get_in, get_in_config
+from Simple_Process_REPL.appstate import merge_pkg_yaml, get_in, get_in_config
+import Simple_Process_REPL.utils as u
 
 # The same configuration can be stored as instructions in a file read
 # by the library with a single call. If myreadline.rc contains:
@@ -38,6 +39,36 @@ Current_NS = "/"
 NS = Root
 
 logger = logging.getLogger()
+
+# yaml = u.load_pkg_yaml("Simple_Process_REPL", "bar_qr.yaml")
+
+# # format and fill in as you wish.
+# HelpText=("""
+# bar-qr: - Bar and QR Code Scanning, generation, saving and printing.  -
+
+# Recognized codetypes are either 'barcode' and 'QR-code'.
+
+# Encode any value with preset prefix and suffixes as set in the configuration
+# into a barcode or QR-code.
+
+# Read a bar or QR code using the webcam. Currently keeps trying until it
+# catches it or an escape key is pressed.
+
+# Bar-qr uses this part of the Application state.
+
+# %s
+
+# When encoding the value is retrieved from bar-QR/value.
+# When scanning with the webcam the resulting value will be placed in bar-QR/value.
+
+# If working exclusively with bar or QR codes it may be beneficial to define
+# partials for some functions, which always require a code type.
+
+# """ % yaml)
+
+
+# def help():
+#     print(HelpText)
 
 
 def root_symbols(symbols, specials):
@@ -132,7 +163,7 @@ def import_lib_spr(module):
         pass
 
     try:
-        load_pkg_yaml(module, yname)
+        merge_pkg_yaml(module, yname)
     except Exception:
         pass
 
@@ -382,6 +413,10 @@ def dolist_help(k, v):
 def namespace_help(key, ns):
     """Format an namespace symbol's help."""
     print("\n\nNamespace: %s\n   Module: %s\n    %s\n\n" % (key, ns["name"], ns["doc"]))
+    try:
+        eval_cmd("%s/help" % key)
+    except Exception:
+        pass
     all_fptr_help(ns["symbols"])
     all_dolist_help(ns["symbols"])
 

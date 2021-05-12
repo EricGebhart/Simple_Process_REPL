@@ -7,6 +7,22 @@ import logging
 logger = logging.getLogger()
 AS = A.AS
 
+# format and fill in as you wish.
+HelpText = """
+Subcmd: - SPR's subprocess interface, ie. shell.  -
+
+Use the sub process command library to execute system commands.
+
+Roughly equivalent, but not, to python's os.system().
+
+https://docs.python.org/3/library/subprocess.html
+
+"""
+
+
+def help():
+    print(HelpText)
+
 
 def rm(filename):
     """remove file at path."""

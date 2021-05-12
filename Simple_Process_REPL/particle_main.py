@@ -1,4 +1,5 @@
 import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 from Simple_Process_REPL.dialog import yes_no, inputbox, msg
 import Simple_Process_REPL.particle as P
 import regex as re
@@ -20,6 +21,42 @@ which in this case is defined in particle.py
 # in case we need it.
 
 logger = logging.getLogger()
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "particle_main.yaml")
+
+# format and fill in as you wish.
+HelpText = (
+    """
+particle: - A particle.io device interface.  -
+
+Interact with particle boards.  list, identify, claim, flash, test, etc.
+
+particle uses these parts of the Application state
+
+%s
+
+When working with a Particle.io board, the first step is to 'get'
+the id and device. There are many commands here which need the usb device
+or the device id. So the first step is always a `get`
+
+A 'get' will populate the device in the Application
+state with the currently connected device.
+
+After that, it is possible to continue working with that device
+to update it, set it's setup bit, flash it, handshake with it etc.
+
+If a repeatable process is desired, simply create one by defining more
+complex commands.
+
+Working  in the REPL with particle boards is much nicer than the particle-cli.
+
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
 
 
 def see_images():

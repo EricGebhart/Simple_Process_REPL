@@ -1,13 +1,13 @@
 config:
-    images:
-        #flash   : '../boron-system-part1@2.0.1.bin'
-        flash   : 'R5Bin.bin'
-        test    : 'R5Test.bin'
-        tinker  : 'tinker-0.8.0-rc.27-boron.bin'
-
     particle:
         # Used by Particle product add (Beta) invalid command at 1.52.
         product    : 'XXXXX'
+
+        images:
+            #flash   : '../boron-system-part1@2.0.1.bin'
+            flash   : 'R5Bin.bin'
+            test    : 'R5Test.bin'
+            tinker  : 'tinker-0.8.0-rc.27-boron.bin'
 
 device:
   id: ''

@@ -5,23 +5,44 @@ import Simple_Process_REPL.logs as logs
 import os
 import logging
 import Simple_Process_REPL.repl as r
+import Simple_Process_REPL.utils as u
 from Simple_Process_REPL.dialog import hello
 import yaml
 
 logger = logging.getLogger()
 
+# format and fill in as you wish.
+HelpText = """
+appstate: - Manage SPR's Application state.  -
+
+Everything needed to load, save, copy, set, and merge data
+in the Application state. Yaml files and merging etc.
+
+Appstate is the Application State.
+
+When writing python code to interact with SPR the appstate functions
+get_in, set_in, get_in_config, and get_in_device are of primary
+use.
+
+Within SPR code, showin, set-in, and set-in-from are of primary use.
+
+"""
+
+
+def help():
+    print(HelpText)
+
+
 # Application state, which will contain merged data from the application layer.
 AS = {
     "config": {},
-    "args": {},
+    "args": {"commands": {}},
     "defaults": {
-        "config_file": "SPR-config.yaml",
+        "config_file": "PBRConfig.yaml",
         "loglevel": "info",
-        "logfile": "SPR.log",
+        "logfile": "PBR.log",
     },
-    "platform": platform(),
-    # "Libs": [],
-    "_Root_": [],
+    "platform": "",
 }
 
 
@@ -31,14 +52,14 @@ def set(d):
     the Application state.
     """
     global AS
-    AS = merge(AS, d)
+    AS = u.merge(AS, d)
 
 
 def set_in(*keys):
     """Takes a list of keys ending with the value to assign
     into the Application State dictionary tree."""
     global AS
-    AS = merge(AS, make_dict(*keys))
+    AS = u.merge(AS, u.make_dict(*keys))
 
 
 def set_in_from(*keys):
@@ -56,50 +77,6 @@ def set_in_from(*keys):
 
     set_keys += [get_in(from_keys)]
     set_in(set_keys)
-
-
-def merge(a, b, path=None, update=True):
-    """nice solution from stack overflow, non-destructive merge.
-    http://stackoverflow.com/questions/7204805/python-dictionaries-of-dictionaries-merge
-    """
-    if path is None:
-        path = []
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge(a[key], b[key], path + [str(key)])
-            elif a[key] == b[key]:
-                pass  # same leaf value
-            elif isinstance(a[key], list) and isinstance(b[key], list):
-                for idx, val in enumerate(b[key]):
-                    a[key][idx] = merge(
-                        a[key][idx],
-                        b[key][idx],
-                        path + [str(key), str(idx)],
-                        update=update,
-                    )
-            elif update:
-                a[key] = b[key]
-            else:
-                raise Exception("Conflict at %s" % ".".join(path + [str(key)]))
-        else:
-            a[key] = b[key]
-    return a
-
-
-def make_dict(keys):
-    """Create a dictionary tree with a value from a list.
-    ie. make_dict(["foo", "bar", value]) => {foo: {bar: value}}
-    """
-    d = {}
-    v = None
-    for x in reversed(keys):
-        if v is None:
-            v = x
-        else:
-            d = {x: v}
-            v = d
-    return v
 
 
 def get_in(keys):
@@ -197,7 +174,7 @@ def eval_default_process():
 def merge_yaml(y):
     """Merge a yaml data structure into the Application state."""
     logger.info("Merge Yaml: %s:" % y)
-    merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
+    u.merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
 def load_functions():
@@ -205,28 +182,12 @@ def load_functions():
     by adding them to the symbol table."""
     # add in the user functions from the config file.
 
-    # fns = get_in_config(['exec', 'functions'])
-    # print(yaml.dump(fns))
-
     fns = get_in_config(["exec", "functions"])
+    # logger.info(yaml.dump(fns))
+
     if fns is not None:
         for k, v in fns.items():
             r.def_symbol(k, v["doc"], v["fn"])
-
-
-def save_yaml_file(filename, dictionary):
-    "Write a dictionary as yaml to a file"
-    with open(filename, "w") as f:
-        yaml.dump(dictionary, f)
-
-
-def load_yaml_file(filename):
-    "load a dictionary from a yaml file"
-    if os.path.isfile(filename):
-        logger.info("Loading YAML: %s" % filename)
-        with open(filename) as f:
-            someyaml = yaml.load(f, Loader=yaml.SafeLoader)
-        return someyaml
 
 
 def load_defaults(state_init, pkgname=None, yamlname=None):
@@ -234,19 +195,19 @@ def load_defaults(state_init, pkgname=None, yamlname=None):
 
     bc = load_base_config()
     if bc:
-        AS["config"] = merge(AS["config"], bc)
+        AS["config"] = u.merge(AS["config"], bc)
         # AS |= state_init  #### destructive...
-    AS = merge(AS, state_init)
+    AS = u.merge(AS, state_init)
     if pkgname is None:
         return AS
-    AS["config"] = merge(AS["config"], load_pkg_config(pkgname, yamlname))
+    AS["config"] = u.merge(AS["config"], u.load_pkg_yaml(pkgname, yamlname))
     return AS
 
 
-def load_pkg_yaml(pkgname, yamlname):
+def merge_pkg_yaml(pkgname, yamlname):
     """load a yaml file from a package into the application state."""
     global AS
-    AS = merge(AS, load_pkg_config(pkgname, yamlname))
+    AS = u.merge(AS, u.load_pkg_yaml(pkgname, yamlname))
 
 
 # import pkg_resources
@@ -272,14 +233,14 @@ def load_base_config():
 def save_config(filename):
     "Sync the functions from the interpreter and save the configuration."
     sync_functions()
-    save_yaml_file(filename, AS["config"])
+    u.save_yaml_file(filename, AS["config"])
 
 
 def load_config(filename):
     """load a yaml file into the application's
     configuration dictionary.
     """
-    AS["config"] = load_yaml_file(filename)
+    AS["config"] = u.load_yaml_file(filename)
 
 
 def load_configs():
@@ -287,13 +248,13 @@ def load_configs():
     cli_config = get_in(["args", "config_file"])
     defaults = get_in(["defaults", "config_file"])
     if cli_config is not None:
-        y = load_yaml_file(cli_config)
+        y = u.load_yaml_file(cli_config)
         if y is not None:
-            AS["config"] = merge(AS["config"], y)
+            AS["config"] = u.merge(AS["config"], y)
     elif defaults is not None:
-        y = load_yaml_file(defaults)
+        y = u.load_yaml_file(defaults)
         if y is not None:
-            AS["config"] = merge(AS["config"], y)
+            AS["config"] = u.merge(AS["config"], y)
 
 
 def init(parser, logger):
@@ -318,6 +279,7 @@ def init(parser, logger):
         get_in_config(["files", "loglevel"]),
         get_in_config(["files", "logfile"]),
     )
+    set_in(["platform", platform()]),
 
     # load functions from the config into the interpreter.
     load_functions()

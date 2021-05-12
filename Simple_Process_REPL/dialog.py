@@ -6,12 +6,34 @@ import regex as re
 import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.appstate as A
 import Simple_Process_REPL.bar_qr as bq
+import Simple_Process_REPL.utils as u
 
 logger = logging.getLogger()
 
 # set up the dialog interface
 d = Dialog(dialog="dialog")
 inputbox = d.inputbox
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "dialog.yaml")
+# format and fill in as you wish.
+HelpText = (
+    """
+dialog: An interface to the python dialog library.
+
+This module provides dialog windows for various purposes.
+
+There is currently no stateful data.
+
+    %s
+
+dialog is an old curses library written in C used for simple dialogs.
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
 
 
 def hello():

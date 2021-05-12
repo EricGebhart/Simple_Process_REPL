@@ -99,3 +99,14 @@ error = logging.error
 critical = logging.critical
 debug = logging.debug
 level = log_lvl
+
+# format and fill in as you wish.
+HelpText = """
+log: - This is the builtin logging of SPR -
+
+Control the logging level and send messages to the log.
+"""
+
+
+def help():
+    print(HelpText)

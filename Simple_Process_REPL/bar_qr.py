@@ -3,7 +3,7 @@ import barcode
 from barcode.writer import ImageWriter
 import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 import os
 import logging
 
@@ -16,6 +16,39 @@ BarCodeType = "barcode"
 QRCodeType = "QR_code"
 
 Root = "bar-QR"
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "bar_qr.yaml")
+
+# format and fill in as you wish.
+HelpText = (
+    """
+bar-qr: - Bar and QR Code Scanning, generation, saving and printing.  -
+
+Recognized codetypes are either 'barcode' and 'QR-code'.
+
+Encode any value with preset prefix and suffixes as set in the configuration
+into a barcode or QR-code.
+
+Read a bar or QR code using the webcam. Currently keeps trying until it
+catches it or an escape key is pressed.
+
+Bar-qr uses this part of the Application state.
+
+%s
+
+When encoding the value is retrieved from bar-QR/value.
+When scanning with the webcam the resulting value will be placed in bar-QR/value.
+
+If working exclusively with bar or QR codes it may be beneficial to define
+partials for some functions, which always require a code type.
+
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
 
 
 def gen(codetype=BarCodeType):

@@ -1,5 +1,6 @@
 namespace as "Application State functionality"
     Simple_Process_REPL.appstate
+    help
     showin
     set_in
     set_in_from
@@ -12,6 +13,7 @@ namespace as "Application State functionality"
 
 namespace cli "User interface using the cli"
     Simple_Process_REPL.cli
+    help
     msg
     yes_no
     hello
@@ -23,6 +25,7 @@ namespace cli "User interface using the cli"
 
 namespace ui "User interface using dialog"
     Simple_Process_REPL.dialog
+    help
     msg
     yes_no
     print_file_loop_from
@@ -61,26 +64,33 @@ namespace shutil "Python shutil library"
 
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
+    help
     do rm sleep environ
 
 namespace log "logger controls and messages"
     Simple_Process_REPL.logs
+    help
     level info warning error critical debug
 
 namespace dev "Device interaction, waiting for, handshaking."
     Simple_Process_REPL.device
+    help
     wait handshake pause
 
 namespace nw "Networking stuff, Wifi"
-    Simple_Process_REPL.network connect_wifi
+    Simple_Process_REPL.network
+    help
+    connect_wifi
     connect_tunnel create_tunnel sendlog
 
 namespace bq "Bar and QR code generation and printing"
     Simple_Process_REPL.bar_qr
+    help
     gen save read_barcode_from_camera
 
 namespace pb "Particle Board interface"
     Simple_Process_REPL.particle_main
+    help
     particle_help archive_log
     reset_usb add product_add claim flash_image
     release flash_tinker flash_test cloud_status

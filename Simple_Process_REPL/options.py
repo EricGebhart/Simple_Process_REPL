@@ -109,7 +109,7 @@ def create_parser(defaults):
         "-f",
         "--file",
         dest="file",
-        help="Filename of spr code to execute",
+        help="File name of spr code to execute",
         type=argparse.FileType(mode="r"),
     )
 

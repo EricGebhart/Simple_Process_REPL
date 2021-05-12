@@ -4,9 +4,69 @@ import serial
 import time
 import logging
 import Simple_Process_REPL.repl as r
-import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 
 logger = logging.getLogger()
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "device.yaml")
+
+# format and fill in as you wish.
+HelpText = (
+    """
+Device: - Simple device interaction.  -
+
+If the device path is set, understands how to wait for,
+and handshake with a usb device. It can wait for a device path,
+and handshake with that device for the purpose of testing.
+
+Device uses this part of the Application state.
+
+%s
+
+The only current use of device is
+in conjunction with the particle module which fully populates
+the device data structure.
+
+Wait and handshake can work, if only the path to the device is set,
+as that is the only thing required.  So, simply set 'device/path'
+to your device and everything here should at least try to wait for and
+or connect with your device.
+
+The Handshake function
+
+This is a generic function that is a bit more complicated.
+It manages an interaction with a device. Everything _handshake_
+does is defined in the configuration file. As with everything else,
+if anything fails, or doesn't match, an exception is raised.
+
+Here are the steps that _handshake()_ does.
+
+  * Wait for the _start_string_, match it.
+  * Respond with the _response_string_.
+  * Look in the output for:
+    * fail_regex,
+    * done_regex,
+    * do_qqc_regex.
+  * If fail, raise an exception.
+  * if done, exit quietly with true.
+  * if do_qqc, then call the do_qqc_function
+  and send the return value to the serial device.
+
+  qqc = quelque chose = something.
+
+  In the config the do_qqc_function is set to input-serial,
+  as an example. Input-serial prompts for a serial number,
+  validates it, and returns it.
+  input-serial at the
+  _SPR:>_ prompt.
+
+"""
+    % yaml
+)
+
+
+def help():
+    print(HelpText)
 
 
 def pause():

@@ -19,8 +19,8 @@ def insert_name(name, lines):
     format it with the name."""
     res = []
     for line in lines.split("\n"):
-        if re.findall("%s", line):
-            line = line % name
+        line = re.sub("%s", name, line)
+        line = re.sub("%yaml", "%s", line)
         res += [line + "\n"]
     return res
 
@@ -41,12 +41,6 @@ def new_spr_extension_project(pathname):
     module that can be installed with pip and imported by SPR.
     """
 
-    setup = get_pkg_file("setup.txt").decode("utf-8")
-    py = get_pkg_file("python.txt").decode("utf-8")
-    spr = get_pkg_file("spr.txt").decode("utf-8")
-    yaml = get_pkg_file("yaml.txt").decode("utf-8")
-    readme = get_pkg_file("readme.txt").decode("utf-8")
-
     logger.info("Creating Python Project: %s" % pathname)
 
     if os.path.exists(pathname):
@@ -58,28 +52,28 @@ def new_spr_extension_project(pathname):
     name = os.path.split(pathname)[1]
     module_path = os.path.join(pathname, name)
 
+    setup = insert_name(name, get_pkg_file("setup.txt").decode("utf-8"))
+    py = insert_name(name, get_pkg_file("python.txt").decode("utf-8"))
+    spr = insert_name(name, get_pkg_file("spr.txt").decode("utf-8"))
+    yaml = insert_name(name, get_pkg_file("yaml.txt").decode("utf-8"))
+    readme = insert_name(name, get_pkg_file("readme.txt").decode("utf-8"))
+
     os.mkdir(module_path)
 
     if setup:
-        write_lines_2_file(os.path.join(pathname, "setup.py"), insert_name(name, setup))
+        write_lines_2_file(os.path.join(pathname, "setup.py"), setup)
 
     if readme:
-        write_lines_2_file(
-            os.path.join(pathname, "README.md"), insert_name(name, readme)
-        )
+        write_lines_2_file(os.path.join(pathname, "README.md"), readme)
 
     write_lines_2_file(
         os.path.join(module_path, "__init__.py"), ['__version__ = "0.0.1"']
     )
 
     if py:
-        write_lines_2_file(os.path.join(module_path, "core.py"), insert_name(name, py))
+        write_lines_2_file(os.path.join(module_path, "core.py"), py)
 
     if spr:
-        write_lines_2_file(
-            os.path.join(module_path, "core.spr"), insert_name(name, spr)
-        )
+        write_lines_2_file(os.path.join(module_path, "core.spr"), spr)
     if yaml:
-        write_lines_2_file(
-            os.path.join(module_path, "core.yaml"), insert_name(name, yaml)
-        )
+        write_lines_2_file(os.path.join(module_path, "core.yaml"), yaml)
