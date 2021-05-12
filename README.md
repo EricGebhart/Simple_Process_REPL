@@ -3,10 +3,41 @@
 Get your favorite python libraries that do things, and start 
 scripting process applications that do composeable things out of them.
 
-This is also a fun thing to embed in your application and wire it up. like you would
-lua or python in a C project. Only it's SPR in your python.
+This started out as a project to identify, test, and flash a particle.io 
+board. The boards are finicky, and the ability to be able to create repeatable
+snippets of processes was the way to go. Two pieces might work individually and
+not one after the other, or the device would disconnect for a moment.
 
-Or maybe this is just a process you need to do a lot.  Program/test a particle
+The process also needed wifi, the concept of a device, usb handshaking,
+device waiting and dialog prompts among other things.
+
+Composeability and an interective REPL were necessary to efficiently create a
+successful process of some complexity.
+So instead of a run it once kind of application, this is a tool that can be
+used to interactively create a run it once kind of application.
+
+The idea was to keep it as simple to use and code as possible, even if a bit
+painful.  Everything had to be configurable, and new process pieces needed to
+be easy to make.
+
+So here it is. It's a language, but there are only variables in a big tree.
+It can run python functions, and it can make partials of them if they take
+arguments.  It's only syntax is words, strings, numbers and whitespace.
+
+And the *from* commands take a `from:` keyword.
+
+It has namespaces, primarily for organization. It has built in help.
+You have to fill in your doc strings!  
+
+It has no scope, no understanding of if I'm in this Namespace things have
+shorter names.
+
+But it's pretty nice for creating little processes that document themselves.
+And it's super cool to recompose things into new processes. It's a fun
+little tool here.
+
+
+Program/test a particle
 board, scan a bar or QR code, generate and print a bar or QR code, run a series
 of shell commands, popup some dialogs, do some stuff.
 
