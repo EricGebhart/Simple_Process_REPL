@@ -1,15 +1,19 @@
 # Simple Process REPL
 
-Get your favorite python libraries that do things, add a dictionary, and start 
+Get your favorite python libraries that do things, and start 
 scripting process applications that do composeable things out of them.
 
 This is also a fun thing to embed in your application and wire it up. like you would
 lua or python in a C project. Only it's SPR in your python.
 
+Or maybe this is just a process you need to do a lot.  Program/test a particle
+board, scan a bar or QR code, generate and print a bar or QR code, run a series
+of shell commands, popup some dialogs, do some stuff.
+
 
     pip install Simple_Process_REPL
     
-This is a stupid simple, configurable, application interface.
+This is a stupid simple, configurable, Extensible, application interface.
 You will need to install dialog. tkinter is coming probably.
 
 on Arch Linux
@@ -23,130 +27,188 @@ To start the REPL;
 
     SPR -r
 
-To get an app, write some functions, fill in the symbol table and the 
-special's table as needed.  Create a _Config.yaml_ which imports your 
-new python module, and configures stuff to your liking.
 
-
-This is out of date. Refactored out this complexity. imports are
-the way to go. PBR will catchup in a bit.
 
 [The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
-is an application built from the Simple_Process_REPL.
+is an application built from the previous version of SPR. PBR is now a standalone
+application that embodies the old version 1 of SPR.
 
-To create an application, it is no longer necessary to create anything more than
-a config file and possible write a standalone python library of your favorite
-functionalities, which can then be imported by SPR. Cool right!?
+## What is it, really ?
+
+This is a really stupid interpreter, connected to a configuration and application state
+which is a big tree of Yaml.  Throw in a module of python functions and  you've got an 
+application with a Read Eval Print loop.
+
+SPR code is really simple. SPR only knows words, strings and numbers.
+If you give it a list, it will try to look up what you gave it and 
+execute it.  So you can make lists and give them names, and make lists of lists,
+all of which turns into a process which will try to do it's thing, and if any
+step fails, the whole process fails.
+
+SPR has a configuration file, which, can have spr functions defined within it.
+SPR can read spr files and execute them.
+
+An SPR library/module is a Python module with a python file, a yaml file and
+an spr file. An SPR library project can be created with the
+    `new-spr-extension-project` command.
+
+Once the new module is available on the Python path SPR can import it with
+a command like this.
+    `namespace foo "my foo namespace" foo.core function1 function2...`
+    
+This will create a namespace foo with all the functions listed, and with
+whatever is defined in `foo.core.spr`.  The application state will merge 
+in what ever structure is defined in `foo.core.yaml`. 
+
+Here is how the bar/QR code module defines it's application state structure
+and it's configuration settings in `bar_qr.yaml`.
+
+``` code=YAML
+bar-QR:
+    src: Null
+    value: ''
+    QR_code:
+        code: Null
+        saved: ''
+    barcode:
+        code: Null
+        saved: ''
+
+config:
+    QR_code:
+        filename_suffix: 'QR'
+        prefix: 'K1'
+        suffix: 'A'
+        save_path: 'qrcodes'
+        font: DejaVuSans.ttf
+        font_size: 18
+    barcode:
+        filename_suffix: 'BC'
+        prefix: ''
+        suffix: ''
+        save_path: 'barcodes'
+        save_options:
+            module_height: 8
+            text_distance: 2
+```
+
+## SPR code.
+
+So it's stupid.  It's a list of things. If you put it in a file,
+each command must be separated by a blank line.  A command can be 
+formatted however you like, but the lines must be contiguous. A blank
+line results in the command being executed. Here is a sample from
+`core.py`
+
+```
+namespace sh "Subprocesses, shell etc."
+    Simple_Process_REPL.subcmd
+    do rm sleep
+
+namespace log "logger controls and messages"
+    Simple_Process_REPL.logs
+    level info warning error critical debug
+
+namespace dev "Device interaction, waiting for, handshaking."
+    Simple_Process_REPL.device
+    wait handshake pause
+
+namespace nw "Networking stuff, Wifi"
+    Simple_Process_REPL.network connect_wifi
+    connect_tunnel create_tunnel sendlog
+
+namespace bq "Bar and QR code generation and printing"
+    Simple_Process_REPL.bar_qr
+    gen save read_barcode_from_camera
+
+in-ns
+
+import Simple_Process_REPL.mkext new_spr_extension_project
+
+```
+
 
 ## libraries
 
 There are a few libraries included within SPR, they are imported by SPR
-into their various namespaces as defined in the Startup hook in 
-"config exec hooks startup" setting which can be any valid SPR code.
-but which is most importantly used to import the various core libraries.
+into their various namespaces by `core.spr`
 
-The easiest thing to do is start a module that imports the libraries you want
-to work with. Add the SPR stuff at the bottom, write some functions, and
-start playing, by importing it directly into SPR.
-
-
-### The SPR blurb for a library.
-
-Here is the SPR import code stolen from the subcmd module. There are 
-explanations for the data structures.  Essentially symbols are
-void function pointers (parameterless functions) or a list of commands.
-
-Specials are functions which take a variable number, or a specific number
-of arguments.  
-
-The last function, _subcmd_, is the import loader. SPR calls this when the module is 
-imported.  This command imports the subcmd module into the __sh__ namespace 
-in SPR. I have named them after the module they live in. It seems to be a reasonable
-idea.
-
-    import Simple_Process_REPL.subcmd subcmd sh
-    
-Add this to the bottom of your module, change the names to match
-your stuff. Then SPR can import it.
-
-```python
-def do_shell(commands, shell=True):
-    do_cmd(commands)
+* logs  - logging level and messaging.
+* appstate - Application state - All the YAML, config etc.
+* dialog_cli - dialog, and cli, stuff for the ui.
+* network - Networking. wifi, ssh, etc.
+* device  - Basic usb device interaction 
+* particle_main  - Particle.io Board interaction.
+* subcmd - shell commands etc.
+* Bar_qr - a bar and QR code reader, generater, and printer
+* mkext  - A function and files to create a sample SPR extension library project.
 
 
-# Commands we want in the repl which can take arguments.
-symbols = [
-    ["ls", "sh/do ls -l", "Run a shell command; ls"],
-]
+### Creating SPR extension modules
 
-specials = [
-    ["do", do_shell, -1, "Run a shell command; do ls -l"],
-    ["rm", os.remove, 1, "Remove a file; rm foo.txt"],
-    ["sleep", time.sleep, 1, "Sleep for specified seconds; sleep 5"],
-]
-
-helptext = """"Shell stuff. Do a sub process. hope it works."""
-
-
-def subcmd():
-    return {
-        "name": "subcmd",
-        "symbols": symbols,
-        "specials": specials,
-        "doc": helptext,
-        "state": None,
-    }
+A new Python/SPR extension module named foo can be created with the SPR command
+```
+    new-spr-extension-project path/to/foo.
 ```
 
-## Yet another application framework.
+The module will have an appropriate `setup.py` with some *fix_mes*. There will
+be 3 files, core.py, core.yaml, and core.spr.  Only the core.py is necessary.
+So it is actually possible to import any python module in order to use it's 
+functions within SPR.
 
-Strangely, This has simplified itself, and now exists as an application which
-can be easily extended with any python library just by creating a dictionary.
+SPR is stupid however, and does not understand keywords and other things.
 
-This is at it's heart a simple Read Eval Print Loop. It has 4 ways
-of running, and it automatically manages Application state, yaml 
-configuration files, the command line, dialogs, prompts, logging and help.  
-Everything needed for a particular application can be done with a module of functions..
+The core.yaml file enables the module to add in it's data structures and 
+configuration to the Application state upon import.
 
-The cli is done with argparse is extendible from the application layer as needed.
+The core.spr file enables non python symbols and partials to be defined in
+which ever namespaces are desired. By default, in it's own namespace.
 
-Python dialog, with several standard messages and boxes are included, as is 
-a yaml configuration, and an Application state which contains everything
-known to the app.
+The Application state, is actually just a merge, of all the yaml's defined
+by the various modules, and by the core.yaml.
 
-Everything is extensible. Usually a few python functions
-and a configuration file is all you will need to create a nicely versatile 
-application.
+A complete configuration file can be generated at any time by saving it.
 
-While there is a Repl available, and commands can be added, combined
-and remixed, they can also be run automatically through the
-autoexec setting in the config.  The default autoexec is to provide help.
+The configuration should be named SPRConfig.yaml and will automatically loaded
+from the runtime directory if it exists.
 
-## Configuration
+It can also be specified on the command line along with an spr file to execute.
 
-The Simple Process REPL uses YAML for it's configuration files. 
+## Modes of running
+  * Run Autoexec once
+  * Run the Autoexec in an intractive loop
+  * Run a repl
+  * Run command line args once
+  * Run command line args in an intractive loop
 
-Everything is specified there.
-Most importantly the python libraries to import are there, among other things.
+### Examples - mix and match.
+  * `SPR -i` Run in a loop doing a process over and over 
+  * `SPR` Run a process once 
+  * `SPR cmd1 cmd2` Run a list of command/symbols from the command line 
+  * `SPR -f foo.spr` Run an SPR file.
+  * `SPR -r` Run as an interactive REPL 
+  
+## Order of execution  
+  * core.py
 
-All necessary defaults are set within the package with SPR-defaults.yaml.
-When building an application, that application's defaults will be merged 
-into the Simple_Process_REPL's default configuration before loading a locally defined
-SPR-config.yaml. An application can over-ride the configuration file name with a setting
-in the defaults section of the Application State. A config file can also be given on
-the command line at invokation.
+  * The Startup Hook defined in the configuration will run first
 
+  * The file given with -f will run next.
 
-## 4 modes of running
+  * Run with a REPL, 
+    * Commands on the command line will execute on startup.
+  
+  * Run the Automatic Exec once or in a loop. 
+    * Commands given on the command line will replace the autoexec 
+    defined in the configuration file.
 
-  * Run in a loop for doing a process over and over 
-  * Run the default process once 
-  * Run a list of command/symbols from the command line 
-  * As an interactive REPL 
+  * The Shutdown Hook defined in the configuration will run last
+
   
 __In any case, if any step fails, the process will fail.__ 
-if in interactive loop mode, _-i_, the continue dialog will catch the fail for the next
-loop.
+if in interactive loop mode, _-i_, The failure and continue dialogs will catch the 
+fail for the next loop.
+
 
 ## The default process
 In the configuration there is an __autoexec__ attribute. This should be a
@@ -155,9 +217,9 @@ is the process that will run when running cli in interactive loop mode,
 or when run once.
   
 If symbols are given on the cli after the option then that list is executed once 
-automatically instead of the symbol in autoexec.
+automatically instead of the symbol in autoexec. 
 
-# Invoking.
+# Invoking help.
 Two different kinds of help are built in.
     * `SPR -h`
     * `SPR help`
@@ -166,6 +228,7 @@ Help with the symbols which are available for programming
 in the REPL is obtained with the help symbol/function.
  `SPR help` 
 
+# Just do it.
 The easiest way to understand this is system is by using the REPL. 
 It will show you how it works. `SPR -r` 
  
@@ -178,16 +241,16 @@ Then type these commands and read as you go.
  * _help nw_
  * _help as_
  * _help ui_
- * _help bcqr_
- * _as_.
+ * _help bq_
  * _help device_
- * _as_ device
- * _dev/input_sn_
- * _as_ device
- * _as_ foo
- * _set-in_ foo bar 10
- * _as_ foo
- * _set-in_ foo bar 10
+ * _showin_ 
+ * _showin_ device
+ * _showin_ foo
+ * _set_ foo bar 10
+ * _set-from_ foo foo from: foo bar
+ * _showin_ foo
+ * msgbox "hello"
+ * def mymsg "my msg help" msgbox "hello"
 
 Once in the REPL at the prompt; __SPR:>,
 _help_ shows all the commands known with their documentation. 
@@ -231,142 +294,43 @@ interactively create/execute a process step by step.
 `help` at the REPL prompt. 
 
  * Builtins __help__
- * __as__, __ls-ns__ are quite handy.
+ * __showin__, __ls-ns__, __ns-tree__ are quite handy.
  * REPL prompt: persistent history and tab completion. 
- * The __loglvl__ command can change the logging level interactively.
+ * The __log/level__ command can change the logging level interactively.
  * Defining a symbol of a special works. - Super cool.
     * `ui/msgbox "Hello World"` 
     * `def mymsg "my special msg" ui/msgbox "Hello World"`
  * __log/info__ and __log/debug__ allow sending of arbitrary messages to the log.
  * __sh/do__ for running shell commands. - There are known bugs.
 
-### Application State. 
-
-```python
-AS = {
-    "config": {},
-    "args": {},
-    "defaults": {
-        "config_file": "SPR-config.yaml",
-        "loglevel": "info",
-        "logfile": "SPR.log",
-    },
-    "device": {"id": "", "name": "", "path": ""},
-    "wifi-connected": False,
-    "platform": platform(),
-}
-```
- * configuration is the merged yaml configurations
+## The Application State
+ * config is the place where is the merged yaml configurations should go.
  * args is the resolved command line
- * defaults is used by argparse to supply default options to the command line.
  * device is an imaginary device. Which we can wait for and handshake with.
+ * bar-QR is the state managed by the bar/QR code module
+ * device is used by core, and by particle.
+ 
+ It's really best to just explore it with `showin`.
 
 The command: **as** in the REPL will give it to you in yaml.
 **help** will give you the documentation for every command you can do, even the ones you just created. 
-The easiest way to access it is `as device` or `as config serial`
-with `as key1 key2,...` is the command to find sub-section or attributes in the REPL.
-`as config` , `as defaults`, or just __as__ 
-
-For an Application layer, it is only necessary to provide a structure as desired, which
-will be merged directly onto this structure.
+The easiest way to access it is `showin device` or `showin config serial`
+with `showin key1 key2,...` is the command to find sub-section or attributes in the REPL.
+`showin config` , `showin defaults`, or just __showin__ 
 
 
 ## It's a Simple list processor.
 
 This program is actually a very simple interpreter with an interactive REPL. 
-Everything you want to do must be a python function which is registered in the
-interpreter's symbol table. From there, everything is composable from symbol/words
-from the interpreter's symbol table, ie, your symbols. Those composed symbols can 
-also be added to the interpreter's symbol table to create increasingly
-complex sets of processes, which are executed in order. These user
-functions can also be defined in the YAML config file.
+Everything you want to do must be a python function imported into the repl.
+From there, everything is composable from symbol/words
+These user functions can also be defined in an spr file or even the YAML config file.
 
 It has a really, really stupid parser. All it can do execute a list of symbols, or call
 a special symbol with everything that follows. It does know the difference between
 symbols, strings and numbers.
-
-Basic symbol/functions should be functions done entirely for their side-effects.
-They take no parameters and give no return. Special Symbols can take arguments.
-
-At the lowest level the symbols/commands are directly connected to
-python functions. But symbols/commands can also be lists of known symbols instead
-of a function.  This allows for the creation of sub-groups which can be referenced by
-other symbols.  There are no parentheses, only the ability to associate lists of
-symbols with a new symbol.
-
-    import repl as r
-    symbols = [
-        ['wifi',       connect_wifi,    'Connect to wifi using nmtui if not connected.']
-        ['list',       P.list_usb,      'List the boards connected to USB.']
-        ['start',      'wifi list',     'Connect wifi and list the boards.']
-        ['identify',   P.identify,      'Try to identify a device.']
-        ['domore',     'start identify', 'Start then identify']
-        ['doevenmore', 'domore setup',   'Start identify and setup.']
-    ]
-    r.init_symbol_table(symbols)
-
-The symbols _start_, _domore_ and _doevenmore_ can be defined in the YAML 
-configuration file, it is not necessary to modify python code unless new 
-functionality needs to be introduced.
-
-## Symbols which point at functions which take parameters.
-
-The interpreter is not very bright and has no way of grouping things together which
-makes it difficult to execute commands which take arguments. Specials are symbols 
-at the beginning of a command which will eat the rest of the line, in attempt to
-do what they are supposed to do.
-
-To compensate the interpreter has the concept of special symbols, 
-These are symbols which take arguments and can consume the entire REPL command. 
-
-These are also pointers to python functions, but which take some arguments.
-These go on a line by themselves since we have no way of knowing them unless the
-line starts with them, and then the special gobbles up the rest of the line.
-
-The REPL itself has a special symbol, __def__ which allows for the creation 
-of a new symbol with the following syntax. 
-
-    def <symbol> 'helpstr' symbol1 symbol2 symbol3...
-
-Other commands are _save-config_, _load-config_, _msgbox_, _msgcli_,
-_loglvl_, _log-info_, _showin_, etc.
-    
-Special symbols have an argument count which can be set. If positive the command will
-be checked for compliance. Here is an example which
-creates symbols for saving and loading configurations from a given filename.
-
-    specials = [
-        "Commands we want in the repl which can take arguments."
-        ['save-config', save-config, 1,
-        "Save the configuration; save-config 'filename'"]
-
-        ['load-config', load-config, 1,
-        "Load a configuration; save-config 'filename'"]
-    ]
-    
-
-## Core: generic functionality
-
-There are a few builtins which do 
-special things. There is __wait__ which just waits for a device to come online 
-with a timeout. There is pause which just sleeps for a few seconds as set in the 
-configuration. The wifi function checks the wifi with linux's network manager, and
-uses _nmcli_ to create a connection if one does not exist. Functionality is easy 
-to add with a new function and an entry in the symbol table.
-
-   * dialogs - There are some python dialog, and cli interface functionalities. 
-   * wifi, - Uses network manager (nmcli) for linux. Non-functional on other platforms.
-   * bar & QR codes - It has structure in the App State, and dialogs to input codes, create, save and print barcodes and QRcodes.
-   * Waiting and handshaking.
-        * __wait__ looks for the actual device path i/o event with a _timeout_.
-        * __pause__ sleeps for _pause_time_. 
-            Note: __wait__ for device is literally a poll to see if the device file exists.
-            Once it appears there is some time before the udev rules make the file accessible
-            by non-root users. A pause helps everything go smoothly. The next command will 
-            actually have access to the device. So now I have a habit of following a __wait__ with
-            a __pause__. 
-        * __handshake__ does a blocking serial.read/readline for both the initial
-        string, and the test results after. 
+It does some introspection of the python function signtures, so it's not completely
+stupid, but some care should be taken.
 
 
 ### Handshake function
