@@ -1,4 +1,4 @@
-import Simple_Process_REPL.dialog_cli as D
+import Simple_Process_REPL.dialog as D
 import logging
 import regex as re
 

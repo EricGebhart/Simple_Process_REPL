@@ -1,5 +1,5 @@
 import Simple_Process_REPL.appstate as A
-from Simple_Process_REPL.dialog_cli import ynbox, inputbox, msgbox
+from Simple_Process_REPL.dialog import yes_no, inputbox, msg
 import Simple_Process_REPL.particle as P
 import regex as re
 import logging
@@ -25,7 +25,7 @@ logger = logging.getLogger()
 def see_images():
     """Ask if the test images are seen, fail if not."""
     yno_msg = A.get_in_config(["dialogs", "images_seen"])
-    if not ynbox(yno_msg):
+    if not yes_no(yno_msg):
         raise Exception("Failure: Test images not Seen.")
 
 
@@ -47,10 +47,10 @@ def input_serial():
                 A.get_in_config(["dialogs", "serial_is_correct"]),
                 res,
             )
-            if ynbox(yno_msg):
+            if yes_no(yno_msg):
                 break
         else:
-            msgbox(A.get_in_config(["dialogs", "serial_must"]))
+            msg(A.get_in_config(["dialogs", "serial_must"]))
 
             os.system("clear")
             logger.info("Serial Number Entered is: %s" % res)

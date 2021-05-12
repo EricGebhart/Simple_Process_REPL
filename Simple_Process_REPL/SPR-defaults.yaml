@@ -24,8 +24,8 @@ exec:
         startup:
 
         #- as/showin config
-        #- ui/msgbox "Where ami"
+        #- ui/msg "Where ami"
 
         shutdown:
 
-        - ui/msgbox "Goodbye have a nice day!"
+        - ui/msg "Goodbye have a nice day!"

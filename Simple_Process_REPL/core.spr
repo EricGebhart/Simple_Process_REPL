@@ -10,11 +10,21 @@ namespace as "Application State functionality"
     reset_device
     archive_log
 
-namespace ui "User interface using dialog and cli"
-    Simple_Process_REPL.dialog_cli
-    msgcli
-    msgbox
-    ynbox
+namespace cli "User interface using the cli"
+    Simple_Process_REPL.cli
+    msg
+    yes_no
+    hello
+    start
+    test
+    flash
+    failed
+    finish
+
+namespace ui "User interface using dialog"
+    Simple_Process_REPL.dialog
+    msg
+    yes_no
     print_file_loop_from
     print_file_from
     print_file_loop
@@ -22,16 +32,11 @@ namespace ui "User interface using dialog and cli"
     input_count_to
     input_string_to
     hello
-    dialog_start
-    dialog_test
-    dialog_flash
-    dialog_failed
-    dialog_finish
-    cli_start
-    cli_test
-    cli_flash
-    cli_failed
-    cli_finish
+    start
+    test
+    flash
+    failed
+    finish
     save_bcqr
     print_bcqr
 

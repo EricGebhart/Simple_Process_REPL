@@ -14,33 +14,9 @@ d = Dialog(dialog="dialog")
 inputbox = d.inputbox
 
 
-def application_help():
-    """Print help as defined by the function set in ['exec', 'help']
-    in the config. This is a help function as defined by the
-    application layer, which is specific to the functionality
-    that we are interfacing with.
-    """
-    helpfn = A.get_in_config(["exec", "help"])
-    if helpfn:
-        r.eval_cmd(A.get_in_config(["exec", "help"]))
-
-
-def help():
-    "Everyone needs a little help now and then."
-    print(
-        """Internal command help.\n
-            These are the defined symbols for this REPL. Symbols
-            may be listed to execute them in order.\n"""
-    )
-
-    application_help()
-    r.help()
-
-
 def hello():
     "Just in case we don't know what to do."
-    msgcli(A.get_in_config(["dialogs", "hellomsg"]))
-    help()
+    msg(A.get_in_config(["dialogs", "hellomsg"]))
     # msgcli(A.get_in_config(["dialogs", "continue"]))
 
 
@@ -68,7 +44,7 @@ def input_count(msg):
         try:
             res = int(res)
         except Exception:
-            msgbox("count must be an integer")
+            msg("count must be an integer")
             continue
         break
     return res
@@ -114,10 +90,10 @@ def dialog_print_loop(fname):
     return cmd_name, command, count
 
 
-def msgbox(msg):
+def msg(text):
     "Display a simple message box, enter to continue."
     d.msgbox(
-        msg,
+        text,
         title=A.get_in_config(["dialogs", "title"]),
         height=10,
         width=50,
@@ -125,7 +101,7 @@ def msgbox(msg):
     os.system("clear")
 
 
-def ynbox(msg):
+def yes_no(msg):
     "Display a yesno dialog, return True or False."
     response = d.yesno(
         msg,
@@ -247,75 +223,33 @@ def print_file_loop_from(*keys):
 
 
 def continue_to_next():
-    "cli version of continue to next."
-    if re.match("^[yY]?$", input(A.get_in_config(["dialogs", "continue_to_next"]))):
-        return True
-    raise Exception("Answer was No")
-
-
-def msgcli(msg):
-    """Display a message on the cli and wait for input."""
-    print(msg)
-    input("Press any key to continue;")
-
-
-def continue_to_next_dialog():
     "Do another one? Dialog. returns True/False"
-    if not ynbox(A.get_in_config(["dialogs", "start_again"])):
+    if not yes_no(A.get_in_config(["dialogs", "start_again"])):
         logger.info("exiting")
         return False
     return True
 
 
-def cli_failed():
-    """cli: Process failed."""
-    msgcli(A.get_in_config(["dialogs", "device_failed"]))
-
-
-def dialog_failed():
+def failed():
     """dialog: Process failed."""
-    msgbox(A.get_in_config(["dialogs", "device_failed"]))
+    msg(A.get_in_config(["dialogs", "device_failed"]))
 
 
-# So we have a parameter less functions for all of these.
-
-
-def dialog_start():
+def start():
     """dialog: Plugin a board and start a process."""
-    msgbox(A.get_in_config(["dialogs", "plugin_start"]))
+    msg(A.get_in_config(["dialogs", "plugin_start"]))
 
 
-def dialog_finish():
+def finish():
     """dialog: unplug and shutdown a board at the end of a process."""
-    msgbox(A.get_in_config(["dialogs", "process_finish"]))
+    msg(A.get_in_config(["dialogs", "process_finish"]))
 
 
-def dialog_test():
+def test():
     """dialog: Ready to test?"""
-    msgbox(A.get_in_config(["dialogs", "ready_to_test"]))
+    msg(A.get_in_config(["dialogs", "ready_to_test"]))
 
 
-def dialog_flash():
+def flash():
     """dialog: Ready to flash?"""
-    msgbox(A.get_in_config(["dialogs", "ready_to_flash"]))
-
-
-# So we have parameter less functions for all of these.
-def cli_start():
-    """cli: Plugin a board and start a process."""
-    msgcli(A.get_in_config(["dialogs", "plugin_start"]))
-
-
-def cli_finish():
-    """cli: unplug and shutdown a board at the end of a process."""
-    msgcli(A.get_in_config(["dialogs", "process_finish"]))
-
-
-def cli_test():
-    """cli: Ready to test?"""
-    msgcli(A.get_in_config(["dialogs", "ready_to_test"]))
-
-
-def cli_flash():
-    """cli: Ready to flash?"""
-    msgcli(A.get_in_config(["dialogs", "ready_to_flash"]))
+    msg(A.get_in_config(["dialogs", "ready_to_flash"]))

@@ -5,7 +5,7 @@ import Simple_Process_REPL.logs as logs
 import os
 import logging
 import Simple_Process_REPL.repl as r
-from Simple_Process_REPL.dialog_cli import hello
+from Simple_Process_REPL.dialog import hello
 import yaml
 
 logger = logging.getLogger()

@@ -9,7 +9,7 @@ import Simple_Process_REPL.appstate as A
 
 # from Simple_Process_REPL.device import device
 # from Simple_Process_REPL.subcmd import subcmd
-import Simple_Process_REPL.dialog_cli as D
+import Simple_Process_REPL.dialog as D
 
 # from Simple_Process_REPL.network import network
 # from Simple_Process_REPL.bar_qr import bar_qr

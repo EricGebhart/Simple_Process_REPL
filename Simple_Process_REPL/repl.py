@@ -1,5 +1,4 @@
 import pkgutil
-import traceback
 import readline
 import logging
 import regex as re
@@ -7,7 +6,7 @@ import os
 import atexit
 import code
 from inspect import signature, _empty
-from Simple_Process_REPL.appstate import load_pkg_yaml, get_in
+from Simple_Process_REPL.appstate import load_pkg_yaml, get_in, get_in_config
 
 # The same configuration can be stored as instructions in a file read
 # by the library with a single call. If myreadline.rc contains:
@@ -430,6 +429,7 @@ def helpful_cmds():
 def help(args=None):
     """Help for everything."""
     global Root
+    application_help()
     print("\nSPR Help\n=============================================")
     sym = args
     helpful_cmds()
@@ -450,6 +450,17 @@ def help(args=None):
             dolist_help(sym, s)
         if isstype(s, ["fptr", "partial", "voidfptr"]):
             fptr_help(sym, s)
+
+
+def application_help():
+    """Print help as defined by the function set in ['exec', 'help']
+    in the config. This is a help function as defined by the
+    application layer, which is specific to the functionality
+    that we are interfacing with.
+    """
+    helpfn = get_in_config(["exec", "help"])
+    if helpfn:
+        eval_cmd(get_in_config(["exec", "help"]))
 
 
 def all_symbol_names():
