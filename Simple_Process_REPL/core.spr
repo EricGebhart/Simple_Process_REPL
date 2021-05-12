@@ -56,7 +56,7 @@ namespace shutil "Python shutil library"
 
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
-    do rm sleep
+    do rm sleep environ
 
 namespace log "logger controls and messages"
     Simple_Process_REPL.logs

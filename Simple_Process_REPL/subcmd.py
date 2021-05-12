@@ -13,6 +13,11 @@ def rm(filename):
     os.remove(filename)
 
 
+def environ():
+    """Show the shell environment"""
+    logger.info(os.environ)
+
+
 def sleep(s):
     """Sleep for x seconds"""
     time.sleep(s)
