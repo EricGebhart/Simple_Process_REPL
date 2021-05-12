@@ -35,6 +35,25 @@ namespace ui "User interface using dialog and cli"
     save_bcqr
     print_bcqr
 
+
+namespace os "Python os library"
+    os
+    fchown lchown ctermid getcwd getcwdb link listdir
+    lstat mkdir readlink rename replace rmdir system umask
+    uname unlink remove getpid getpgrp getppid getuid getlogin
+    kill killpg setuid sendfile fstat curdir pardir makedirs
+    removedirs getenv
+
+
+namespace shutil "Python shutil library"
+    shutil
+    copyfile copymode copystat copy copy2 copytree rmtree move
+    get_archive_formats register_archive_format unregister_archive_format
+    make_archive get_unpack_formats register_unpack_format
+    unregister_unpack_format unpack_archive disk_usage chown
+    get_terminal_size which
+
+
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
     do rm sleep

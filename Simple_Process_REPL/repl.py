@@ -118,7 +118,11 @@ def load(reader):
 
 def import_lib_spr(module):
     """Look for an spr file with the same name in the module and load it if found."""
-    root, name = module.split(".")
+    if re.findall("\.", module):
+        root, name = module.split(".")
+    else:
+        root = module
+        name = module
     sprname = name + ".spr"
     yname = name + ".yaml"
     logger.info("import spr %s: %s" % (root, sprname))
@@ -229,6 +233,9 @@ def find_first_parameter_with_default(parameters):
 
 
 def get_fsig(f):
+    if not callable(f):
+        return None, 0, False, 0
+
     sig = signature(f)
     parameters = sig.parameters
     nargs = len(parameters)
@@ -249,16 +256,16 @@ def append_specials(st, slist):
     """
     for name, function, nargs, helptext in slist:
         sig, nargs, vargs, def_index = get_fsig(function)
-        st[name] = dict(
-            fn=function,
-            signature=sig,
-            nargs=nargs,
-            vargs=vargs,
-            def_index=def_index,
-            doc=helptext,
-            stype="fptr",
-        )
-    return st
+        if sig:
+            st[name] = dict(
+                fn=function,
+                signature=sig,
+                nargs=nargs,
+                vargs=vargs,
+                def_index=def_index,
+                doc=helptext,
+                stype="fptr",
+            )
 
 
 def _def_(name, helpstr, commandstr):
