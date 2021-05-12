@@ -3,16 +3,163 @@
 Get your favorite python libraries that do things, and start 
 scripting process applications that do composeable things out of them.
 
-This started out as a project to identify, test, and flash a particle.io 
-board. The boards are finicky, and the ability to be able to create repeatable
-snippets of processes was the way to go. Two pieces might work individually and
-not one after the other, or the device would disconnect for a moment.
+This is a really stupid interpreter, connected to a configuration and application state
+which is a big tree of Yaml.  Throw in a module of python functions and  you've got an 
+application with a Read Eval Print loop.
+
+
+## The parts.
+  * The Interpreter/Repl
+  * Application state data structure
+  * SPR/Python extensions that are built in.
+    * cli 
+    * dialog
+    * appstate
+    * shell
+    * device
+    * bar / QR Codes
+    * particle board
+    * logging controls
+   
+### The interpreter/REPL
+This is defined in `repl.py`. It has the idea of namespaces and
+it knows how to import python modules. It does it's best to call the
+python functions you tell it to.  It recognizes, words, strings and numbers.
+ie. `foo "this is a string" 10`, it understands functions with various 
+signatures including variable arguments, but not keywords. Which aren't
+valid in the syntax anyway.
+
+#### Sources:
+When run with no Arguments, SPR will try to do whatever is set as the
+autoexec in the configuration file. This setting should be a list of
+words understood by the interpreter.
+
+With `-f` a file can be given for SPR to run on startup before the
+autoexec or repl is started.
+
+The configuration file can also hold SPR code in the `functions:` section.
+
+Additionally there are hooks which can be defined in the configuration 
+to do what you like, at particular steps of the process.
+
+#### The syntax. 
+
+That's it. words strings and numbers separated by spaces. Commands
+are separated by a blank line and can be formatted with whitespace in
+any way, as long as the lines are contiguous.
+
+#### The core commands.
+* namespace - create a namespace and import a SPR/python extension.
+* ls-ns - List the namespaces.
+* ns-tree - List the namespaces and their contents.
+* ns - which namespace am I in.
+* in-ns - change to a namespace
+* import - import a SPR/python extension into the current namespace.
+* def - Define a new command
+* partial - Define a new command that is a partial of another.
+* showin - show the Application state in YAML form.
+* help - get help
+
+### Application State Data Structure
+
+There is a big data structure referred to as the Application State. 
+It has a config tree which can be grown as needed by any SPR extensions
+that need it. 
+
+The configuration portion of the tree can be saved as a file and used 
+as a basis to create a new application.
+
+There are other things in the Application state, each SPR extension can
+also add a structure to the root of the tree to hold the information that
+it cares about.  This is the _state_ part of the structure. The Application
+state is defined by collecting all of the extension modules yaml file and
+merging them together.
+
+### SPR/Python extensions
+
+#### Python code
+SPR can just import a python module and make those functions available,
+in the interpreter.
+
+The python functions for as SPR extension are generally very simple, 
+* Retrieve their configuration data from the Application state, 
+* Do something, 
+* Save the result back into their part of the application state as needed.
+
+#### Help
+It is recommended that one function be named `help` and that it prints
+Text which explains the extensions usage.
+
+#### Yaml Data Structure
+Additionally, an extension can define a yaml file which import will integerate
+into the Application state. Configuration settings and whatever data structure
+needed by the extension are defined here.
+
+#### SPR code
+Additionally an SPR extension module can have an spr file. This is a file
+of spr code. Libraries can be imported, new symbols and partial functions 
+can be defined. 
+
+The Bar/QR extension has a good example of this. 
+The files in the repo are: *bar_qr.py* *bar_qr.yaml* and *bar_qr.spr*
+
+## Why ?
+This started out as a project to identify, test, and flash a particle.io
+board. The boards and services are finicky, and the ability to be able
+to create repeatable snippets of processes was the way to go. Two pieces
+might work individually and not one after the other, or the device would
+disconnect for a moment. It was a pull your hair out kind of experience.
+
+The original python version 1 of SPR now lives on as this project.
+[The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
+is an application built from the previous version of SPR. PBR is now a standalone
+application that embodies the old version 1 of SPR.
 
 The process also needed wifi, the concept of a device, usb handshaking,
 device waiting and dialog prompts among other things.
 
 Composeability and an interective REPL were necessary to efficiently create a
-successful process of some complexity.
+successful process of some complexity. 
+It naturally evolved out of the first version of this code which was a _zsh_ script.
+I had added a prompt to the script so I could run it's functions interactively.
+
+But, then, between all the error trapping, and io redirection It was decided to
+switch to python. I built the prompt first, and started feeding it functions as
+I built the process. It simply evolved into a list processor. 
+It worked fantastically. Creating that finicky process was actually kind of fun.
+
+
+### What is it?
+
+It's a tool to create applications which do processes.
+
+#### How to do it.
+* Make a python extension with the `new-spr-extension-project` command.
+* Define your YAML.
+* Add in your python code. 
+* Write your spr code if you need it.
+
+Interact in the Repl, `SPR -r` to start creating new commands which are lists of other
+commands. Test and play with your code, and create a new process.
+
+```
+def input-code
+    "Dialog to get a string to encode to a bar or QR code"
+    ui/input-string-to bar-QR value
+
+def print-codes
+    "Dialogs to get a string, encode it, and print it as some number of Bar or QR codes."
+    bq/input-code ui/print-bcqr
+```
+
+Sync your functions to your config and Save your configuration. 
+Set your process to the autoexec in your configuration yaml
+
+Now, when you run with that configuration, SPR will just run your process.
+
+
+#### Reusable parts to make stuff with.
+
 So instead of a run it once kind of application, this is a tool that can be
 used to interactively create a run it once kind of application.
 
@@ -33,14 +180,10 @@ It has no scope, no understanding of if I'm in this Namespace things have
 shorter names.
 
 But it's pretty nice for creating little processes that document themselves.
-And it's super cool to recompose things into new processes. It's a fun
+And it's super cool to recompose old things into new processes. It's a fun
 little tool here.
 
-
-Program/test a particle
-board, scan a bar or QR code, generate and print a bar or QR code, run a series
-of shell commands, popup some dialogs, do some stuff.
-
+## Installation
 
     pip install Simple_Process_REPL
     
@@ -59,16 +202,39 @@ To start the REPL;
     SPR -r
 
 
+## I'm confused, Try another explanation
 
-[The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
-is an application built from the previous version of SPR. PBR is now a standalone
-application that embodies the old version 1 of SPR.
+### Creating SPR extension modules
 
-## What is it, really ?
+A new Python/SPR extension module named foo can be created with the SPR command
+```
+    new-spr-extension-project path/to/foo.
+```
 
-This is a really stupid interpreter, connected to a configuration and application state
-which is a big tree of Yaml.  Throw in a module of python functions and  you've got an 
-application with a Read Eval Print loop.
+The module will have an appropriate `setup.py` with some *fix_mes*. There will
+be 3 files, core.py, core.yaml, and core.spr.  Only the core.py is necessary.
+So it is actually possible to import any python module in order to use it's 
+functions within SPR.
+
+SPR is stupid however, and does not understand keywords and other things.
+
+The core.yaml file enables the module to add in it's data structures and 
+configuration to the Application state upon import.
+
+The core.spr file enables non python symbols and partials to be defined in
+which ever namespaces are desired. By default, in it's own namespace.
+
+The Application state, is actually just a merge, of all the yaml's defined
+by the various modules, and by the core.yaml.
+
+A complete configuration file can be generated at any time by saving it.
+
+The configuration should be named SPRConfig.yaml and will automatically loaded
+from the runtime directory if it exists.
+
+It can also be specified on the command line along with an spr file to execute.
+
+### And again, oy.
 
 SPR code is really simple. SPR only knows words, strings and numbers.
 If you give it a list, it will try to look up what you gave it and 
@@ -82,14 +248,19 @@ SPR can read spr files and execute them.
 An SPR library/module is a Python module with a python file, a yaml file and
 an spr file. An SPR library project can be created with the
     `new-spr-extension-project` command.
+    
+    `new-spr-extension-project <path/to/my/new/library/foo` 
+
+To install, `python setup.py install` will install your project into
+your local python environment / site-packages. 
 
 Once the new module is available on the Python path SPR can import it with
-a command like this.
+a command like this. 
     `namespace foo "my foo namespace" foo.core function1 function2...`
     
-This will create a namespace foo with all the functions listed, and with
-whatever is defined in `foo.core.spr`.  The application state will merge 
-in what ever structure is defined in `foo.core.yaml`. 
+This will create a _namespace foo_ within SPR with all the functions listed, 
+as well as whatever is defined in `foo.core.spr`.  The application state 
+will merge in what ever structure is defined in `foo.core.yaml`. 
 
 Here is how the bar/QR code module defines it's application state structure
 and it's configuration settings in `bar_qr.yaml`.
@@ -158,8 +329,16 @@ import Simple_Process_REPL.mkext new_spr_extension_project
 
 ```
 
+Here is an example of using a message box and creating a new command
+that does the same thing. First is the using a msg box. Then defining
+a new command mymsg, then using the new command.
+```
+    ui/msgbox "Hello World" 
+    def mymsg "my special msg" ui/msgbox "Hello World"
+    mymsg 
+```
 
-## libraries
+## Batteries included
 
 There are a few libraries included within SPR, they are imported by SPR
 into their various namespaces by `core.spr`
@@ -173,37 +352,9 @@ into their various namespaces by `core.spr`
 * subcmd - shell commands etc.
 * Bar_qr - a bar and QR code reader, generater, and printer
 * mkext  - A function and files to create a sample SPR extension library project.
+* os  - Some functions from python OS
+* shutil  - Some functions from python shutil
 
-
-### Creating SPR extension modules
-
-A new Python/SPR extension module named foo can be created with the SPR command
-```
-    new-spr-extension-project path/to/foo.
-```
-
-The module will have an appropriate `setup.py` with some *fix_mes*. There will
-be 3 files, core.py, core.yaml, and core.spr.  Only the core.py is necessary.
-So it is actually possible to import any python module in order to use it's 
-functions within SPR.
-
-SPR is stupid however, and does not understand keywords and other things.
-
-The core.yaml file enables the module to add in it's data structures and 
-configuration to the Application state upon import.
-
-The core.spr file enables non python symbols and partials to be defined in
-which ever namespaces are desired. By default, in it's own namespace.
-
-The Application state, is actually just a merge, of all the yaml's defined
-by the various modules, and by the core.yaml.
-
-A complete configuration file can be generated at any time by saving it.
-
-The configuration should be named SPRConfig.yaml and will automatically loaded
-from the runtime directory if it exists.
-
-It can also be specified on the command line along with an spr file to execute.
 
 ## Modes of running
   * Run Autoexec once
@@ -286,7 +437,7 @@ Then type these commands and read as you go.
 Once in the REPL at the prompt; __SPR:>,
 _help_ shows all the commands known with their documentation. 
 
-## Symbols/Commands/functions
+## In case more explanation is necessary, Symbols/Commands/functions
 
 There are several kinds.
 
