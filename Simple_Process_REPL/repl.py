@@ -111,22 +111,6 @@ def append_funcs(st, module, funclist):
     return st
 
 
-def merge_ns_states():
-    """Loop through the namespaces and merge their _SPR_AS_ trees into one
-    big dict tree."""
-    global Root
-    res = {}
-    for k, v in sorted(Root.items()):
-        if isstype(v, "namespace"):
-
-            lib = __import__(v["name"], globals(), locals(), ["_SPR_AS_"], 0)
-            _AS_ = getattr(lib, "_SPR_AS_", None)
-            if _AS_ is not None:
-                # Note: 3.9, also destructive, so no overlap between modules.
-                res |= _AS_
-    return res
-
-
 def is_blank_line(line):
     """test if text is blank or not."""
     return re.match(r"^[\s]*$", line)
@@ -136,6 +120,8 @@ def load(reader):
     """Load a text reader (hopefully an spr file) into the interpreter."""
     txt = ""
     for line in reader:
+        logger.debug("loading SPR: ")
+        logger.debug("%s" % line)
         if len(line) == 0 or is_blank_line(line):
             if len(txt) > 0:
                 eval_cmd(txt)
@@ -155,7 +141,8 @@ def import_lib_spr(module):
         name = module
     sprname = name + ".spr"
     yname = name + ".yaml"
-    logger.info("import spr %s: %s" % (root, sprname))
+    logger.info("Import spr %s: %s" % (root, sprname))
+
     try:
         init = pkgutil.get_data(root, sprname).decode("utf-8").split("\n")
         load(init)
@@ -300,7 +287,7 @@ def append_specials(st, slist):
 
 def _def_(name, helpstr, commandstr):
     """define a new symbol which is a 'dolist' of other symbols.
-    def myhelp 'helptext' help log help bcqr"""
+    example: def hello-world \"My help text\" ui/msg \"hello world\" """
     _def_symbol(name, helpstr, commandstr, stype="dolist")
 
 
@@ -318,7 +305,8 @@ def partial(name, helpstr, commandstr):
 def _def_symbol(name, helpstr, commandstr, stype="dolist"):
     """Define a new symbol in the symbol table of the current namespace."""
     global NS
-    logging.info(
+    global Current_NS
+    logging.debug(
         "Define: %s/%s, %s, %s, %s" % (Current_NS, name, commandstr, helpstr, stype)
     )
     s = dict(fn=commandstr, doc=helpstr, stype=stype)
@@ -393,11 +381,15 @@ def fptr_sig(k, v):
         return k
 
 
-def fptr_help(k, v):
+def fptr_help(k, v, indent=False):
     """Format an fptr symbol's help."""
     sig = fptr_sig(k, v)
-    print("\n%-20s" % sig)
-    print("----------------\n%s" % v["doc"])
+    indention = ""
+    if indent:
+        indention = "    "
+
+    print("\n%s%-20s" % (indention, sig))
+    print("%s----------------\n%s%s" % (indention, indention, v["doc"]))
 
 
 def all_dolist_help(st):
@@ -411,7 +403,13 @@ def dolist_help(k, v):
     """Format an dolist symbol's help."""
     if isstype(v, "dolist") or isstype(v, "partial"):
         print("\n {0[0]:20}\n--------------\n{0[1]}".format([k, v["doc"]]))
-        print("    Source: [%s]" % v["fn"])
+        print("    Type: %s" % v["stype"])
+        print("    Source: [%s]\n" % v["fn"])
+    if isstype(v, "partial"):
+        print("  --- Derived from: ---")
+        func_name = v["fn"].split(" ")[0]
+        s = _get_symbol(func_name)
+        fptr_help(func_name, s, indent=True)
 
 
 def namespace_help(key, ns):
@@ -504,11 +502,12 @@ def help(args=None):
         # for sym in args:
         # logger.info("Sym in args: " % (sym, args))
         s = _get_symbol(sym)
+        logger.info("Sym : %s" % s)
         if isstype(s, "namespace"):
             namespace_help(sym, s)
-        if isstype(s, "dolist"):
+        if isstype(s, ["dolist", "partial"]):
             dolist_help(sym, s)
-        if isstype(s, ["fptr", "partial", "voidfptr"]):
+        if isstype(s, ["fptr", "voidfptr"]):
             fptr_help(sym, s)
 
 
@@ -568,9 +567,9 @@ def do_fptrs(commands):
     command = commands[0]
     fptr = isa_fptr(command)
 
-    # logging.debug("do specials: %s" % command)
-    # logging.debug("do specials: %s" % commands)
-    # logging.debug("do specials: %s" % str(fptr))
+    # logging.debug("do fptrs: %s" % command)
+    # logging.debug("full: %s" % commands)
+    # logging.debug("fptr: %s" % str(fptr))
 
     if fptr is None:
         return False
@@ -590,7 +589,8 @@ def do_fptrs(commands):
     # "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
     # % (command, func, sig, fnargs, nargs, vargs)
 
-    if command == "def" or command == "partial":
+    # oy. je n'aime pas des exceptions
+    if command == "-def-" or command == "partial":
         commandstr = " ".join(commands[3:])
         fn(commands[1], commands[2], commandstr)
         return True
@@ -707,8 +707,8 @@ def eval_symbol(s):
 
 def eval_list(commands):
     """Execute a list from the symbol table.
-    It's either a command with arguments or
-    a list of commands.
+    It's either a partial, a command with
+    arguments or a list of commands.
     """
     logger.debug("eval list: %s" % commands)
 

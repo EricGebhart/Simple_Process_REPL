@@ -215,24 +215,9 @@ def merge_pkg_yaml(pkgname, yamlname):
     AS = u.merge(AS, u.load_pkg_yaml(pkgname, yamlname))
 
 
-# import pkg_resources
-def load_pkg_config(pkgname, yamlname):
-    """load a configuration file from a package."""
-    logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
-    try:
-        some_yaml = yaml.load(
-            pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader
-        )
-    except FileNotFoundError:
-        pass
-    except Exception as e:
-        print(e)
-    return some_yaml
-
-
 def load_base_config():
     """load the default configuration."""
-    return load_pkg_config(__name__, "SPR-defaults.yaml")
+    return u.load_pkg_yaml(__name__, "SPR-defaults.yaml")
 
 
 def save_config(filename):

@@ -86,7 +86,6 @@ def load_yaml_file(filename):
     return someyaml
 
 
-# load pkg_resources
 def load_pkg_yaml(pkgname, yamlname):
     """load a configuration file from a package."""
     logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
