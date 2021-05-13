@@ -97,17 +97,17 @@ def input_serial():
 
 def flash_image():
     "Flash the flash image"
-    P.flash(A.get_in_config(["images", "flash"]))
+    P.flash(A.get_in_config(["particle", "images", "flash"]))
 
 
 def flash_tinker():
     "Flash the tinker image"
-    P.flash(A.get_in_config(["images", "tinker"]))
+    P.flash(A.get_in_config(["particle", "images", "tinker"]))
 
 
 def flash_test():
     "Flash the test image"
-    P.flash(A.get_in_config(["images", "test"]))
+    P.flash(A.get_in_config(["particle", "images", "test"]))
 
 
 def product_add():
