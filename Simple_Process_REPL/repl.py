@@ -473,7 +473,17 @@ def ls_ns(ns=None):
 
 def helpful_cmds():
     """Print a list of helpful commands"""
-    print("Useful Commands: ls-ns <ns>, ns-tree, help <ns|name|ns/name>, showin")
+    """
+Useful Commands: ls-ns <ns>, ns-tree, help <ns|name|ns/name>, showin
+
+If the prescribed coding patterns for SPR extensions are adhered to:
+ * `ls-ns` to see a list of the namespaces.
+ * `ls-ns <ns>` to see a summary of a namespace.
+ * `help <ns>` to get help for a namespace.
+ * `help <ns>/<function>` to get help for a function in the namespace.
+ * `showin <ns>` to see the Stateful Data used by the namespace.
+ * `showin config <ns>` to see the configuration data used by the namespace
+"""
 
 
 def help(args=None):

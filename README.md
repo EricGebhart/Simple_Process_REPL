@@ -196,6 +196,17 @@ SPR files can be loaded with load-file.
 
     `load-file foo.spr`
 
+#### Introspection
+
+If the code patterns are adhered to, a namespace can be explored with the following
+SPR commands, where <ns> is the name of the namespace: 
+
+ * `ls-ns <ns>` to see a summary of the namespace.
+ * `help <ns>` to get help for the namespace.
+ * `help <ns>/<function>` to get help for a function in the namespace.
+ * `showin <ns>` to see the Stateful data used by the namespace.
+ * `showin config <ns>` to see the configuration data used by the device namespace
+
 
 ### Application State Data Structure
 
@@ -626,6 +637,7 @@ There are several kinds.
 
 _dolist_ commands are commands defined in spr or the configuration. 
 They are strings which can be parsed and evaluated by the REPL/interpreter.
+They are created with the `def` command.
 
 _dolist_ commands can be built from other _dolist_ commands and _fptr_ commands.
 _dolist_ commands can be defined in yaml, in python code, or interactively in the REPL.
@@ -637,6 +649,8 @@ the process of importing a python library into SPR.
 
 ### Partial commands
 
+_partial_s are created with the `partial` command.
+
 _partial_ commands are built from _fptr_ commands.
 _partial_ commands are like dolist commands. Except that the first symbol in
 the list is an fptr symbol, and the list is not everything the fptr function needs.
@@ -645,15 +659,24 @@ some or all of the first arguments.
 
 _partial_ commands can only be defined in SPR code, and interactively.
 
+
 ### Handshake function
 
-This is a generic function that is a bit more complicated.  
+Keeping this here, so it is findable in multiple ways.
+See also: 
+ * `help dev` to get help for the dev namespace, which
+ has imported the device extension module.
+ * `showin device` to see the Stateful data used by the device namespace
+ * `showin config device` to see the configuration data used by the device namespace
+
+Handshake is a generic function that is a bit more complicated.  
 It manages an interaction with a device. Everything _handshake_ 
 does is defined in the configuration file. As with everything else, 
 if anything fails, or doesn't match, an exception is raised.
 
 Here are the steps that _handshake()_ does.
 
+  * Wait for the specified device path to appear.
   * Wait for the _start_string_, match it.
   * Respond with the _response_string_.
   * Look in the output for: 

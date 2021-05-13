@@ -7,18 +7,19 @@ device:
   path: ''
 
 config:
-    serial:
-        baudrate      : 9600
+  device:
+        serial:
+            baudrate      : 9600
 
-    test:
-        start_string    : 'Some handshake string'
-        response_string : 'some response string'
-        fail_regex      : '^F:.*'
-        done_regex      : '^I:Test All Done'
-        do_qqc_regex    : '^I:Now Setting Serial Number'
-        do_qqc_func     : input-serial
+        handshake:
+            start_string    : 'Some handshake string'
+            response_string : 'some response string'
+            fail_regex      : '^F:.*'
+            done_regex      : '^I:Test All Done'
+            do_qqc_regex    : '^I:Now Setting Serial Number'
+            do_qqc_func     : input-serial
 
-    #number of seconds to wait for a response from board and from the test.
-    waiting:
-        timeout      : 30
-        pause_time   : 5
+        #number of seconds to wait for a response from board and from the test.
+        waiting:
+            timeout      : 30
+            pause_time   : 5

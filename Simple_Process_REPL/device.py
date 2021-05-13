@@ -41,6 +41,7 @@ if anything fails, or doesn't match, an exception is raised.
 
 Here are the steps that _handshake()_ does.
 
+  * Wait for the specified device path to appear.
   * Wait for the _start_string_, match it.
   * Respond with the _response_string_.
   * Look in the output for:
@@ -95,23 +96,23 @@ def wait():
 
 
 def do_qqc(line):
-    do_qqc_regex = A.get_in_config(["test", "do_qqc_regex"])
+    do_qqc_regex = A.get_in_config(["device", "handshake", "do_qqc_regex"])
     if do_qqc_regex:
         return re.match(do_qqc_regex, line)
     return False
 
 
 def test_line_fails(line):
-    fail_regex = A.get_in_config(["test", "fail_regex"])
+    fail_regex = A.get_in_config(["device", "handshake", "fail_regex"])
     result = False
     if re.match(fail_regex, line):
         result = True
-        logger.error("Test failed with: %s" % line)
+        logger.error("handshake failed with: %s" % line)
     return result
 
 
 def test_done(line):
-    done_regex = A.get_in_config(["test", "done_regex"])
+    done_regex = A.get_in_config(["device", "handshake", "done_regex"])
     result = False
     if re.match(done_regex, line):
         result = True
@@ -130,10 +131,10 @@ def handshake():
     if do_qqc, then call function and send return to the
     serial device.
     """
-    init_string = A.get_in_config(["test", "start_string"])
-    response_string = A.get_in_config(["test", "response_string"])
-    do_qqc_func = A.get_in_config(["test", "do_qqc_func"])
-    baudrate = A.get_in_config(["serial", "baudrate"])
+    init_string = A.get_in_config(["device", "handshake", "start_string"])
+    response_string = A.get_in_config(["device", "handshake", "response_string"])
+    do_qqc_func = A.get_in_config(["device", "handshake", "do_qqc_func"])
+    baudrate = A.get_in_config(["device", "serial", "baudrate"])
     usb_device = A.get_in_device("path")
 
     _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func)
