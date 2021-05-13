@@ -22,8 +22,12 @@ Markdown uses these parts of the Application state.
 
 Populate markdown/md in the Application state,
 with the markdown you wish to convert.
-then convert to what you want and set it where you like
-with a *send_html_to* command.
+Then use 'md/html-to some/value/vector' to convert and
+save it.
+
+Alternatively use md/html-from, give it the vector for
+your markdown content, and the html will placed right
+next to it in the data structure.
 """
     % yaml
 )
@@ -33,17 +37,24 @@ def help():
     print(HelpText)
 
 
-def load_from(*keys):
-    """Load markdown from a value vector into markdown/md,
-    Convert the markdown and assign it to markdown/html.
-    example: md/load-from readme md"""
+def html_from(*keys):
+    """Convert markdown from a value vector
+
+    Convert the markdown and assign it to
+    html in the same tree node as the markdown.
+
+    example: md/html-from readme md
+
+    This will convert readme/md from markdown into
+    html and place the contents in readme/html
+    """
+    vv = keys[0][:-1]
     md = A.get_in(*keys)
     html = m.markdown(md)
-    A.set_in(["markdown", "md", md])
-    A.set_in(["markdown", "html", html])
+    A.set_in(vv + ["html", html])
 
 
-def send_to(*keys):
+def html_to(*keys):
     """Convert the markdown held in markdown/md to HTML
     and assign it to the value vector given.
     example: md/send-to readme html"""

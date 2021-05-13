@@ -46,7 +46,7 @@ AS = {
 }
 
 
-def set(d):
+def _set_(d):
     """
     merge in a new dict, like the device dictionary, into
     the Application state.
@@ -93,14 +93,17 @@ def get_vals_in(vector, *keys):
     """Get a list of values from a value vector in the Application state.
     Vector should be a vector of keys, and keys should be a list of keys. :-/
 
-    this, that, it = get_vals_in(["foo", "bar"], this that it).
+    this, that, it = get_vals_in(["foo", "bar"], ["this" "that" "it"]).
 
     This is of primary use in the creation '-with' commands.
     """
     res = []
     d = get_in(vector)
     for k in keys[0]:
-        res += [d[k]]
+        try:
+            res += [d[k]]
+        except Exception:
+            res += [None]
     return res
 
 
@@ -240,9 +243,51 @@ def load_base_config():
 
 
 def load_pkg_resource_to(pkgname, filename, *keys):
-    """load the default configuration."""
+    """load a python package resource file and place the contents
+    at the value vector given.
+
+    example: load-pkg-resource-to Simple_Process_REPL README.md readme md
+
+    Will place the contents of the README.md file into the value vector
+    readme/md.
+    """
     res = u.load_pkg_resource(pkgname, filename)
     set_in(keys[0] + [res])
+
+
+def load_pkg_resource_with(*keys):
+    """load a python package resource file
+    using the values found in 'package' and 'filename' located at
+    the value vector.
+
+    The contents will be placed into 'contents' at the value vector given.
+
+    For this example there is a structure in the Application state which
+    looks like this. In this case the value vector is simply 'readme'.
+    Contents is included for clarity, but will be created if not there.
+
+    readme:
+         package: "Simple_Process_REPL"
+         filename: "README.md"
+         contents: ""
+
+    example: load-pkg-resource-with readme
+
+    Will place the contents of the README.md file into the value vector
+    readme/md.
+
+    In SPR:
+
+    set readme package Simple_Process_REPL
+
+    set readme filename README.md
+
+    load-pkg-resources-with readme
+
+    """
+    pkgname, filename = get_vals_in(*keys, ["package", "filename"])
+    res = u.load_pkg_resource(pkgname, filename)
+    set_in(keys[0] + ["content", res])
 
 
 def save_config(filename):

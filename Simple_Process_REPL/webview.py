@@ -85,7 +85,7 @@ def view_url_from(title, *keys):
     webview.start()
 
 
-def view_html_with(*keys):
+def view_with(*keys):
     """Given a value vector, use the values located there for title, html, and url
     html wins over url if both are given.
     example: view-html-with readme
@@ -95,7 +95,7 @@ def view_html_with(*keys):
     """
 
     # I think this can be a lot easier, with kwargs. - refactor
-    html, url, title = A.get_vals_in(*keys, "html", "url", "title")
+    html, url, title = A.get_vals_in(*keys, ["html", "url", "title"])
     webview.create_window(
         title,
         html=html,

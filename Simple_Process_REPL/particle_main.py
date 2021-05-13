@@ -166,7 +166,7 @@ def get_usb_and_id():
     """
     # PB['usb_device'], PB['device_id'] = P.get_usb_and_id()
     path, name, id = P.get_w_timeout(A.get_in_config(["waiting", "timeout"]))
-    A.set({"device": {"path": path, "name": name, "id": id}})
+    A._set_({"device": {"path": path, "name": name, "id": id}})
 
 
 def wait_for_plist():

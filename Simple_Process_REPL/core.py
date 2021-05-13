@@ -115,9 +115,9 @@ def init(symbols, specials, parser):
     """
     A.init(parser, logger)
     # make the symbol table available in the App State.
-    A.set({"_Root_": r.Root})
+    A._set_({"_Root_": r.Root})
     # Need to revisit. Be nice if it worked.
-    # A.set({"_Current_NS_": r.Current_NS})
+    # A._set_({"_Current_NS_": r.Current_NS})
 
     # Add fundamental commands to the root level of the interpreter.
     r._import_(

@@ -9,6 +9,7 @@ namespace as "Application State functionality"
     load_config
     load_yaml
     load_pkg_resource_to
+    load_pkg_resource_with
     merge_yaml
     sync_functions
     reset_device
@@ -105,16 +106,28 @@ namespace pb "Particle Board interface"
 namespace md "Markdown conversion to HTML"
     Simple_Process_REPL.markdown
     help
-    send_to
-    load_from
+    html_to
+    html_from
 
 namespace web "View HTML and urls."
     Simple_Process_REPL.webview
     help
     view_url_from
     view_html_from
-    view_html_with
+    view_with
 
 in-ns
 
 import Simple_Process_REPL.mkext new_spr_extension_project
+
+set readme package Simple_Process_REPL
+
+set readme filename README.md
+
+as/load-pkg-resource-with readme
+
+md/html-from readme content
+
+set readme title "The SPR README!!!"
+
+def doc "Display the Readme documentation in a browser window." web/view-with readme
