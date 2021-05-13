@@ -1,11 +1,42 @@
 # Simple Process REPL
 
-Get your favorite python libraries that do things, and start 
-scripting process applications that do composeable things out of them.
+** Readme under re-construction **
+_This feels like 5 readmes in a row. 
+This is all a little bit to verbose, repeated, and disorganized,
+but I figure too much information is better than not enough.
+Continuing to edit as I go._
 
+Get your favorite python libraries that do things, and start 
+composing process applications that do more complicated things out of them.
+
+So you have something you know you can code up in python. It's got some data
+to keep track of, It's got configuration settings, 
+it does some things, communicates with a device, generates some
+barcodes, flashes and tests an IoT device, downloads an image and creates a bootable
+sdcard with all the steps required... etc.
+
+SPR handles the foundation, It manages logging and yaml configurations. 
+It has integrated help, and can be fully introspected within it's self.
+
+It can be configured to run as an application, which will execute once, or
+in a loop over and over. Help is fully configurable to complete the illusion.
+At the same time it has extensive internal help.
+
+When run as a REPL SPR has history, tab completion, and complete access to
+all functionality within your application.
+
+SPR gives you a tree of data to hold everything you could
+want. It has a simple expandable data tree defined in yaml. 
+Configurations for everything.
+
+This allows you to write simple functions which set and get their configuration 
+and stateful data in the tree, and/or interact with other things. 
+There is a notion of devices, there are simple dialogs and cli prompts,
+
+## To sum up.
 This is a really stupid interpreter, connected to a configuration and application state
 which is a big tree of Yaml.  Throw in a module of python functions and  you've got an 
-application with a Read Eval Print loop.
+application with a REPL. (Read Eval Print loop).
 
 
 ## The parts.
@@ -15,11 +46,13 @@ application with a Read Eval Print loop.
     * cli 
     * dialog
     * appstate
-    * shell
+    * subprocess/shell
     * device
     * bar / QR Codes
     * particle board
     * logging controls
+    * Some functions from python os
+    * Some functions from python shutil 
    
 ### The interpreter/REPL
 This is defined in `repl.py`. It has the idea of namespaces and
@@ -27,7 +60,7 @@ it knows how to import python modules. It does it's best to call the
 python functions you tell it to.  It recognizes, words, strings and numbers.
 ie. `foo "this is a string" 10`, it understands functions with various 
 signatures including variable arguments, but not keywords. Which aren't
-valid in the syntax anyway.
+valid in the non-existant syntax anyway.
 
 #### Sources:
 When run with no Arguments, SPR will try to do whatever is set as the
@@ -35,18 +68,31 @@ autoexec in the configuration file. This setting should be a list of
 words understood by the interpreter.
 
 With `-f` a file can be given for SPR to run on startup before the
-autoexec or repl is started.
+autoexec or repl is started. 
 
 The configuration file can also hold SPR code in the `functions:` section.
 
 Additionally there are hooks which can be defined in the configuration 
 to do what you like, at particular steps of the process.
 
-#### The syntax. 
+### The syntax. 
 
 That's it. words strings and numbers separated by spaces. Commands
 are separated by a blank line and can be formatted with whitespace in
 any way, as long as the lines are contiguous.
+
+
+#### Oh, well almost.
+Slashes '/' are valid characters in names. it's not special, except it is.
+the / is what denotes the namespace path for the functions.
+So if we want to use _msg_ in the _ui_ namespace we would write it like this. 
+
+`ui/msg "hello"`
+
+A complication of this, is that it is still stupid namespaces, they don't know
+where they are, and therefore namespace must always be specified even when
+inside the namespace.  It's a pain point, but it's not bad. 
+
 
 #### The core commands.
 * namespace - create a namespace and import a SPR/python extension.
@@ -58,7 +104,46 @@ any way, as long as the lines are contiguous.
 * def - Define a new command
 * partial - Define a new command that is a partial of another.
 * showin - show the Application state in YAML form.
-* help - get help
+* help - get help, help <name|ns|ns/name>
+
+### Namespaces
+A namespace is a structure that holds some stuff, and a list of symbols.
+When a namespace is created the python functions are imported directly 
+into it, The module's spr code is also run, and the yaml code associated 
+with the import module will be integrated into the Application State tree.
+
+It is encouraged that the modules imported into the namespace have a _help()_
+function. The `new-spr-extension-project` creates a nice template accordingly.
+
+At a minimum, creating a namespace requires a documentation string. If a help
+function exists in the namespace that help will be integrated into the namespace
+help formatting.
+
+`ls-ns` will list all the namespaces. 
+`ls-ns name` will list the contents of that namespace. 
+`ns-tree` will list all the namespaces with their contents. 
+
+Creating a namespace called foo from a python module _foo.core_ looks like this:
+```
+    namespace foo "my foo namespace that does bar" 
+        foo.core 
+        function1 function2 ...`
+```
+
+after a namespace command, the interpreter will remain in that namespace
+until it is changed with the `in-ns` command.
+
+While in a namespace it is also possible to do an import of a python module
+like this:
+```
+    import foo.core 
+        function1 functon2 ...
+```
+
+SPR files can be loaded with load-file.
+
+    `load-file foo.spr`
+
 
 ### Application State Data Structure
 
@@ -75,16 +160,32 @@ it cares about.  This is the _state_ part of the structure. The Application
 state is defined by collecting all of the extension modules yaml file and
 merging them together.
 
+Yaml files can be merged into the application state config with load-config.
+
+    `load-config foo.yaml`
+
+Yaml files can be merged into the **Root** of the application state with load-yaml.
+
+    `load-yaml foo.yaml`
+
+
 ### SPR/Python extensions
+
+#### just make one.
+
+A picture is worth a million words. use the _new-spr-extension-project_ to
+make a project and go look at it. looking at the help for a namespace may
+also be enlightening.
 
 #### Python code
 SPR can just import a python module and make those functions available,
-in the interpreter.
+in the interpreter. It seems to mostly work. 
 
-The python functions for as SPR extension are generally very simple, 
+The python functions for use as an SPR extension are generally very simple, 
 * Retrieve their configuration data from the Application state, 
 * Do something, 
 * Save the result back into their part of the application state as needed.
+
 
 #### Help
 It is recommended that one function be named `help` and that it prints
@@ -118,10 +219,11 @@ application that embodies the old version 1 of SPR.
 The process also needed wifi, the concept of a device, usb handshaking,
 device waiting and dialog prompts among other things.
 
-Composeability and an interective REPL were necessary to efficiently create a
+Composeability and an interactive REPL were necessary to efficiently create a
 successful process of some complexity. 
 It naturally evolved out of the first version of this code which was a _zsh_ script.
-I had added a prompt to the script so I could run it's functions interactively.
+I had added a prompt to the script out of frustration so that I could run it's 
+functions interactively.
 
 But, then, between all the error trapping, and io redirection It was decided to
 switch to python. I built the prompt first, and started feeding it functions as
