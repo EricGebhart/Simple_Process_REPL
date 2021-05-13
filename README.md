@@ -20,8 +20,7 @@ with various methods of execution.
 
     pip install Simple_Process_REPL
     
-This is a stupid simple, configurable, Extensible, application interface.
-You will need to install dialog. tkinter is coming probably.
+You will also need to install dialog. tkinter is coming probably.
 
 on Arch Linux
 
@@ -44,13 +43,13 @@ to create repeatable snippets of processes was the way to go. Two pieces
 might work individually and not one after the other, or the device would
 disconnect for a moment. It was a pull your hair out kind of experience.
 
-The original python version 1 of SPR now lives on as this project.
-[The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git)
-is an application built from the previous version of SPR. PBR is now a standalone
-application that embodies the old version 1 of SPR.
+The original python version 1 of SPR now lives on as 
+[The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git).
+PBR is an application layer built on top of the previous version of SPR. 
+PBR is now a standalone application that embodies the old version 1 of SPR.
 
-The process also needed wifi, the concept of a device, usb handshaking,
-device waiting and dialog prompts among other things.
+This particle board process also needed wifi, the concept of a device, 
+usb handshaking, device waiting and dialog prompts among other things.
 
 Composeability and an interactive REPL were necessary to efficiently create a
 successful process of some complexity. 
@@ -60,13 +59,15 @@ functions interactively.
 
 But, then, between all the error trapping, and io redirection It was decided to
 switch to python. I built the prompt first, and started feeding it functions as
-I built the process. It simply evolved into a list processor. 
+I built the process. It was a list processor from the very beginning. 
 It worked fantastically. Creating that finicky process was actually kind of fun.
 
 
 ----------
 
-So get your favorite python libraries that do things, and start 
+## Make something!
+
+Get your favorite python libraries that do things, and start 
 composing process applications that do more complicated things out of them.
 
 So you have something you know you can code up in python. It's got some data
@@ -76,22 +77,21 @@ barcodes or flashes and tests an IoT device,
 or maybe it downloads an image and creates a bootable
 sdcard with all the steps required... etc.
 
-SPR handles the foundation, It manages logging and yaml configurations. 
+SPR handles the foundation, It can import python modules, it has namespaces,
+It manages logging and yaml configurations. As well as Stateful data.
 It has integrated help, and can be fully introspected within it's self.
 
 It can be configured to run as an application, which will execute once, or
-in a loop over and over. Help is fully configurable to complete the illusion.
-At the same time it has extensive internal help.
+in a loop over and over with the `-i, --interactive` option. Help is fully 
+configurable to complete the illusion. At the same time it has extensive internal help.
 
 When run as a REPL SPR has history, tab completion, and complete access to
 all functionality within your application.
 
-SPR gives you a tree of data to hold everything you could
-want. It has a simple expandable data tree defined in yaml. 
-Configurations for everything. It's a bit painful, 
-but not unlike assembly code, just put your value over there, so someone else can get it later.
+SPR gives you YAML as a way to define your own tree of data to hold everything you 
+could want. 
 
-This allows you to write simple functions which set and get their configuration 
+All of this allows you to write simple functions which set and get their configuration 
 and stateful data in the tree, and/or interact with other things. 
 There is a notion of devices, there are simple dialogs and cli prompts,
 
@@ -99,8 +99,9 @@ There is a notion of devices, there are simple dialogs and cli prompts,
 This is a really stupid interpreter, think of it as a stupid layer on top of python.
 All with nice configuration and application state management
 But stupid, no syntax, no variables, no logic, it just calls functions.
-It's easy to get and put things into the Application state
+It's easy to get and put things into the Application state 
 which is represented as a big tree of Yaml. 
+
 A module of python functions to do the complicated bits fills out the functionality. 
 Then it's time to start playing with the parts and put something together.
 Once it's done, with just a configuration file you could have an
@@ -116,10 +117,13 @@ application that does a repeatable process with a builtin REPL.
 ### The interpreter/REPL
 
 This is defined in `repl.py`. It has `help`, persistent history,
-and tab completion.
+and tab completion. 
+It has the idea of namespaces and it knows how to import python modules. 
 
-It has the idea of namespaces and
-it knows how to import python modules. It does it's best to call the
+**help** will give you the documentation for every namespace and command available, 
+even the ones you just created. 
+
+It does it's best to call the
 python functions you tell it to.  It recognizes, words, strings and numbers.
 ie. `foo "this is a string" 10`, it understands functions with various 
 signatures including variable arguments, but not keywords. Which aren't
@@ -130,7 +134,7 @@ interactively create/execute a process step by step.
 `help` at the REPL prompt. 
 
 On startup, there are only a dozen or so commands imported directly into
-the repl. The rest of the initialization is done by core.spr which
+the repl. The rest of the initialization is done by _core.spr_ which
 imports the rest of the extensions into their namespaces.
 
 
@@ -138,7 +142,7 @@ imports the rest of the extensions into their namespaces.
 
 Everything you want to do must be a python function imported into the repl.
 From there, everything is composable from symbol/words
-These user functions can also be defined in an spr file or even the YAML config file.
+These user functions can also be defined in an spr file or even in the YAML config file.
 
 It has a really, really stupid parser. All it can do execute a list of symbols, or call
 a special symbol with everything that follows. It does know the difference between
@@ -146,7 +150,9 @@ symbols, strings and numbers.
 It does some introspection of the python function signtures, so it's not completely
 stupid, but some care should be taken.
 
+
 ### Namespaces
+
 A namespace is a structure that holds some stuff, and a list of symbols.
 Think of it as a folder of commands. That really is about the extent of it.
 
@@ -176,8 +182,13 @@ after a namespace command, the interpreter will remain in that namespace
 until it is changed with the `in-ns` command.
 
 While in a namespace it is also possible to do an import of a python module
-like this, which is actually how SPR gets the *new_spr_extension_project* command:
+like this, which is actually how SPR gets the *new_spr_extension_project* command,
+into it's root namespace. `in-ns` with no name will take the you to the root
+namespace.
+
 ```
+    in-ns
+    
     import Simple_Process_REPL.mkext new_spr_extension_project
 ```
 
@@ -192,16 +203,17 @@ There is this big data structure referred to as the Application State.
 It has a config tree which can be grown as needed by any SPR extensions
 that need it. 
 
+Some of the data trees at the root of the Application state are the following. 
  * config is the place where the configurations should go.
  * args is the resolved command line
  * device is an imaginary device. Which we can wait for and handshake with.
  * bar-QR is the state managed by the bar/QR code module
  * device is used by core, and by particle.
  
- It's really best to just explore it with `showin` in the REPL.
-
-The command: **showin** in the REPL will give it to you in yaml.
-**help** will give you the documentation for every command you can do, even the ones you just created. 
+It's really easiest to just explore SPR and it's application state with `showin` 
+in the REPL.
+ 
+The command: **showin** in the REPL will give the Application state to you in yaml.
 The easiest way to access it is `showin device` or `showin config serial`
 with `showin key1 key2,...` is the command to find sub-section or attributes in the REPL.
 `showin config` , `showin defaults`, or just __showin__ 
@@ -267,9 +279,9 @@ commands. Test and play with your code, and create a new process.
 A picture is worth a million words. use the _new-spr-extension-project_ to
 make a project and go look at it. looking at the help for a namespace may
 also be enlightening. There are three core files to an SPR extension.
-The usual python modules, a yaml file and an spr file. Only the python
+A python module, a yaml file and an spr file. Only the python
 is necessary. All of the builtin extensions follow this same model.
-_bar_qr_ is a good example if you want to read the source. 
+_bar_qr_ in the repo is a good example if you want to read the source. 
 
 Here is the result of `new-spr-extension-project foo`.
 
@@ -286,7 +298,9 @@ foo
 
 #### Python code
 SPR can just import a python module and make those functions available,
-in the interpreter. 
+in the interpreter.  However, there is usually some sort of wrapping up
+to make life easier in SPR. It is fairly easy to make an extension made
+from example snippets gleaned from StackOverflow.
 
 The python functions for use as an SPR extension are generally very simple, 
 * Retrieve their configuration data from the Application state, 
@@ -382,11 +396,12 @@ def print-codes
 It's just a list of things with whitespace. words, strings and numbers.
 If the first thing is a python function with arguments the rest of the list
 is the arguments. If it isn't, then it's a list of commands and each is done
-in turn. But, each command can be, a list of commands..
+in turn. But each command, can be a list of things.
 
 If you put spr in a file, each list must be separated by a blank line.  
 A command list can be formatted however you like, but the lines must be 
 contiguous. A blank line results in the command being executed. Here is a sample from
+
 `core.py`
 
 ```
@@ -420,7 +435,7 @@ Here is an example of using a message box and creating a new command
 that does the same thing. First is the using a msg box. Then defining
 a new command mymsg, then using the new command.
 ```
-    ui/msgbox "Hello World" 
+    ui/msg "Hello World" 
 
     def mymsg "my special msg" ui/msgbox "Hello World"
 
@@ -437,17 +452,18 @@ There is this thing, the *from* commands take a `from:` keyword.
 so `as/set-in-from foo bar from: foo baz`
 Will copy the contents from foo/baz to foo/bar in the Application state.
 
-Slashes '/' are valid characters in names. it's not special, except it is.
-the / is what denotes the namespace path for the functions.
-So if we want to use _msg_ in the _ui_ namespace we would write it like this. 
+Slashes '/' are valid characters in names. It's not special in the grammar, 
+but it is when looking up SPR symbols. The / is what denotes the namespace 
+path for the functions. So if we want to use _msg_ in the _ui_ namespace we 
+would write it like this. 
 
 `ui/msg "hello"`
 
-A complication of this, is that it is still stupid namespaces, they don't know
-where they are, and therefore namespace must always be specified even when
-inside the namespace.  It's a pain point, but it's not bad. 
-The thing that nags me is that the namespace name can be arbitrary.
-So therefore, this is brittle.
+A complication of this, is that namespaces are still stupid, they don't know
+where they are, and therefore the namespace must always be specified 
+on commands even when inside the namespace.  It's a pain point, 
+but it's not bad. The thing that nags me is that the namespace name 
+can be arbitrary. Therefore, this is brittle.
 
 
 ## A few batteries included so far.
@@ -497,7 +513,7 @@ little tool here.
 
 ### The default process
 
-In the configuration there is an __autoexec__ attribute. This should be a
+In the configuration there is an __exec/autoexec__ attribute. This should be a
 symbol name or list of symbol names to run as the default process. This
 is the process that will run when running in interactive loop mode,
 or when run once.
@@ -520,11 +536,13 @@ takes the place of the autoexec for that execution.
   * `SPR cmd1 cmd2` Run a list of command/symbols from the command line 
   * `SPR -f foo.spr` Run an SPR file.
   * `SPR -r` Run as an interactive REPL 
-
+  * `SPR -r cmds` Run as an interactive REPL, executing cmds on startup.
+  * `SPR -rf foo.spr cmds` Run as an interactive REPL, loading a file and
+  executing cmds on startup.
 
 ### Sources:
 When run with no Arguments, SPR will try to do whatever is set as the
-autoexec in the configuration file. This setting should be a list of
+_autoexec_ in the configuration file. This setting should be a list of
 words understood by the interpreter.
 
 With `-f` a file can be given for SPR to run on startup before the
@@ -558,7 +576,7 @@ if in interactive loop mode, _-i_, The failure and continue dialogs will catch t
 fail for the next loop.
 
 
-## Just do it.
+## Learning by example.
 The easiest way to understand this is system is by using the REPL. 
 It will show you how it works. `SPR -r` 
  
