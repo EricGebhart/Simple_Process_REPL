@@ -7,6 +7,8 @@ namespace as "Application State functionality"
     eval_default_process
     save_config
     load_config
+    load_yaml
+    merge_yaml
     sync_functions
     reset_device
     archive_log

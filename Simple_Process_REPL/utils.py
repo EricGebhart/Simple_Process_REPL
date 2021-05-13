@@ -102,5 +102,5 @@ def load_pkg_yaml(pkgname, yamlname):
 
 
 def dump_pkg_yaml(pkgname, yamlname):
-    """load a yaml file from a package and dump it."""
+    """load a yaml file from a python package and dump it."""
     return yaml.dump(load_pkg_yaml(pkgname, yamlname))

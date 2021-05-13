@@ -386,12 +386,16 @@ def all_fptr_help(st):
         fptr_help(k, v)
 
 
+def fptr_sig(k, v):
+    if "signature" in v.keys():
+        return "%s%s" % (k, v["signature"])
+    else:
+        return k
+
+
 def fptr_help(k, v):
     """Format an fptr symbol's help."""
-    if "signature" in v.keys():
-        sig = "%s%s" % (k, v["signature"])
-    else:
-        sig = k
+    sig = fptr_sig(k, v)
     print("\n%-20s" % sig)
     print("----------------\n%s" % v["doc"])
 
@@ -421,7 +425,7 @@ def namespace_help(key, ns):
     all_dolist_help(ns["symbols"])
 
 
-def list_namespace(ns=Root):
+def list_namespace():
     """List the non namespace stuff in the Root namespace."""
     print("\n Root Namespace: ")
     for k, v in sorted(Root.items()):
@@ -435,30 +439,41 @@ def ns_tree():
     print("\n")
     for k, v in sorted(Root.items()):
         if isstype(v, "namespace"):
-            print(
-                "\n%-10s %15s:\n---------------------------\n%s"
-                % (k, v["name"], v["doc"])
-            )
-            for j, v in sorted(v["symbols"].items()):
+            printns(k, v)
+            for j, z in sorted(v["symbols"].items()):
                 print("   %s" % j)
 
 
+def printns(k, v):
+    print(
+        "\n%-10s %20s: \n---------------------------------------------\n%s"
+        % (k, v["name"], v["doc"])
+    )
+
+
+def printns_syms(ns):
+    for k, v in sorted(ns["symbols"].items()):
+        sig = fptr_sig(k, v)
+        print("%-20s" % sig)
+
+
 def ls_ns(ns=None):
-    """List the name spaces"""
-    # So that the signature shows up nicely in the doc.
+    """List the name spaces, or the contents of a namespace if given"""
     if ns is None:
         ns = Root
-    for k, v in sorted(ns.items()):
-        if isstype(v, "namespace"):
-            print(
-                "\n%-10s %20s: \n---------------------------------------------\n%s"
-                % (k, v["name"], v["doc"])
-            )
+        for k, v in sorted(ns.items()):
+            if isstype(v, "namespace"):
+                printns(k, v)
+    else:
+        s = get_symbol(ns)
+        if isstype(s, "namespace"):
+            printns(ns, s)
+            printns_syms(s)
 
 
 def helpful_cmds():
     """Print a list of helpful commands"""
-    print("Helpful Commands: ls-ns, ns-tree, help <ns>, as/showin, def, help as")
+    print("Useful Commands: ls-ns <ns>, ns-tree, help <ns|name|ns/name>, showin")
 
 
 def help(args=None):

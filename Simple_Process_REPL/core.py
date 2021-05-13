@@ -132,7 +132,7 @@ def init(symbols, specials, parser):
             "partial",
             "in_ns",
             "namespace",
-            "load",
+            "load_file",
             "_quit_",
         ],
     )

@@ -171,10 +171,15 @@ def eval_default_process():
         hello()
 
 
-def merge_yaml(y):
+def merge_yaml(yaml):
     """Merge a yaml data structure into the Application state."""
     logger.info("Merge Yaml: %s:" % y)
     u.merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
+
+
+def load_yaml(yaml_file):
+    """Load a yaml file into the application state"""
+    merge_yaml(u.load_yaml_file(yaml_file))
 
 
 def load_functions():
