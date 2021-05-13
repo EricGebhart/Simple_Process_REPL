@@ -61,10 +61,13 @@ def set_in(*keys):
     global AS
     AS = u.merge(AS, u.make_dict(*keys))
 
+    # Refactor. Should be set. and set in from at the same time.
 
-def set_in_from(*keys):
-    """Takes 2 lists of keys separated with 'from:' the value to assign
-    into the Application State and where to get it from."""
+
+def set(*keys):
+    """Takes a value vector or 2 value vectors separated with 'from:'
+    If from: is found the value is retrieved from the value vector that follows
+    Without from, the last item is taken to be the value."""
     global AS
     set_keys = []
     from_keys = []
@@ -75,14 +78,30 @@ def set_in_from(*keys):
             continue
         dest += [k]
 
-    set_keys += [get_in(from_keys)]
-    set_in(set_keys)
+    if from_keys:
+        set_keys += [get_in(from_keys)]
+    AS = u.merge(AS, u.make_dict(set_keys))
 
 
 def get_in(keys):
     """Get something out of the Application state."""
     global AS
     return _get_in(AS, keys)
+
+
+def get_vals_in(vector, *keys):
+    """Get a list of values from a value vector in the Application state.
+    Vector should be a vector of keys, and keys should be a list of keys. :-/
+
+    this, that, it = get_vals_in(["foo", "bar"], this that it).
+
+    This is of primary use in the creation '-with' commands.
+    """
+    res = []
+    d = get_in(vector)
+    for k in keys[0]:
+        res += [d[k]]
+    return res
 
 
 def _get_in(dict_tree, keys):
@@ -218,6 +237,12 @@ def merge_pkg_yaml(pkgname, yamlname):
 def load_base_config():
     """load the default configuration."""
     return u.load_pkg_yaml(__name__, "SPR-defaults.yaml")
+
+
+def load_pkg_resource_to(pkgname, filename, *keys):
+    """load the default configuration."""
+    res = u.load_pkg_resource(pkgname, filename)
+    set_in(keys[0] + [res])
 
 
 def save_config(filename):

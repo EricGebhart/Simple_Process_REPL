@@ -4,8 +4,6 @@ partial show "Showin the device" as/showin device
 
 partial showin "Show in the App State" as/showin
 
-partial set "Set a value in the app state." as/set-in
-
-partial set-from "Set a value in the app state from another value." as/set-in-from
+partial set "Set a value in the app state." as/set
 
 partial run "Run the autoexec command set in the configuration" as/eval-default-process

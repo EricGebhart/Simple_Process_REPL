@@ -40,6 +40,7 @@ setup(
         "numpy",
         "Image",
         "Pyzbar",
+        "markdown"
         # "brother_ql",
     ],
 )

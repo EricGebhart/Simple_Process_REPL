@@ -3,11 +3,12 @@ namespace as "Application State functionality"
     help
     showin
     set_in
-    set_in_from
+    set
     eval_default_process
     save_config
     load_config
     load_yaml
+    load_pkg_resource_to
     merge_yaml
     sync_functions
     reset_device
@@ -100,6 +101,19 @@ namespace pb "Particle Board interface"
     dfu listen list identify inspect login
     logout update setup_done _doctor _flash pcmd
     name name_from
+
+namespace md "Markdown conversion to HTML"
+    Simple_Process_REPL.markdown
+    help
+    send_to
+    load_from
+
+namespace web "View HTML and urls."
+    Simple_Process_REPL.webview
+    help
+    view_url_from
+    view_html_from
+    view_html_with
 
 in-ns
 

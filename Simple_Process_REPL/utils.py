@@ -86,12 +86,17 @@ def load_yaml_file(filename):
     return someyaml
 
 
+def load_pkg_resource(pkgname, filename):
+    """Load a file from a python package, and return it."""
+    return pkgutil.get_data(pkgname, filename).decode("utf-8")
+
+
 def load_pkg_yaml(pkgname, yamlname):
     """load a configuration file from a package."""
     logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
     try:
         someyaml = yaml.load(
-            pkgutil.get_data(pkgname, yamlname), Loader=yaml.SafeLoader
+            load_pkg_resource(pkgname, yamlname), Loader=yaml.SafeLoader
         )
         return someyaml
     except FileNotFoundError:

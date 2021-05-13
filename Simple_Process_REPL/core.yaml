@@ -12,6 +12,13 @@ config:
 
         config_file   : 'SPRConfig.yaml'
 
+    readme:
+        module: Simple_Python_REPL
+        filename: README.md
+        path: ""
+        md: ""
+        html: ""
+
     exec:
         # function name to autoexec when asked to run
 
