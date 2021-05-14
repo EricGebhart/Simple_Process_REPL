@@ -26,6 +26,7 @@ The cli uses the same parts of the configuration as the dialog module.
 
 
 def help():
+    """Additional SPR specific Help for the cli Module."""
     print(HelpText)
 
 

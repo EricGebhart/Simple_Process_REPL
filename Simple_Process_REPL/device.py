@@ -67,6 +67,7 @@ Here are the steps that _handshake()_ does.
 
 
 def help():
+    """Additional SPR specific Help for the device Module."""
     print(HelpText)
 
 

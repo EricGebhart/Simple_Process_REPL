@@ -1,8 +1,6 @@
 in-ns
 
-partial show "Showin the device" as/showin device
-
-partial showin "Show in the App State" as/showin
+partial show "Showin the device" as/show
 
 partial set "Set a value in the app state." as/set
 

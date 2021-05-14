@@ -18,10 +18,10 @@ QRCodeType = "QR_code"
 Root = "bar-QR"
 
 yaml = u.dump_pkg_yaml("Simple_Process_REPL", "bar_qr.yaml")
+spr = u.load_pkg_resource("Simple_Process_REPL", "bar_qr.spr")
 
 # format and fill in as you wish.
-HelpText = (
-    """
+HelpText = """
 bar-qr: - Bar and QR Code Scanning, generation, saving and printing.  -
 
 Recognized codetypes are either 'barcode' and 'QR-code'.
@@ -42,12 +42,18 @@ When scanning with the webcam the resulting value will be placed in bar-QR/value
 If working exclusively with bar or QR codes it may be beneficial to define
 partials for some functions, which always require a code type.
 
-"""
-    % yaml
+bar-qr has the following spr code.
+
+%s
+
+""" % (
+    yaml,
+    spr,
 )
 
 
 def help():
+    """Additional SPR help For the Bar and QR code Module."""
     print(HelpText)
 
 

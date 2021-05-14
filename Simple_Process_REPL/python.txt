@@ -10,6 +10,7 @@ logger = logging.getLogger()
 Root = "%s"
 
 yaml = u.dump_pkg_yaml(%s, "%s.yaml")
+spr = u.load_pkg_resource("%s", "%s.spr")
 
 # format and fill in as you wish.
 HelpText = (
@@ -22,22 +23,97 @@ I do this.
 
 %yaml
 
+%s defines this spr code.
+
+%yaml
+
 This is how I work.
 
 """
-    % yaml
+    % (yaml, spr)
 )
 
 
 def help():
+    """Additional SPR help."""
     print(HelpText)
 
 
-# Get something out of my part of the config.
-# A.get_in_config([Root, "foo"])
+def do_something_with(path):
+    """Given a value vector, use the values located there for
+    x, y and z to do something.
 
-# Put something into my part of the Appstate.
-# A.set_in([Root, "foo" "bar" 10])
+    example: do-something-with readme
 
-# Get something out of my part of the Appstate.
-# A.get_in([Root, "foo" "bar"])
+    With luck, the value vector given will contain x, y and z.
+    do_something_with will use the dictionary at the value vector
+    for the parameters to do something.
+
+    The result will be placed in %s/result.
+    """
+    # Get something out of my part of the Appstate.
+    mymode = A.get_in([Root, "mymode"])
+
+    x, y, z = A.get_vals_in(path, ["x", "y", "z"])
+
+    if not x:
+    # Get something out of my part of the config.
+    x =  A.get_in_config([Root, "x"])
+
+    # I think this can be a lot easier, with kwargs. - refactor
+    myresult = foo.do_something(x, mode=mymode, y=y, z=z)
+
+    # Put something into my part of the Appstate.
+    A.set_in([Root, "result", myresult])
+
+
+def do_something_from(path):
+    """Do Something Using the value from the value vector given.
+    example: do-something-from readme url
+
+    This will use the value held at readme/url to do something.
+    The result will be placed in %s/result.
+
+    """
+    thing = A.get_in_path(path)
+
+    logger.info("doing something to: %s" % thing)
+
+    myresult = foo.do_something(thing)
+
+    # Put something into my part of the Appstate.
+    A.set_in([Root, "result", myresult])
+
+
+def something_from(path):
+    """Do something from a value vector
+    And place the result into that same parent
+    vector with the name of 'stuff'.
+
+    example: something-from readme md
+
+    This will do this.
+    """
+
+    logger.info("doing something: %s" % something)
+
+    parent = keys[0][:-1]
+    thing = A.get_in_path(path)
+    stuff = foo.do_something(thing)
+    A.set_in(parent + ["stuff", stuff])
+
+
+def something_to(path):
+    """Convert the markdown held in markdown/md to HTML
+    and assign it to the value vector given.
+    example: md/send-to readme html"""
+
+    logger.info("doing something: %s" % something)
+
+
+    mything = A.get_in([Root, "thing"])
+    result = do_something(mything)
+
+    vv = A._get_vv_from_path(path)
+
+    A.set_in(vv + [result])

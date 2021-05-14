@@ -38,6 +38,7 @@ do anything.
 
 
 def help():
+    """Additional SPR specific Help for the Network Module."""
     logger.info("network help")
     print(HelpText)
 

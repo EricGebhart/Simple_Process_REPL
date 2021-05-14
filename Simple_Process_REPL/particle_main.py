@@ -23,15 +23,19 @@ which in this case is defined in particle.py
 logger = logging.getLogger()
 
 yaml = u.dump_pkg_yaml("Simple_Process_REPL", "particle_main.yaml")
+spr = u.load_pkg_resource("Simple_Process_REPL", "particle_main.spr")
 
 # format and fill in as you wish.
-HelpText = (
-    """
+HelpText = """
 particle: - A particle.io device interface.  -
 
 Interact with particle boards.  list, identify, claim, flash, test, etc.
 
-particle uses these parts of the Application state
+Particle uses these parts of the Application state
+
+%s
+
+Particle Defines This SPR code.
 
 %s
 
@@ -50,12 +54,14 @@ complex commands.
 
 Working  in the REPL with particle boards is much nicer than the particle-cli.
 
-"""
-    % yaml
+""" % (
+    yaml,
+    spr,
 )
 
 
 def help():
+    """Additional SPR specific Help for the Particle Module."""
     print(HelpText)
 
 

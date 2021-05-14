@@ -124,9 +124,10 @@ def init(symbols, specials, parser):
         "Simple_Process_REPL.repl",
         [
             "ns",
-            "ls_ns",
+            "ls",
             "ns_tree",
-            "help",
+            "_help_",
+            "_pyhelp_",
             "_def_",
             "_import_",
             "partial",

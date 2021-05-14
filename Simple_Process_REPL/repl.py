@@ -1,3 +1,4 @@
+import pydoc
 import pkgutil
 import readline
 import logging
@@ -6,7 +7,12 @@ import os
 import atexit
 import code
 from inspect import signature, _empty
-from Simple_Process_REPL.appstate import merge_pkg_yaml, get_in, get_in_config
+from Simple_Process_REPL.appstate import (
+    merge_pkg_yaml,
+    get_in,
+    get_in_config,
+    get_keys_in,
+)
 import Simple_Process_REPL.utils as u
 
 # The same configuration can be stored as instructions in a file read
@@ -450,53 +456,184 @@ def printns(k, v):
 
 
 def printns_syms(ns):
-    for k, v in sorted(ns["symbols"].items()):
-        sig = fptr_sig(k, v)
-        print("%-20s" % sig)
+    for k, symbol in sorted(ns["symbols"].items()):
+        print_sym(k, symbol)
 
 
-def ls_ns(ns=None):
-    """List the name spaces, or the contents of a namespace if given"""
+def get_parent_symbol(symbol):
+    """get the symbol this symbol is derived from"""
+    func_name = symbol["fn"].split(" ")[0]
+    s = _get_symbol(func_name)
+    return func_name, _get_symbol(func_name)
+
+
+def print_sym(k, symbol):
+    """Print a symbols signature."""
+    sig = fptr_sig(k, symbol)
+
+    if isstype(symbol, "namespace"):
+        print("   %-15s -->  %-30s %-30s" % (sig, symbol["name"], symbol["doc"]))
+
+    if isstype(symbol, "partial"):
+        parent_name, parent = get_parent_symbol(symbol)
+        print("   %-30s  Partial -->  %-20s" % (sig, fptr_sig(parent_name, parent)))
+
+    if isstype(symbol, "dolist"):
+        print("   %-30s  Do List -->  %-20s" % (sig, symbol["fn"]))
+
+    if isstype(symbol, "fptr"):
+        print("   %-30s" % sig)
+
+
+def ls(ns=None):
+    """
+    List the name spaces, the contents of a namespace.
+    Or the contents of the Application state at value vector given
+    in the form of a pathname starting with a '/'
+
+    ls - list all symbols in the root namespace.
+    ls foo - list all the symbols in the foo namespace
+    ls / - show the symbols tree in the root of the Application State
+    ls /bar-QR - show the symbol tree from the /bar-QR node of the Application State
+    ls /bar-QR/qrcode - show the symbol tree from the /bar-QR node of the Application State
+    """
     if ns is None:
         ns = Root
+        print("Namespaces:")
         for k, v in sorted(ns.items()):
             if isstype(v, "namespace"):
-                printns(k, v)
+                print_sym(k, v)
+                # printns(k, v)
+
+        print("\nFunctions:")
+        for k, v in sorted(ns.items()):
+            if not isstype(v, "namespace"):
+                print_sym(k, v)
     else:
-        s = get_symbol(ns)
-        if isstype(s, "namespace"):
-            printns(ns, s)
-            printns_syms(s)
+        if ns[0] == "/":
+            if len(ns) == 1:
+                keys = get_keys_in()
+            else:
+                vv = ns[1:].split("/")
+                keys = get_keys_in(*vv)
+
+            for k in keys:
+                print("    %-30s" % k)
+        else:
+            s = get_symbol(ns)
+            if isstype(s, "namespace"):
+                printns(ns, s)
+                printns_syms(s)
 
 
 def helpful_cmds():
     """Print a list of helpful commands"""
+    t = """
+    Useful Commands: ls, help, pyhelp, show
+
+    If the prescribed coding patterns for SPR extensions are adhered to:
+    * `ls` to list the contents of the Root, '/',  Namespace.
+    * `ls /` to list the contents of the Root, '/',  of the Application state.
+    * `ls <ns>` to see a summary of a namespace.
+    * `ls /path/to/something` to see a list of keys at that location in the Application State.
+    * `help` to get a summary.
+    * `help /` to get help for the root namespace.
+    * `help <ns>` to get help for a namespace.
+    * `help <ns>/<function>` to get help for a function in the namespace.
+
+    * `pyhelp <ns>` to get python help for a namespace.
+    * `pyhelp <ns>/<function>` to get python help for a function in the namespace.
+
+    * `showin <ns>` to see the Stateful Data used by the namespace.
+    * `showin config <ns>` to see the configuration data used by the namespace
+
+    * `browse-doc`  To read the README.md in your browser.
+    * `view-doc`  To read the README.md in an HTML viewer.
     """
-Useful Commands: ls-ns <ns>, ns-tree, help <ns|name|ns/name>, showin
-
-If the prescribed coding patterns for SPR extensions are adhered to:
- * `ls-ns` to see a list of the namespaces.
- * `ls-ns <ns>` to see a summary of a namespace.
- * `help <ns>` to get help for a namespace.
- * `help <ns>/<function>` to get help for a function in the namespace.
- * `showin <ns>` to see the Stateful Data used by the namespace.
- * `showin config <ns>` to see the configuration data used by the namespace
-"""
+    print(t)
 
 
-def help(args=None):
-    """Help for everything."""
+def _help_(args=None):
+    """
+    This is the SPR help, Additionally there is also the builtin
+    python help which can be accessed with the pyhelp command.
+    The two help systems show different information, all of which is
+    quite useful.
+
+    Help understands SPR symbols and their origins, so it can display
+    different and additional information about SPR than the python help.
+
+    Help can be used on namespaces and functions.  All of the following
+    Will give help in more and more specific ways.
+
+     * help
+     * help /
+     * help nw
+     * help nw/connect-wifi
+
+    """
     global Root
     application_help()
-    print("\nSPR Help\n=============================================")
     sym = args
-    helpful_cmds()
+    print("\nSPR Help\n=============================================")
     if args is None:  # or len(args) == 0:
+        helpful_cmds()
+        print("=============================================")
+        print("All Symbols in the Root / namespace")
+        ls()
+    elif args == "/":
         all_fptr_help(Root)
         all_dolist_help(Root)
         print("=============================================")
+
+    else:
+        # for sym in args:
+        # logger.info("Sym in args: " % (sym, args))
+        if sym[0] == "/":
+            sym = sym[1:]
+        s = _get_symbol(sym)
+        if isstype(s, "namespace"):
+            namespace_help(sym, s)
+        if isstype(s, ["dolist", "partial"]):
+            dolist_help(sym, s)
+        if isstype(s, ["fptr", "voidfptr"]):
+            fptr_help(sym, s)
+
+
+def _pyhelp_(args=None):
+    """
+    This is the interactive python help, Additionally there is also the builtin
+    SPR help which can be accessed with the help command.
+    The two help systems show different information, all of which is
+    quite useful.
+
+    pyHelp understands Python modules and doc strings and can therefore
+    provide nicely formated python level help for all SPR functionality.
+
+    It does also know how to show the documentation for the underlying
+    python functions which are used by SPR's partials.
+
+    pyHelp can be used on namespaces and functions.  All of the following
+    Will give help in more and more specific ways.
+
+     * pyhelp
+     * pyhelp nw
+     * pyhelp nw/connect-wifi
+    """
+
+    global Root
+    application_help()
+
+    sym = args
+    helpful_cmds()
+    if args is None:  # or len(args) == 0:
+        print("\nSPR Help\n=============================================")
+        # all_fptr_help(Root)
+        # all_dolist_help(Root)
         helpful_cmds()
-        # ls_ns()
+        print("=============================================")
+        print("All Symbols in the Root / namespace")
+        ls()
 
     else:
         # for sym in args:
@@ -504,11 +641,14 @@ def help(args=None):
         s = _get_symbol(sym)
         logger.info("Sym : %s" % s)
         if isstype(s, "namespace"):
-            namespace_help(sym, s)
-        if isstype(s, ["dolist", "partial"]):
+            pydoc.help(s["name"])
+        if isstype(s, "partial"):
+            n, s = get_parent_symbol(s)
+            pydoc.help(s["fn"])
+        if isstype(s, "dolist"):
             dolist_help(sym, s)
         if isstype(s, ["fptr", "voidfptr"]):
-            fptr_help(sym, s)
+            pydoc.help(s["fn"])
 
 
 def application_help():
@@ -740,6 +880,7 @@ def repl_message():
     """Give a welcome message."""
     print("Welcome to the REPL.")
     print("Type 'help' for help and 'quit' to exit.")
+    helpful_cmds()
 
 
 def make_completer(vocabulary):
@@ -809,6 +950,7 @@ def repl(prompt="SPR:> ", init=None):
 
     while True:
         try:
+            print("")
             line = input(prompt)
             if len(line):
                 eval_list(parse(line))

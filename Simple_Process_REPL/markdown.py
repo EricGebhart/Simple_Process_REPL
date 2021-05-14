@@ -1,4 +1,6 @@
-# Do stuff with SPR.
+"""
+This is the markdown module for SPR, it can convert markdown to html.
+"""
 import Simple_Process_REPL.appstate as A
 import Simple_Process_REPL.utils as u
 import markdown as m
@@ -34,6 +36,7 @@ next to it in the data structure.
 
 
 def help():
+    """Additional SPR help For the markdown Module."""
     print(HelpText)
 
 

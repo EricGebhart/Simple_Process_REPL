@@ -1,6 +1,9 @@
 config:
-    webview:
+    web:
+      webview:
         title: "SPR Web View"
         html: "<h1>SPR is cool</h1>."
         url: "http://github.com/ericgebhart/Simple_Process_REPL"
         confirm_close: True
+      browser:
+        open-tab: True

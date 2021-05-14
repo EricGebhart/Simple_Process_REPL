@@ -109,4 +109,5 @@ Control the logging level and send messages to the log.
 
 
 def help():
+    """Additional SPR specific Help for the logs Module."""
     print(HelpText)

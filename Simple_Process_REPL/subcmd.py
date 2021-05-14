@@ -21,6 +21,7 @@ https://docs.python.org/3/library/subprocess.html
 
 
 def help():
+    """Additional SPR specific Help for the App State Module."""
     print(HelpText)
 
 

@@ -30,6 +30,7 @@ Within SPR code, showin, set-in, and set-in-from are of primary use.
 
 
 def help():
+    """Additional SPR help For the appstate Module."""
     print(HelpText)
 
 
@@ -64,22 +65,30 @@ def set_in(*keys):
     # Refactor. Should be set. and set in from at the same time.
 
 
-def set(*keys):
-    """Takes a value vector or 2 value vectors separated with 'from:'
-    If from: is found the value is retrieved from the value vector that follows
-    Without from, the last item is taken to be the value."""
-    global AS
-    set_keys = []
-    from_keys = []
-    dest = set_keys
-    for k in keys[0]:
-        if k == "from:":
-            dest = from_keys
-            continue
-        dest += [k]
+def _get_vv_from_path(path):
+    if path[0] == "/":
+        path = path[1:]
+    return path.split("/")
 
-    if from_keys:
-        set_keys += [get_in(from_keys)]
+
+def get_from_path(path):
+    vv = _get_vv_from_path(path)
+    return get_in(vv)
+
+
+def set(set_path, fromv=None):
+    """Takes a path and value or 2 paths.
+    If the second value begins with / it will be
+    treated a path, otherwise as a value.
+    """
+    global AS
+    set_keys = _get_vv_from_path(set_path)
+    if isinstance(fromv, str):
+        if fromv[0] == "/":
+            fromv = fromv[1:]
+            fromv = get_from_path(fromv)
+
+    set_keys += [fromv]
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -89,7 +98,12 @@ def get_in(keys):
     return _get_in(AS, keys)
 
 
-def get_vals_in(vector, *keys):
+def get_keys_in(*keys):
+    """Get just a list of keys from the thing at the value vector."""
+    return get_in(keys).keys()
+
+
+def get_vals_in(path, *keys):
     """Get a list of values from a value vector in the Application state.
     Vector should be a vector of keys, and keys should be a list of keys. :-/
 
@@ -98,7 +112,7 @@ def get_vals_in(vector, *keys):
     This is of primary use in the creation '-with' commands.
     """
     res = []
-    d = get_in(vector)
+    d = get_from_path(path)
     for k in keys[0]:
         try:
             res += [d[k]]
@@ -142,13 +156,23 @@ def get_in_device(key):
     return _get_in(AS["device"], [key])
 
 
-def showin(*keys):
-    """Show a sub-tree in the Application State"""
-    if len(keys) == 0:
+def show(pathname="/"):
+    """Show a sub-tree in the Application State with a path.
+
+    example: show /device
+
+    will display the Application state tree from the device node on.
+    """
+    logger.info("show %s" % pathname)
+    if pathname == "/":
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
     else:
-        qqc = get_in(*keys)
+        # so we don't have to type the first / in the path.
+        if pathname[0] == "/":
+            pathname = pathname[1:]
+        vv = pathname.split("/")
+        qqc = get_in(vv)
     logger.info(yaml.dump(qqc))
 
 
@@ -255,12 +279,12 @@ def load_pkg_resource_to(pkgname, filename, *keys):
     set_in(keys[0] + [res])
 
 
-def load_pkg_resource_with(*keys):
+def load_pkg_resource_with(path):
     """load a python package resource file
     using the values found in 'package' and 'filename' located at
-    the value vector.
+    the path.
 
-    The contents will be placed into 'contents' at the value vector given.
+    The contents will be placed into 'contents' at the path given.
 
     For this example there is a structure in the Application state which
     looks like this. In this case the value vector is simply 'readme'.
@@ -285,9 +309,10 @@ def load_pkg_resource_with(*keys):
     load-pkg-resources-with readme
 
     """
-    pkgname, filename = get_vals_in(*keys, ["package", "filename"])
+    pkgname, filename = get_vals_in(path, ["package", "filename"])
     res = u.load_pkg_resource(pkgname, filename)
-    set_in(keys[0] + ["content", res])
+    keys = _get_vv_from_path(path)
+    set_in(keys + ["content", res])
 
 
 def save_config(filename):

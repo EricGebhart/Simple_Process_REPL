@@ -1,7 +1,7 @@
 namespace as "Application State functionality"
     Simple_Process_REPL.appstate
     help
-    showin
+    show
     set_in
     set
     eval_default_process
@@ -115,19 +115,28 @@ namespace web "View HTML and urls."
     view_url_from
     view_html_from
     view_with
+    browse_with
+    browse_url_from
 
 in-ns
 
 import Simple_Process_REPL.mkext new_spr_extension_project
 
-set readme package Simple_Process_REPL
+set readme/package Simple_Process_REPL
 
-set readme filename README.md
+set readme/filename README.md
+
+set readme/url
+    https://github.com/EricGebhart/Simple_Process_REPL/blob/main/README.md
 
 as/load-pkg-resource-with readme
 
 md/html-from readme content
 
-set readme title "The SPR README!!!"
+set readme/title "The SPR README!!!"
 
-def doc "Display the Readme documentation in a browser window." web/view-with readme
+def view-doc "Display the Readme documentation in an html viewer."
+    web/view-with readme
+
+def browse-doc "Display the Readme documentation in a browser window."
+    web/browse-with readme
