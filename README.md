@@ -37,31 +37,124 @@ To start the REPL;
 
 
 ## Why ?
-This started out as a project to identify, test, and flash a particle.io
-board. The boards and services are finicky, and the ability to be able
+Well, at this point it's kind of fun. It's been really interesting to see
+how it evolves. And why is it evolving? Well, because it's fun.
+
+It's been eating it's self lately, I find that super exciting.
+
+I've written other languages, my tagset language for SAS, 
+and a couple of lisps among other things.  This wasn't really intentional,
+and it comes with a strong desire to keep it from becoming a real turing
+complete language. But it seems to be happening anyway.
+
+What will happen? I don't know !
+
+The basic idea is to only change something if it makes sense and it's simple.
+It must be simple and elegant. 
+Now the interesting thing is the complexity of the things 
+you can build with such simple things, if you build your simple things correctly.
+
+That has changed so much here. Because of the restrictions of the appstate, or
+thinking of it as an app state, instead of just namespace, things changed 
+dramatically with that change of point of view.  Now, set-in is making variables,
+we are just stashing them in a big global tree.  Then it went from value vectors,
+
+The python representation changed like so.
+`[foo bar baz]` Became: `foo/bar/baz`.  
+
+And the evolution of set evolved from
+
+`set-in foo bar baz 10`
+`set-from foo baz from: foo bar baz`
+
+to this:
+
+`set foo bar baz 10`
+`set foo baz from: foo bar baz`
+
+to this:
+
+`set foo/bar/baz 10`
+`set foo/baz  /foo/bar/baz`
+
+
+They've been through a lot of change over time.
+They are modeled after clojure's _update-in_, and _get-in_. But now they use
+paths instead. It feels much more intuitive to wander around the system space
+with **ls** and **show**.
+
+The idea of **-from** and **-to** changed things too, those are essentially all that
+is needed within a module for it to get the stuff to and from other module's,
+application state, or where ever you are putting your stuff.
+
+But that led to **-with** variants, so now, we give a path full of stuff to a 
+function and it goes and gets what it wants _with_ what you have there.
+
+So, I'm not sure where that's headed, but it seems like that could boil away too.
+A _with_ function, and the lower level python code in every module goes away.
+
+But the interpreter really hasn't changed, and it's way more stupid than the 
+dumbest of lisp interpreters. And they can be pretty stupid too.
+
+The symbols have gotten more complex over time. 
+It's really interesting see something blow up into something big and 
+then refactor into something smaller and more capable than the original. 
+I like watching the architecture become more elegant.
+
+I wrote exercism's "100 Bottles of Beer" exercise 21 different times in clojure 
+alone.  Just to see how it boiled down. I had 3 basic flavors in the end, that
+were more elegant, concise and readable than all the rest.
+
+I added barcodes, because that was a requirement for a thing I made for someone.
+When I did that, I decided to add simple namespaces, which led to just changing
+everything from stupid simple and obvious symbol tables, to a more elegant import
+system. Oh, so instead of that hardcoded symbol table, I had to make code to 
+figure out python function signatures and do the right thing. 
+
+Then, instead of a big ol YAML, each module could keep it's own
+pieces. 
+
+These things changed everything, but the language, if you can call it that, 
+It's only syntax is whitespace, and I guess we can count the */'s* in the paths.
+But, then, once I had namespaces, and imports and
+
+And despite it's growing capabilities its doing it with less code. That's cool.
+
+I sort of want to give a choice of repl's so more fun could be had that way.
+And why not have a repl server and an emacs mode so I can run spr code in emacs. 
+
+So, endless fun. Why not.
+
+
+## History
+This started out as a zsh script to identify, test, and flash a particle.io
+board. The script can be found in the repo.
+
+The option parsing of the script turned into a REPL out of frustration
+with developing the process.
+
+The boards and services are finicky, and the ability to be able
 to create repeatable snippets of processes was the way to go. Two pieces
 might work individually and not one after the other, or the device would
 disconnect for a moment. It was a pull your hair out kind of experience.
 
+It then turned into Python.
+
 The original python version 1 of SPR now lives on as 
 [The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git).
-PBR is an application layer built on top of the previous version of SPR. 
-PBR is now a standalone application that embodies the old version 1 of SPR.
+PBR is an application layer built on top of the previous version of SPR, which
+was a bit of a pain to extend. PBR is now a standalone application that embodies 
+the old version 1 of SPR.
 
-This particle board process also needed wifi, the concept of a device, 
+I built the REPL first and started converting all my functionality to
+python. This particle board process also needed wifi, the concept of a device, 
 usb handshaking, device waiting and dialog prompts among other things.
 
-Composeability and an interactive REPL were necessary to efficiently create a
-successful process of some complexity. 
-It naturally evolved out of the first version of this code which was a _zsh_ script.
-I had added a prompt to the script out of frustration so that I could run it's 
-functions interactively.
+So in the end, it was really nice, and it did what was needed relatively easily.
+Actually creating a working process from the parts took very little time.
 
-But, then, between all the error trapping, and io redirection It was decided to
-switch to python. I built the prompt first, and started feeding it functions as
-I built the process. It was a list processor from the very beginning. 
-It worked fantastically. Creating that finicky process was actually kind of fun.
-
+Then I added barcodes. which prompted namespaces, importing, better help,
+paths... And now there is SPR 2.
 
 ----------
 
@@ -96,11 +189,45 @@ and stateful data in the tree, and/or interact with other things.
 There is a notion of devices, there are simple dialogs and cli prompts,
 
 ## To sum up.
-This is a really stupid interpreter, think of it as a stupid layer on top of python.
-All with nice configuration and application state management
-But stupid, no syntax, no variables, no logic, it just calls functions.
+
+This is a really simple interpreter, with a really short list of commands, 
+think of it as a stupid/smart layer on top of python.
+
+All with nice configuration and application state management, logging,
+and error handling. It runs like an application once it has a process,
+and it can repeat it interactively, reporting failures.
+And it has a REPL. So you can play with it interactively, building things.
+
+All with no syntax beyond this snippet, newlines and indention are optional, 
+blank lines are not.
+
+```    
+    ui/msg "hello"
+
+    def mymsg "This says hello" 
+        ui/msg "hello"
+
+    mymsg
+
+SPR:> set /foo/bar 10
+
+SPR:> show foo
+bar: 10
+
+SPR:> set /foo/baz /foo/bar
+
+SPR:> show foo
+bar: 10
+baz: 10
+
+```
+
+no logic, Just a big Application State Tree and
+python functions.
 It's easy to get and put things into the Application state 
 which is represented as a big tree of Yaml. 
+
+If you build a process, 
 
 A module of python functions to do the complicated bits fills out the functionality. 
 Then it's time to start playing with the parts and put something together.
@@ -120,8 +247,29 @@ This is defined in `repl.py`. It has `help`, persistent history,
 and tab completion. 
 It has the idea of namespaces and it knows how to import python modules. 
 
-**help** will give you the documentation for every namespace and command available, 
-even the ones you just created. 
+There are two help systems. SPR's and python's. They have two different
+presentations of the same thing, both are very useful.
+**help** and **pyhelp** will give you the documentation for every 
+namespace and command available, even the ones you just created. 
+
+ * `help` will show a short summary, followed by an _ls_
+ * `help /` will show full namespace help for the Root namespace. 
+ * `help ns` will show full namespace help for the ns namespace. 
+ * `help ns/name` will show full function help for the ns/name function. 
+
+The same rules apply to the **pyhelp** command, but what it shows is different. 
+
+Additionally each SPR module can have it's own help function which 
+can be invoked as any other function, and which will be used by namespace
+help if it exists. Extensions use a template which contains a help 
+template showing SPR information in a pretty way.
+
+Both the module's Application state and spr code are shown in the help
+if they exist.
+
+The **ls** command will navigate both the Namespaces of SPR and the
+Application state. Any path that starts with a / looks in the Application
+state. Anything that does not start with a / is looked up in the Namespaces.
 
 It does it's best to call the
 python functions you tell it to.  It recognizes, words, strings and numbers.
@@ -167,9 +315,17 @@ At a minimum, creating a namespace requires a documentation string. If a help
 function exists in the namespace that help will be integrated into the namespace
 help formatting.
 
-`ls-ns` will list all the namespaces. 
-`ls-ns name` will list the contents of that namespace. 
-`ns-tree` will list all the namespaces with their contents. 
+ * `ls` will list all the namespaces. 
+ * `ls name` will list the contents of that namespace. 
+ * `help name` will show the namespace help, which includes the YAML, and spr code.
+    As well as the SPR help for each symbol.
+ * `pyhelp name` will show the python module help for the module 
+    imported into that namespace on it's creation. 
+ * `ns-tree` will list all the namespaces with their contents. 
+ * `import` will import a python module
+ * `ns` will tell you which namespace you are in.
+ * `in-ns` will move you to another namespace. - which only matters for 
+    _def, partial_, and _import_.
 
 Creating a namespace called foo from a python module _foo.core_ looks like this:
 ```
@@ -178,7 +334,7 @@ Creating a namespace called foo from a python module _foo.core_ looks like this:
         function1 function2 ...`
 ```
 
-after a namespace command, the interpreter will remain in that namespace
+After a namespace command, the interpreter will remain in that namespace
 until it is changed with the `in-ns` command.
 
 While in a namespace it is also possible to do an import of a python module
@@ -198,14 +354,32 @@ SPR files can be loaded with load-file.
 
 #### Introspection
 
-If the code patterns are adhered to, a namespace can be explored with the following
+If the code patterns are adhered to, ie. The module defines
+it's yaml like so. Perhaps we should make a modules space.
+It's getting cluttered in /.
+
+```code=YAML
+    mymodulename:
+        mystuff1: "foo"
+        mystuff2: "bar"
+    config:
+        mymodulename:
+            mytitle: "sometitle I guess."
+```
+
+Given that. A namespace can be explored with the following
 SPR commands, where <ns> is the name of the namespace: 
 
- * `ls-ns <ns>` to see a summary of the namespace.
+ * `ls <ns>` to see a summary of the namespace.
+
  * `help <ns>` to get help for the namespace.
  * `help <ns>/<function>` to get help for a function in the namespace.
- * `showin <ns>` to see the Stateful data used by the namespace.
- * `showin config <ns>` to see the configuration data used by the device namespace
+
+ * `pyhelp <ns>` to get python help for the namespace.
+ * `pyhelp <ns>/<function>` to get python help for a function in the namespace.
+
+ * `show <ns>` to see the Stateful data used by the namespace.
+ * `show /config/<ns>` to see the configuration data used by the device namespace
 
 
 ### Application State Data Structure
@@ -221,13 +395,39 @@ Some of the data trees at the root of the Application state are the following.
  * bar-QR is the state managed by the bar/QR code module
  * device is used by core, and by particle.
  
-It's really easiest to just explore SPR and it's application state with `showin` 
-in the REPL.
+#### Paths
  
-The command: **showin** in the REPL will give the Application state to you in yaml.
-The easiest way to access it is `showin device` or `showin config serial`
-with `showin key1 key2,...` is the command to find sub-section or attributes in the REPL.
-`showin config` , `showin defaults`, or just __showin__ 
+The entire system is held in this tree. so think of it like a filesystem on
+your computer. Lots of folders in a big tree. Pathnames are used to get things
+and put things and look at things.
+
+Paths are just like filesystem paths in Unix/Linux.  The namespaces can be 
+thought of as one tree, built from imported python code, 
+and the Application state as another that is built from YAML.
+
+`ls` navigates both trees.
+`set` uses paths like variable names. getting and putting values in them.
+`show` uses paths to find what to show.
+`-with` and `-from` and `-to` functions use them to find and put their data.
+
+```
+    SPR:> set foo/bar 10
+
+    SPR:> show foo
+    bar: 10
+
+
+    SPR:> set foo/baz /foo/bar
+
+    SPR:> show foo
+    bar: 10
+    baz: 10
+
+    SPR:> ls /foo
+    bar                           
+    baz
+```
+
 
 The Application state, is actually just a merge, of all the yaml's defined
 by the various modules, and by the core.yaml.
@@ -318,10 +518,9 @@ The python functions for use as an SPR extension are generally very simple,
 * Do something, 
 * Save the result back into their part of the application state as needed.
 
-#### Help, Please.
-It is recommended that one function be named `help` and that it prints
-Text which explains the extensions usage. There is a nice template in
-the extension project.
+To that end, the template created has example _-to_, _-from_ and _-with_ 
+functions to be used.
+
 
 #### Yaml Data Structure
 Additionally, an extension can define a yaml file which import will integrate
@@ -387,21 +586,6 @@ def print-codes
     bq/input-code ui/print-bcqr
 ```
 
-
-
-### Some core commands.
-* namespace - create a namespace and import a SPR/python extension.
-* ls-ns - List the namespaces.
-* ns-tree - List the namespaces and their contents.
-* ns - which namespace am I in.
-* in-ns - change to a namespace
-* import - import a SPR/python extension into the current namespace.
-* def - Define a new command
-* partial - Define a new command that is a partial of another.
-* showin - show the Application state in YAML form.
-* help - get help, help <name|ns|ns/name>
-
-
 ### The syntax. 
 
 It's just a list of things with whitespace. words, strings and numbers.
@@ -448,7 +632,8 @@ a new command mymsg, then using the new command.
 ```
     ui/msg "Hello World" 
 
-    def mymsg "my special msg" ui/msgbox "Hello World"
+    def mymsg "my special msg" 
+        ui/msgbox "Hello World"
 
     mymsg 
 ```
@@ -457,24 +642,6 @@ a new command mymsg, then using the new command.
 That's it. words strings and numbers separated by spaces. Commands
 are separated by a blank line and can be formatted with whitespace in
 any way, as long as the lines are contiguous.
-
-#### Oh, well almost.
-There is this thing, the *from* commands take a `from:` keyword.
-so `as/set-in-from foo bar from: foo baz`
-Will copy the contents from foo/baz to foo/bar in the Application state.
-
-Slashes '/' are valid characters in names. It's not special in the grammar, 
-but it is when looking up SPR symbols. The / is what denotes the namespace 
-path for the functions. So if we want to use _msg_ in the _ui_ namespace we 
-would write it like this. 
-
-`ui/msg "hello"`
-
-A complication of this, is that namespaces are still stupid, they don't know
-where they are, and therefore the namespace must always be specified 
-on commands even when inside the namespace.  It's a pain point, 
-but it's not bad. The thing that nags me is that the namespace name 
-can be arbitrary. Therefore, this is brittle.
 
 
 ## A few batteries included so far.
@@ -494,6 +661,8 @@ into their various namespaces by `core.spr`
 * mkext  - A function and files to create a sample SPR extension library project.
 * os  - Some functions from python OS
 * shutil  - Some functions from python shutil
+* web  - View HTML or URL, Browse a URL.
+* markdown  - Convert Markdown to HTML.
 
 
 #### Reusable parts to make stuff with.
@@ -592,31 +761,39 @@ The easiest way to understand this is system is by using the REPL.
 It will show you how it works. `SPR -r` 
  
 Then type these commands and read as you go.
- * _ls-ns_ 
+ * _ls_ 
+ * _ls /_ 
+ * _ls bq_
+ * _ls /bar-QR_
+ * _show /bar-QR_
+ * _show bar-QR_
+ * _show_ or _show /_ --- is big. 
+ * _ls /config_
  * _ns-tree_ 
  * _help_ 
+ * _pyhelp_ 
+ * _help def_
+ * _pyhelp def_
  * _help sh_
+ * _pyhelp sh_
  * _help sh/do_
- * _help nw_
- * _help as_
- * _help ui_
- * _help bq_
- * _help device_
- * _showin_ 
- * _showin_ device
- * _showin_ foo
- * _def foo "foo show" showin foo
- * _partial_ bar "foo show" showin foo
+ * _pyhelp sh/do_
+ * _ls_
+ * _show_ 
+ * _show_ device
+ * _show_ foo
+ * _def foo "foo show" as/show foo
+ * _partial_ bar "foo show" as/show foo
  * _help_ foo
  * _help_ bar
  * foo
  * bar
- * _set_ foo bar 10
+ * _set_ /foo/bar 10
  * _foo_ 
  * _bar_
  * _foo_ bar
  * _bar_ bar
- * _set-from_ foo foo from: foo bar
+ * _set-from_ foo/foo foo/bar
  * _foo_
  * ui/msg "hello"
  * def mymsg "my msg help" ui/msg "hello"
@@ -663,11 +840,16 @@ _partial_ commands can only be defined in SPR code, and interactively.
 ### Handshake function
 
 Keeping this here, so it is findable in multiple ways.
+
+The handshake function is defined in the device module which
+is imported into the _dev_ namespace. Therefore, more help
+is available like this.
+
 See also: 
  * `help dev` to get help for the dev namespace, which
  has imported the device extension module.
- * `showin device` to see the Stateful data used by the device namespace
- * `showin config device` to see the configuration data used by the device namespace
+ * `show device` to see the Stateful data used by the device namespace
+ * `show config/device` to see the configuration data used by the device namespace
 
 Handshake is a generic function that is a bit more complicated.  
 It manages an interaction with a device. Everything _handshake_ 

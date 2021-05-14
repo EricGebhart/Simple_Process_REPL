@@ -548,7 +548,7 @@ def helpful_cmds():
     * `showin config <ns>` to see the configuration data used by the namespace
 
     * `browse-doc`  To read the README.md in your browser.
-    * `view-doc`  To read the README.md in an HTML viewer.
+    * `view-doc`  To read the README.md in an HTML viewer - does not require internet.
     """
     print(t)
 
@@ -639,7 +639,6 @@ def _pyhelp_(args=None):
         # for sym in args:
         # logger.info("Sym in args: " % (sym, args))
         s = _get_symbol(sym)
-        logger.info("Sym : %s" % s)
         if isstype(s, "namespace"):
             pydoc.help(s["name"])
         if isstype(s, "partial"):

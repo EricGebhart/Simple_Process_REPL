@@ -163,7 +163,6 @@ def show(pathname="/"):
 
     will display the Application state tree from the device node on.
     """
-    logger.info("show %s" % pathname)
     if pathname == "/":
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
