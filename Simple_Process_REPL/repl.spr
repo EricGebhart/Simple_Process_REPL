@@ -7,3 +7,5 @@ def quit "Quit SPR" -quit-
 partial import "Import an SPR/Python library." -import-
 
 partial help "Help for everything" -help-
+
+partial pyhelp "Pythonic Help for everything" -pyhelp-

@@ -1,10 +1,29 @@
 # Simple Process REPL
 
+I hope this document is not too annoying in it's repeating. I'm working on it.
+It some ways it less important now since help is so good.
+But I'd rather have too much than too little.
+
+I could probably chop this down to 
+
+ * pip install, 
+ * `SPR -r`
+ * read, think, type, repeat.
+ 
+ Short-cuts: 
+  * Jump to the learn by example section. - Do it. - play, read.
+  * `new-spr-extension-project myproj.` - look at the code.
+  * Read all the help for all the namespaces.
+
 ### What is it?
 
 It's a fun to use tool to create applications which do processes.
 It's just stupid enough to be transparent and easy, and just smart
 enough to not be too annoying. 
+
+This is a tool that can be used to interactively create a run 
+a process as if it is an application. Possibly with nothing but a configuration
+file.
 
 This program is actually a very simple interpreter with an interactive REPL. 
 
@@ -40,6 +59,8 @@ To start the REPL;
 Well, at this point it's kind of fun. It's been really interesting to see
 how it evolves. And why is it evolving? Well, because it's fun.
 
+And it's a nice way to make a new tool, that has all the power of Python.
+
 It's been eating it's self lately, I find that super exciting.
 
 I've written other languages, my tagset language for SAS, 
@@ -47,83 +68,13 @@ and a couple of lisps among other things.  This wasn't really intentional,
 and it comes with a strong desire to keep it from becoming a real turing
 complete language. But it seems to be happening anyway.
 
-What will happen? I don't know !
+What will happen? I don't know ! I suppose that's why it's fun.
+It is already doing a great job at making handy self documenting 
+scripts quickly.
 
-The basic idea is to only change something if it makes sense and it's simple.
-It must be simple and elegant. 
-Now the interesting thing is the complexity of the things 
-you can build with such simple things, if you build your simple things correctly.
-
-That has changed so much here. Because of the restrictions of the appstate, or
-thinking of it as an app state, instead of just namespace, things changed 
-dramatically with that change of point of view.  Now, set-in is making variables,
-we are just stashing them in a big global tree.  Then it went from value vectors,
-
-The python representation changed like so.
-`[foo bar baz]` Became: `foo/bar/baz`.  
-
-And the evolution of set evolved from
-
-`set-in foo bar baz 10`
-`set-from foo baz from: foo bar baz`
-
-to this:
-
-`set foo bar baz 10`
-`set foo baz from: foo bar baz`
-
-to this:
-
-`set foo/bar/baz 10`
-`set foo/baz  /foo/bar/baz`
-
-
-They've been through a lot of change over time.
-They are modeled after clojure's _update-in_, and _get-in_. But now they use
-paths instead. It feels much more intuitive to wander around the system space
-with **ls** and **show**.
-
-The idea of **-from** and **-to** changed things too, those are essentially all that
-is needed within a module for it to get the stuff to and from other module's,
-application state, or where ever you are putting your stuff.
-
-But that led to **-with** variants, so now, we give a path full of stuff to a 
-function and it goes and gets what it wants _with_ what you have there.
-
-So, I'm not sure where that's headed, but it seems like that could boil away too.
-A _with_ function, and the lower level python code in every module goes away.
-
-But the interpreter really hasn't changed, and it's way more stupid than the 
-dumbest of lisp interpreters. And they can be pretty stupid too.
-
-The symbols have gotten more complex over time. 
-It's really interesting see something blow up into something big and 
-then refactor into something smaller and more capable than the original. 
-I like watching the architecture become more elegant.
-
-I wrote exercism's "100 Bottles of Beer" exercise 21 different times in clojure 
-alone.  Just to see how it boiled down. I had 3 basic flavors in the end, that
-were more elegant, concise and readable than all the rest.
-
-I added barcodes, because that was a requirement for a thing I made for someone.
-When I did that, I decided to add simple namespaces, which led to just changing
-everything from stupid simple and obvious symbol tables, to a more elegant import
-system. Oh, so instead of that hardcoded symbol table, I had to make code to 
-figure out python function signatures and do the right thing. 
-
-Then, instead of a big ol YAML, each module could keep it's own
-pieces. 
-
-These things changed everything, but the language, if you can call it that, 
-It's only syntax is whitespace, and I guess we can count the */'s* in the paths.
-But, then, once I had namespaces, and imports and
-
-And despite it's growing capabilities its doing it with less code. That's cool.
-
-I sort of want to give a choice of repl's so more fun could be had that way.
-And why not have a repl server and an emacs mode so I can run spr code in emacs. 
-
-So, endless fun. Why not.
+So it's useful and it's fun. I want to smash it together with plysp and
+see what happens. But I'm also curious about where the SPR ouroboros will 
+stop. And what it might become.
 
 
 ## History
@@ -155,6 +106,12 @@ Actually creating a working process from the parts took very little time.
 
 Then I added barcodes. which prompted namespaces, importing, better help,
 paths... And now there is SPR 2.
+
+But it's job and purpose are really to provide a simple interface which can
+configure a process that can be built by writing a little bit of python.
+With the infrastructure taken care of the python code is simple 
+and the gratification of building an application
+that can be given to anyone is really high.
 
 ----------
 
@@ -193,6 +150,10 @@ There is a notion of devices, there are simple dialogs and cli prompts,
 This is a really simple interpreter, with a really short list of commands, 
 think of it as a stupid/smart layer on top of python.
 
+It's got some really handy extensions for making processes, and extensions
+are easy to make from a bit of python code. It will even create an
+extension project template for you. That's one of it's many commands.
+
 All with nice configuration and application state management, logging,
 and error handling. It runs like an application once it has a process,
 and it can repeat it interactively, reporting failures.
@@ -223,16 +184,9 @@ baz: 10
 ```
 
 no logic, Just a big Application State Tree and
-python functions.
+python functions. Failures are expected.
 It's easy to get and put things into the Application state 
 which is represented as a big tree of Yaml. 
-
-If you build a process, 
-
-A module of python functions to do the complicated bits fills out the functionality. 
-Then it's time to start playing with the parts and put something together.
-Once it's done, with just a configuration file you could have an
-application that does a repeatable process with a builtin REPL. 
 
 ## The parts.
   * The Interpreter/Repl
@@ -271,32 +225,19 @@ The **ls** command will navigate both the Namespaces of SPR and the
 Application state. Any path that starts with a / looks in the Application
 state. Anything that does not start with a / is looked up in the Namespaces.
 
-It does it's best to call the
+The interpreter does it's best to call the
 python functions you tell it to.  It recognizes, words, strings and numbers.
 ie. `foo "this is a string" 10`, it understands functions with various 
 signatures including variable arguments, but not keywords. Which aren't
 valid in it's non-existent syntax anyway.
 
-The REPL is very convenient as it saves state, and can be used to
+The REPL is fun to use. It makes it super easy to
 interactively create/execute a process step by step. 
 `help` at the REPL prompt. 
 
 On startup, there are only a dozen or so commands imported directly into
 the repl. The rest of the initialization is done by _core.spr_ which
 imports the rest of the extensions into their namespaces.
-
-
-## It's a Simple list processor.
-
-Everything you want to do must be a python function imported into the repl.
-From there, everything is composable from symbol/words
-These user functions can also be defined in an spr file or even in the YAML config file.
-
-It has a really, really stupid parser. All it can do execute a list of symbols, or call
-a special symbol with everything that follows. It does know the difference between
-symbols, strings and numbers.
-It does some introspection of the python function signtures, so it's not completely
-stupid, but some care should be taken.
 
 
 ### Namespaces
@@ -386,58 +327,35 @@ SPR commands, where <ns> is the name of the namespace:
 
 There is this big data structure referred to as the Application State.
 It has a config tree which can be grown as needed by any SPR extensions
-that need it. 
+that need it. That is how I originally thought of it, load my config!
+But then I needed to stash something. or change a setting and resave my
+config.  So how is this different that a globally organized tree of
+variables, that is created from a merging of multiple YAML files ?
+It's not.. Except if you think about it as variable space that we all agree
+to use in a respectful and organized way.  It's just variables no matter
+how you cut it. You don't even have to use or make the tree...
 
-Some of the data trees at the root of the Application state are the following. 
+The Application state, is actually just a merge, of all the yaml's defined
+by the various modules, and by the core.yaml.
+
+That said, here's how the tree is organized.
+
+Some of the data trees in the Application state are the following. 
  * config is the place where the configurations should go.
  * args is the resolved command line
  * device is an imaginary device. Which we can wait for and handshake with.
  * bar-QR is the state managed by the bar/QR code module
  * device is used by core, and by particle.
- 
-#### Paths
- 
-The entire system is held in this tree. so think of it like a filesystem on
-your computer. Lots of folders in a big tree. Pathnames are used to get things
-and put things and look at things.
 
-Paths are just like filesystem paths in Unix/Linux.  The namespaces can be 
-thought of as one tree, built from imported python code, 
-and the Application state as another that is built from YAML.
-
-`ls` navigates both trees.
-`set` uses paths like variable names. getting and putting values in them.
-`show` uses paths to find what to show.
-`-with` and `-from` and `-to` functions use them to find and put their data.
-
-```
-    SPR:> set foo/bar 10
-
-    SPR:> show foo
-    bar: 10
-
-
-    SPR:> set foo/baz /foo/bar
-
-    SPR:> show foo
-    bar: 10
-    baz: 10
-
-    SPR:> ls /foo
-    bar                           
-    baz
-```
-
-
-The Application state, is actually just a merge, of all the yaml's defined
-by the various modules, and by the core.yaml.
+Truthfully it's probably a waste of time writing this, Just go into the REPL
+and have a look around.
 
 A complete configuration file can be generated at any time by saving it with
-_save-config_. This is the first step in creating an application.
+_save-config_. Note that this is only the **config** section of the data tree.
 
 The configuration file should be named SPRConfig.yaml and will automatically loaded
 from the runtime directory if it exists. A different name can be specified with
-the `-c` option.
+the `-c` option.  Or the name can be changed in the configuration.
 
 There are other things in the Application state, each SPR extension can
 also add a structure to the root of the tree to hold the information that
@@ -453,6 +371,41 @@ Yaml files can be merged directly into the **Root** of the application
 state with load-yaml.
 
     `load-yaml foo.yaml`
+ 
+#### Paths
+ 
+The entire system is held in this data tree. Think of it like a filesystem on
+your computer. Lots of folders in a big tree. Pathnames are used to get things
+and put things and look at things.
+
+Paths are just like filesystem paths in Unix/Linux.  The namespaces can be 
+thought of as one tree, built from imported python code, 
+and the Application state as another that is built from YAML.
+
+ * `ls` navigates both trees using paths.
+ * `set` uses paths like variable names. getting and putting values in them.
+ * `show` uses paths to find what to show.
+ * `-with` and `-from` and `-to` functions use them to find and put their data.
+
+```
+    SPR:> set foo/bar 10
+
+    SPR:> show foo
+    bar: 10
+
+    SPR:> set foo/baz /foo/bar
+
+    SPR:> show foo
+    bar: 10
+    baz: 10
+
+    SPR:> ls /foo
+    bar                           
+    baz
+```
+
+
+
 
 
 ### SPR/Python extensions
@@ -461,14 +414,18 @@ An SPR library/module is a Python module with a python file, a yaml file and
 an spr file. An SPR library project can be created with the
     `new-spr-extension-project` command.
     
-    `new-spr-extension-project <path/to/my/new/library/foo` 
+    `new-spr-extension-project path/to/my/new/library/foo` 
 
 To install, `python setup.py install` will install your project into
 your local python environment / site-packages. 
 
 Once the new module is available on the Python path SPR can import it with
 a command like this. 
-    `namespace foo "my foo namespace" foo.core function1 function2...`
+    ```
+    namespace foo "my foo namespace" 
+        foo.core 
+        function1 function2 
+    ```
     
 This will create a _namespace foo_ within SPR with all the functions listed, 
 as well as whatever is defined in `foo/core.spr`.  The application state 
@@ -478,7 +435,7 @@ will merge in what ever structure is defined in `foo/core.yaml`.
 
 #### How to do it.
 * Make a python extension with the 
-`SPR new-spr-extension-project path/to/project` command.
+`new-spr-extension-project path/to/project` command.
 * Define some data structure/YAML.
 * Add in some python code. - the stuff you really want to do. 
 * Write some spr code if you need it.
@@ -629,6 +586,7 @@ import Simple_Process_REPL.mkext new_spr_extension_project
 Here is an example of using a message box and creating a new command
 that does the same thing. First is the using a msg box. Then defining
 a new command mymsg, then using the new command.
+This is how it started. Just a nice list of functions and strings.
 ```
     ui/msg "Hello World" 
 
@@ -667,9 +625,6 @@ into their various namespaces by `core.spr`
 
 #### Reusable parts to make stuff with.
 
-So instead of a run it once kind of application, this is a tool that can be
-used to interactively create a run it once kind of application.
-
 The idea was to keep it as simple to use and code as possible, even if a bit
 painful.  Everything had to be configurable, and new process pieces needed to
 be easy to make.
@@ -685,9 +640,7 @@ It has no scope, no understanding of if I'm in this Namespace things have
 shorter names.
 
 But it's pretty nice for creating little processes that document themselves.
-And it's super cool to recompose old things into new processes. It's a fun
-little tool here.
-
+And it's super cool to recompose old things into new processes. 
 
 ## Execution
 
@@ -783,17 +736,15 @@ Then type these commands and read as you go.
  * _show_ device
  * _show_ foo
  * _def foo "foo show" as/show foo
- * _partial_ bar "foo show" as/show foo
+ * _partial_ bar "foo show too" as/show foo
  * _help_ foo
  * _help_ bar
- * foo
- * bar
- * _set_ /foo/bar 10
  * _foo_ 
  * _bar_
  * _foo_ bar
  * _bar_ bar
- * _set-from_ foo/foo foo/bar
+ * _set_ /foo/bar 10
+ * _set-from_ foo/foo /foo/bar
  * _foo_
  * ui/msg "hello"
  * def mymsg "my msg help" ui/msg "hello"
@@ -801,10 +752,10 @@ Then type these commands and read as you go.
 Once in the REPL at the prompt; __SPR:>,
 _help_ shows all the commands known with their documentation. 
 
-## In case more explanation is necessary, Symbols/Commands/functions
+## A bit of internals in case more explanation is necessary
 
-There are several kinds.
-
+### Symbol types:
+ * namespaces.
  * lists of symbols, _dolist_s.
  * python functions, _fptr_s.
  * lists of symbols, but which resolve to partially completed 
@@ -827,12 +778,16 @@ the process of importing a python library into SPR.
 ### Partial commands
 
 _partial_s are created with the `partial` command.
+Note: They do not currently use pythons func.partial(), 
+    they work in simpler SPR sort of way.
 
 _partial_ commands are built from _fptr_ commands.
-_partial_ commands are like dolist commands. Except that the first symbol in
+_partial_ commands are like dolist commands. 
+Except that the first symbol in
 the list is an fptr symbol, and the list is not everything the fptr function needs.
 when using a partial, they act just like fptr functions, you just have to leave off
-some or all of the first arguments.
+some or all of the first arguments. A partial acts like an alias for a function
+if no arguments are given.  This is how SPR creates _show_, which is really _as/show_.
 
 _partial_ commands can only be defined in SPR code, and interactively.
 
@@ -879,3 +834,94 @@ Here are the steps that _handshake()_ does.
   look for it. Makes it easy to test. _serial-input_ at the
   _SPR:>_ prompt.
       
+
+### Evolution Notes.
+
+The basic idea is to only change something if it makes sense and it's simple.
+It must be simple and elegant.
+
+The goals of the project are to make it easy to create a very configurable
+and repeatable process which is python code at it's heart.
+Processes should be able to fail gracefully, and report what they know.
+
+
+For me, it is very interesting to see how the solutions refine themselves
+under such limited abilities. I'm interested how the _-from_, _-to_ and _-with_
+stuff will affect the creation of stuff in the data tree. I think with those
+constructs there will not be as much need for special data spots. The way
+I was originally thinking when I added the markdown stuff. That'll change in 
+a minute.. markdown will be like the new ones soon.
+
+Because of the restrictions of the appstate, or thinking of it as an app state, 
+and configuration instead of just namespace, things changed 
+dramatically with that change of point of view.  
+Now, set-in is making variables, we are just stashing them in a big global tree.  
+
+It's feeling lot like a language...
+
+Set_in, get_in and showin, were originally modeled after clojure's
+_update-in_, and _get-in_. But now they use paths instead. Now it feels
+much more intuitive to wander around the system space with **ls** and
+**show**. The interface to values also became simple.
+
+
+The python representation changed like so.
+`[foo bar baz]` Became: `foo/bar/baz`.  
+
+And the evolution of set evolved from set-in
+and a dorky set-in-from
+
+```
+set-in foo bar baz 10
+set-in-from foo baz from: foo bar baz
+```
+
+to this, - just set:
+
+```
+set foo bar baz 10
+
+set foo baz from: foo bar baz
+```
+
+to this:
+
+```
+`set foo/bar/baz 10`
+`set foo/baz  /foo/bar/baz`
+```
+
+The idea of **-from** and **-to** changed things too, those are essentially all that
+is needed within a module for it to get the stuff to and from other module's,
+application state, or where ever you are putting your stuff.
+
+But that led to **-with** variants, so now, we give a path full of stuff to a 
+function and it goes and gets what it wants _with_ what you have there.
+
+So, I'm not sure where that's headed, but it seems like that could boil away too.
+A _with_ function, and the lower level python code in every module goes away.
+
+But the interpreter really hasn't changed, and it's way more stupid than the 
+dumbest of lisp interpreters. And they can be pretty stupid too.
+
+I added barcodes to SPR because that was a requirement for a thing I made for someone.
+When I did that, I decided to add simple namespaces, which led to just changing
+everything from the stupid simple and obvious symbol tables to a more elegant import
+system. Instead of that hardcoded symbol table, there is code to figure out python 
+function signatures and do the right thing when it found some 
+function in the new dynamically created table. 
+
+Because of namespaces and import, instead of a big ol YAML, 
+each module could keep it's own little piece.
+Simpler and Simpler.
+
+These things changed everything, but the language, if you can call it that, 
+It's only syntax is whitespace, and I guess we can count the */'s* in the paths.
+
+And despite it's growing capabilities it's doing it with less code. That's cool.
+
+I sort of want to give a choice of repl's so more fun could be had that way.
+And why not have a repl server and an emacs mode so I can run spr code in emacs. 
+And I'd like to see this with plysp as it's REPL.
+
+So, endless fun. Why not.
