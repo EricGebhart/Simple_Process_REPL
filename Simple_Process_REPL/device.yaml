@@ -7,7 +7,7 @@ device:
   path: ''
 
 config:
-  device:
+    device:
         serial:
             baudrate      : 9600
 
@@ -19,7 +19,7 @@ config:
             do_qqc_regex    : '^I:Now Setting Serial Number'
             do_qqc_func     : input-serial
 
-        #number of seconds to wait for a response from board and from the test.
+        #number of seconds to wait for a response.
         waiting:
             timeout      : 30
             pause_time   : 5

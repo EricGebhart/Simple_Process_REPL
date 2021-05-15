@@ -13,12 +13,12 @@ logger = logging.getLogger()
 
 # format and fill in as you wish.
 HelpText = """
-appstate: - Manage SPR's Application state.  -
+appstate: - Manage SPR's yaml datastore.  -
 
 Everything needed to load, save, copy, set, and merge data
-in the Application state. Yaml files and merging etc.
+in the yaml datastore. Yaml files and merging etc.
 
-Appstate is the Application State.
+Appstate is the Yaml Datastore.
 
 When writing python code to interact with SPR the appstate functions
 get_in, set_in, get_in_config, and get_in_device are of primary
@@ -34,7 +34,7 @@ def help():
     print(HelpText)
 
 
-# Application state, which will contain merged data from the application layer.
+# yaml datastore, which will contain merged data from the application layer.
 AS = {
     "config": {},
     "args": {"commands": {}},
@@ -50,7 +50,7 @@ AS = {
 def _set_(d):
     """
     merge in a new dict, like the device dictionary, into
-    the Application state.
+    the yaml datastore.
     """
     global AS
     AS = u.merge(AS, d)
@@ -58,7 +58,7 @@ def _set_(d):
 
 def set_in(*keys):
     """Takes a list of keys ending with the value to assign
-    into the Application State dictionary tree."""
+    into the Yaml Datastore dictionary tree."""
     global AS
     AS = u.merge(AS, u.make_dict(*keys))
 
@@ -93,7 +93,7 @@ def set(set_path, fromv=None):
 
 
 def get_in(keys):
-    """Get something out of the Application state."""
+    """Get something out of the yaml datastore."""
     global AS
     return _get_in(AS, keys)
 
@@ -104,7 +104,7 @@ def get_keys_in(*keys):
 
 
 def get_vals_in(path, *keys):
-    """Get a list of values from a value vector in the Application state.
+    """Get a list of values from a value vector in the yaml datastore.
     Vector should be a vector of keys, and keys should be a list of keys. :-/
 
     this, that, it = get_vals_in(["foo", "bar"], ["this" "that" "it"]).
@@ -157,11 +157,11 @@ def get_in_device(key):
 
 
 def show(pathname="/"):
-    """Show a sub-tree in the Application State with a path.
+    """Show a sub-tree in the Yaml Datastore with a path.
 
     example: show /device
 
-    will display the Application state tree from the device node on.
+    will display the yaml datastore tree from the device node on.
     """
     if pathname == "/":
         # remove _Root_ from showing unless asked.
@@ -216,14 +216,14 @@ def eval_default_process():
         hello()
 
 
-def merge_yaml(yaml):
-    """Merge a yaml data structure into the Application state."""
+def merge_yaml(y):
+    """Merge a yaml data structure into the yaml datastore."""
     logger.info("Merge Yaml: %s:" % y)
     u.merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
 def load_yaml(yaml_file):
-    """Load a yaml file into the application state"""
+    """Load a yaml file into the yaml datastore"""
     merge_yaml(u.load_yaml_file(yaml_file))
 
 
@@ -255,7 +255,7 @@ def load_defaults(state_init, pkgname=None, yamlname=None):
 
 
 def merge_pkg_yaml(pkgname, yamlname):
-    """load a yaml file from a package into the application state."""
+    """load a yaml file from a package into the yaml datastore."""
     global AS
     AS = u.merge(AS, u.load_pkg_yaml(pkgname, yamlname))
 
@@ -285,7 +285,7 @@ def load_pkg_resource_with(path):
 
     The contents will be placed into 'contents' at the path given.
 
-    For this example there is a structure in the Application state which
+    For this example there is a structure in the yaml datastore which
     looks like this. In this case the value vector is simply 'readme'.
     Contents is included for clarity, but will be created if not there.
 

@@ -1,5 +1,8 @@
 # Simple Process REPL
 
+A YAML datastore, a config file, a namespace manager, and an interpreter walk 
+into a bar...
+
 I hope this document is not too annoying in it's repeating. I'm working on it.
 It some ways it less important now since help is so good.
 But I'd rather have too much than too little.
@@ -68,6 +71,11 @@ and a couple of lisps among other things.  This wasn't really intentional,
 and it comes with a strong desire to keep it from becoming a real turing
 complete language. But it seems to be happening anyway.
 
+I like the idea of keeping it syntaxless.  I think that is a nice
+limitation that keeps it from changing too quickly. I have to be
+really thoughtful about the naming and doing of things.
+but I also want to try plugging in a different repl. 
+
 What will happen? I don't know ! I suppose that's why it's fun.
 It is already doing a great job at making handy self documenting 
 scripts quickly.
@@ -95,7 +103,8 @@ The original python version 1 of SPR now lives on as
 [The Particle Board REPL](https://github.com/ericgebhart/Particle_Board_REPL.git).
 PBR is an application layer built on top of the previous version of SPR, which
 was a bit of a pain to extend. PBR is now a standalone application that embodies 
-the old version 1 of SPR.
+the old version 1 of SPR. The same could be done with SPR 2, as the mechanisms
+used by PBR to extend SPR are still there.
 
 I built the REPL first and started converting all my functionality to
 python. This particle board process also needed wifi, the concept of a device, 
@@ -154,7 +163,7 @@ It's got some really handy extensions for making processes, and extensions
 are easy to make from a bit of python code. It will even create an
 extension project template for you. That's one of it's many commands.
 
-All with nice configuration and application state management, logging,
+All with nice configuration and yaml datastore management, logging,
 and error handling. It runs like an application once it has a process,
 and it can repeat it interactively, reporting failures.
 And it has a REPL. So you can play with it interactively, building things.
@@ -183,15 +192,15 @@ baz: 10
 
 ```
 
-no logic, Just a big Application State Tree and
+no logic, Just a big yaml datastore Tree and
 python functions. Failures are expected.
-It's easy to get and put things into the Application state 
+It's easy to get and put things into the yaml datastore 
 which is represented as a big tree of Yaml. 
 
 ## The parts.
   * The Interpreter/Repl
   * Namespaces
-  * Application state data structure
+  * yaml datastore data structure
   * SPR/Python extensions that are built in.
 
    
@@ -218,12 +227,12 @@ can be invoked as any other function, and which will be used by namespace
 help if it exists. Extensions use a template which contains a help 
 template showing SPR information in a pretty way.
 
-Both the module's Application state and spr code are shown in the help
+Both the module's yaml datastore and spr code are shown in the help
 if they exist.
 
 The **ls** command will navigate both the Namespaces of SPR and the
-Application state. Any path that starts with a / looks in the Application
-state. Anything that does not start with a / is looked up in the Namespaces.
+yaml datastore. Any path that starts with a / looks in the yaml datastore. 
+Anything that does not start with a / is looked up in the Namespaces.
 
 The interpreter does it's best to call the
 python functions you tell it to.  It recognizes, words, strings and numbers.
@@ -247,7 +256,7 @@ Think of it as a folder of commands. That really is about the extent of it.
 
 When a namespace is created the python functions are imported directly 
 into it, The module's spr code is also run, and the yaml code associated 
-with the import module will be integrated into the Application State tree.
+with the import module will be integrated into the yaml datastore tree.
 
 It is encouraged that the modules imported into the namespace have a _help()_
 function. The `new-spr-extension-project` creates a nice template accordingly.
@@ -323,52 +332,59 @@ SPR commands, where <ns> is the name of the namespace:
  * `show /config/<ns>` to see the configuration data used by the device namespace
 
 
-### Application State Data Structure
+### yaml datastore 
 
-There is this big data structure referred to as the Application State.
-It has a config tree which can be grown as needed by any SPR extensions
-that need it. That is how I originally thought of it, load my config!
-But then I needed to stash something. or change a setting and resave my
-config.  So how is this different that a globally organized tree of
-variables, that is created from a merging of multiple YAML files ?
-It's not.. Except if you think about it as variable space that we all agree
-to use in a respectful and organized way.  It's just variables no matter
-how you cut it. You don't even have to use or make the tree...
+There is this big data structure that was originally the configuration loaded
+from a YAML file. It still is. But it's also where processes and extensions
+can put stateful data that they are keeping track of or using.
+So config, is for stuff you want to define in a file, and you mostly don't change.
+and next to config, you can see them with `ls /` is lots of other stuff. 
 
-The Application state, is actually just a merge, of all the yaml's defined
+You can save this config and change it, and load it to change the ways that
+different modules behave, or even how SPR behaves. It's prompt was one of the first
+options to go into the config section.
+
+all of the yaml datastore is built from the core of SPR, and then with each import
+that SPR makes.  If you import _mymodule.foo_, spr will also merge _mymodule.foo.yaml.
+into the yaml datastore, and will then execute foo.spr
+
+which can be grown as needed by any SPR extensions
+that need it. 
+
+The yaml datastore, is actually just a merge, of all the yaml's defined
 by the various modules, and by the core.yaml.
 
 That said, here's how the tree is organized.
 
-Some of the data trees in the Application state are the following. 
+Some of the data trees in the yaml datastore are the following. 
  * config is the place where the configurations should go.
  * args is the resolved command line
- * device is an imaginary device. Which we can wait for and handshake with.
- * bar-QR is the state managed by the bar/QR code module
- * device is used by core, and by particle.
+ * defaults is for cli defaults, there aren't many.
+ * device is from the device extension
+ * bar-QR is from the bar-qr extension
 
 Truthfully it's probably a waste of time writing this, Just go into the REPL
-and have a look around.
+and have a look around. Use `ls /<path>` and `show <path>`.
 
 A complete configuration file can be generated at any time by saving it with
 _save-config_. Note that this is only the **config** section of the data tree.
 
 The configuration file should be named SPRConfig.yaml and will automatically loaded
 from the runtime directory if it exists. A different name can be specified with
-the `-c` option.  Or the name can be changed in the configuration.
+the `-c` option.  Or the name can be changed in the default section of the configuration.
 
-There are other things in the Application state, each SPR extension can
+There are other things in the yaml datastore, each SPR extension can
 also add a structure to the root of the tree to hold the information that
-it cares about.  This is the _state_ part of the structure. The Application
-state is defined by collecting all of the extension modules yaml file and
+it cares about.  This is the _state_ part of the structure. The yaml datastore
+is defined by collecting all of the extension modules yaml file and
 merging them together as they are imported.
 
-Yaml files can be merged directly into the application state config with load-config.
+Yaml files can be merged directly into the yaml datastore config with load-config.
 
     `load-config foo.yaml`
 
-Yaml files can be merged directly into the **Root** of the application 
-state with load-yaml.
+Yaml files can be merged directly into the **Root** of the yaml datastore. 
+with load-yaml.
 
     `load-yaml foo.yaml`
  
@@ -380,7 +396,7 @@ and put things and look at things.
 
 Paths are just like filesystem paths in Unix/Linux.  The namespaces can be 
 thought of as one tree, built from imported python code, 
-and the Application state as another that is built from YAML.
+and the yaml datastore as another that is built from YAML.
 
  * `ls` navigates both trees using paths.
  * `set` uses paths like variable names. getting and putting values in them.
@@ -428,7 +444,7 @@ a command like this.
     ```
     
 This will create a _namespace foo_ within SPR with all the functions listed, 
-as well as whatever is defined in `foo/core.spr`.  The application state 
+as well as whatever is defined in `foo/core.spr`.  The yaml datastore 
 will merge in what ever structure is defined in `foo/core.yaml`. 
 
 
@@ -471,9 +487,9 @@ to make life easier in SPR. It is fairly easy to make an extension made
 from example snippets gleaned from StackOverflow.
 
 The python functions for use as an SPR extension are generally very simple, 
-* Retrieve their configuration data from the Application state, 
+* Retrieve their configuration data from the yaml datastore, 
 * Do something, 
-* Save the result back into their part of the application state as needed.
+* Save the result back into their part of the yaml datastore as needed.
 
 To that end, the template created has example _-to_, _-from_ and _-with_ 
 functions to be used.
@@ -481,10 +497,10 @@ functions to be used.
 
 #### Yaml Data Structure
 Additionally, an extension can define a yaml file which import will integrate
-into the Application state. Configuration settings and whatever data structure
+into the yaml datastore. Configuration settings and whatever data structure
 needed by the extension are defined here.
 
-Here is how the bar/QR code module defines it's application state structure
+Here is how the bar/QR code module defines it's yaml datastore structure
 and it's configuration settings in `bar_qr.yaml`.
 
 ``` code=YAML
@@ -608,7 +624,7 @@ There are a few core libraries included within SPR, they are imported by SPR
 into their various namespaces by `core.spr`
 
 * log  - logging level and messaging.
-* appstate - Application state - All the YAML, config etc.
+* appstate - yaml datastore - All the YAML, config etc.
 * dialog - dialog windows for the user interface.
 * cli - cli stuff for the user interface.
 * network - Networking. wifi, ssh, etc.
@@ -893,7 +909,7 @@ to this:
 
 The idea of **-from** and **-to** changed things too, those are essentially all that
 is needed within a module for it to get the stuff to and from other module's,
-application state, or where ever you are putting your stuff.
+yaml datastore, or where ever you are putting your stuff.
 
 But that led to **-with** variants, so now, we give a path full of stuff to a 
 function and it goes and gets what it wants _with_ what you have there.
@@ -907,9 +923,7 @@ dumbest of lisp interpreters. And they can be pretty stupid too.
 I added barcodes to SPR because that was a requirement for a thing I made for someone.
 When I did that, I decided to add simple namespaces, which led to just changing
 everything from the stupid simple and obvious symbol tables to a more elegant import
-system. Instead of that hardcoded symbol table, there is code to figure out python 
-function signatures and do the right thing when it found some 
-function in the new dynamically created table. 
+system. 
 
 Because of namespaces and import, instead of a big ol YAML, 
 each module could keep it's own little piece.
@@ -917,6 +931,7 @@ Simpler and Simpler.
 
 These things changed everything, but the language, if you can call it that, 
 It's only syntax is whitespace, and I guess we can count the */'s* in the paths.
+hasn't changed.
 
 And despite it's growing capabilities it's doing it with less code. That's cool.
 
