@@ -1,0 +1,26 @@
+'
+device:
+  id: ''
+  last_id: ''
+  type: ''
+  serial: ''
+  name: ''
+  path: ''
+
+config:
+    device:
+        serial:
+            baudrate      : 9600
+
+        handshake:
+            start_string    : Some handshake string
+            response_string : some response string
+            fail_regex      : ^F:.*
+            done_regex      : ^I:Test All Done
+            do_qqc_regex    : ^I:Now Setting Serial Number
+            do_qqc_func     : input-serial
+
+        #number of seconds to wait for a response.
+        waiting:
+            timeout      : 30
+            pause_time   : 5
