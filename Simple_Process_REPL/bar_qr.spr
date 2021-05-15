@@ -1,3 +1,4 @@
+# this is the bar qr data store and configuration settings.
 '
 bar-QR:
     src: Null
@@ -26,6 +27,8 @@ config:
             module_height: 8
             text_distance: 2
 
+
+# We need these to make it easy to print barcodes.
 
 def input-code
     "Dialog to get a string to encode to a bar or QR code"

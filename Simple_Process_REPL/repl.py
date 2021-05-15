@@ -168,6 +168,9 @@ def load(reader):
         except Exception:
             break
 
+        if line and line[0] == "#":
+            continue
+
         if line == "'":
             inline_yaml(lines)
             txt = ""
@@ -1016,6 +1019,8 @@ def repl(prompt="SPR:> ", init=None):
         try:
             print("")
             line = input(prompt)
+            if line and line[0] == "#":
+                continue
             if line == "'":
                 yaml_parse()
             else:

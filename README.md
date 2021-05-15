@@ -240,6 +240,55 @@ ie. `foo "this is a string" 10`, it understands functions with various
 signatures including variable arguments, but not keywords. Which aren't
 valid in it's non-existent syntax anyway.
 
+Well almost non existant syntax.
+ * ' by itself to read the YAML that follows, terminated with two blank lines.
+ * # in the first character of the line is a comment.
+
+A single quote on a line by it's self, followed by yaml,
+and another **2 Blank lines** will cause the interpreter to
+switch parsers and merge the yaml it finds there into the yaml datastore.
+
+Here is an example from bar_qr.spr:
+```
+'
+bar-QR:
+    src: Null
+    value: ''
+    QR_code:
+        code: Null
+        saved: ''
+    barcode:
+        code: Null
+        saved: ''
+
+config:
+    QR_code:
+        filename_suffix: 'QR'
+        prefix: 'K1'
+        suffix: 'A'
+        save_path: 'qrcodes'
+        font: DejaVuSans.ttf
+        font_size: 18
+    barcode:
+        filename_suffix: 'BC'
+        prefix: ''
+        suffix: ''
+        save_path: 'barcodes'
+        save_options:
+            module_height: 8
+            text_distance: 2
+
+
+def input-code
+    "Dialog to get a string to encode to a bar or QR code"
+    ui/input-string-to bar-QR value
+
+def print-codes
+    "Dialogs to get a string, encode it, and print it as some number of Bar or QR codes."
+    bq/input-code ui/print-bcqr
+
+```
+
 The REPL is fun to use. It makes it super easy to
 interactively create/execute a process step by step. 
 `help` at the REPL prompt. 
@@ -334,7 +383,10 @@ SPR commands, where <ns> is the name of the namespace:
 
 ### yaml datastore 
 
-There is this big data structure that was originally the configuration loaded
+The yaml datastore, is actually just a merge, of all the yaml's defined
+by the various modules, and by the core.yaml.
+
+It is a data structure that was originally the configuration loaded
 from a YAML file. It still is. But it's also where processes and extensions
 can put stateful data that they are keeping track of or using.
 So config, is for stuff you want to define in a file, and you mostly don't change.
@@ -344,27 +396,17 @@ You can save this config and change it, and load it to change the ways that
 different modules behave, or even how SPR behaves. It's prompt was one of the first
 options to go into the config section.
 
-all of the yaml datastore is built from the core of SPR, and then with each import
+The yaml datastore is first built from the core of SPR, and then with each import
 that SPR makes.  If you import _mymodule.foo_, spr will also merge _mymodule.foo.yaml.
 into the yaml datastore, and will then execute foo.spr
+It is also possible to embed the yaml in the the spr file with a **'**
+on a line by itself just before the YAML. The YAML should be followed by
+two blank lines, that tells the SPR parser to stop parsing YAML and
+go back to normal.
 
-which can be grown as needed by any SPR extensions
-that need it. 
-
-The yaml datastore, is actually just a merge, of all the yaml's defined
-by the various modules, and by the core.yaml.
-
-That said, here's how the tree is organized.
-
-Some of the data trees in the yaml datastore are the following. 
- * config is the place where the configurations should go.
- * args is the resolved command line
- * defaults is for cli defaults, there aren't many.
- * device is from the device extension
- * bar-QR is from the bar-qr extension
-
-Truthfully it's probably a waste of time writing this, Just go into the REPL
-and have a look around. Use `ls /<path>` and `show <path>`.
+Truthfully it's probably a waste of time writing this, 
+The easiest way to see what is there is to go look.
+Just go into the REPL and have a look around. Use `ls /<path>` and `show <path>`.
 
 A complete configuration file can be generated at any time by saving it with
 _save-config_. Note that this is only the **config** section of the data tree.
@@ -379,7 +421,7 @@ it cares about.  This is the _state_ part of the structure. The yaml datastore
 is defined by collecting all of the extension modules yaml file and
 merging them together as they are imported.
 
-Yaml files can be merged directly into the yaml datastore config with load-config.
+Yaml files can also be merged directly into the yaml datastore config with load-config.
 
     `load-config foo.yaml`
 
@@ -387,6 +429,16 @@ Yaml files can be merged directly into the **Root** of the yaml datastore.
 with load-yaml.
 
     `load-yaml foo.yaml`
+    
+Or the last way, just code them like this, in spr.
+```
+'
+foo: 
+   bar: 10
+   baz: 20
+   
+   
+```
  
 #### Paths
  
@@ -396,12 +448,12 @@ and put things and look at things.
 
 Paths are just like filesystem paths in Unix/Linux.  The namespaces can be 
 thought of as one tree, built from imported python code, 
-and the yaml datastore as another that is built from YAML.
+and the yaml datastore as another tree that is built from YAML.
 
  * `ls` navigates both trees using paths.
  * `set` uses paths like variable names. getting and putting values in them.
  * `show` uses paths to find what to show.
- * `-with` and `-from` and `-to` functions use them to find and put their data.
+ * `-with` and `-from` and `-to` functions use paths to find and put their data.
 
 ```
     SPR:> set foo/bar 10
@@ -419,10 +471,6 @@ and the yaml datastore as another that is built from YAML.
     bar                           
     baz
 ```
-
-
-
-
 
 ### SPR/Python extensions
 
@@ -497,11 +545,13 @@ functions to be used.
 
 #### Yaml Data Structure
 Additionally, an extension can define a yaml file which import will integrate
-into the yaml datastore. Configuration settings and whatever data structure
-needed by the extension are defined here.
+into the yaml datastore. It can also be included in the spr file instead using
+the quote syntax.
+Configuration settings and whatever data structure needed by the extension 
+are defined here.
 
 Here is how the bar/QR code module defines it's yaml datastore structure
-and it's configuration settings in `bar_qr.yaml`.
+and it's configuration settings in `bar_qr.yaml`. 
 
 ``` code=YAML
 bar-QR:
@@ -535,13 +585,14 @@ config:
 
 #### SPR code
 This is where more Libraries can be imported and new symbols and partial functions 
-can be defined. 
+can be defined.  As well as the YAML if desired.
 
 The Bar/QR extension is a good example of all of this. It only provides 3 public
 functions and it has state, configuration, and a couple of SPR symbol definitions,
-The files in the repo are: *bar_qr.py* *bar_qr.yaml* and *bar_qr.spr*
+The files in the repo are: *bar_qr.py* and *bar_qr.spr* which has both spr and yaml
+combined.
 
-Here is the contents of *bar_qr.spr*. Notice it makes a new command `input-code`
+Here is the spr contents of *bar_qr.spr*. Notice it makes a new command `input-code`
 which is actually a dialog window in the _ui_ namespace. The value vector given
 is for _bar-QR/value_. So that is where the input dialog will put it's result.
 
@@ -562,6 +613,10 @@ def print-codes
 ### The syntax. 
 
 It's just a list of things with whitespace. words, strings and numbers.
+**#'s** at the beginning of a line are comments
+A **'** on a line by itselfs indicates that YAML follows until 2 blank lines
+are encountered.
+
 If the first thing is a python function with arguments the rest of the list
 is the arguments. If it isn't, then it's a list of commands and each is done
 in turn. But each command, can be a list of things.
@@ -704,6 +759,8 @@ to do what you like, at particular steps of the process.
 
   
 ### Order of execution  
+  * Load module config - SPR-Defaults
+
   * core.py
 
   * The Startup Hook defined in the configuration will run first
@@ -764,6 +821,12 @@ Then type these commands and read as you go.
  * _foo_
  * ui/msg "hello"
  * def mymsg "my msg help" ui/msg "hello"
+ * _'_           --- Start entering Yaml.
+ * _stuff:_
+ * _    mine: 10_
+ * _    yours: 20_
+ *_ _            --- Finish entering Yaml.
+ * show /stuff
 
 Once in the REPL at the prompt; __SPR:>,
 _help_ shows all the commands known with their documentation. 
@@ -940,3 +1003,8 @@ And why not have a repl server and an emacs mode so I can run spr code in emacs.
 And I'd like to see this with plysp as it's REPL.
 
 So, endless fun. Why not.
+
+Ok, so comments, and inline Yaml.  These are nice things.
+
+**With** is coming, it's in my head swimming around.
+
