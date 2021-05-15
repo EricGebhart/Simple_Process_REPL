@@ -1,6 +1,7 @@
 import os
 from dialog import Dialog
 import logging
+import traceback
 
 import regex as re
 import Simple_Process_REPL.repl as r
@@ -39,7 +40,6 @@ def help():
 def hello():
     "Just in case we don't know what to do."
     msg(A.get_in_config(["dialogs", "hellomsg"]))
-    # msgcli(A.get_in_config(["dialogs", "continue"]))
 
 
 def input_string(msg):

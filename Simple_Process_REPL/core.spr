@@ -1,3 +1,49 @@
+'
+config:
+    REPL:
+        prompt        : 'SPR:> '
+
+    ssh:
+        pemfile       : 'server.pem'
+        ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
+
+    files:
+        logfile       : 'SPR.log'
+        loglevel      : 'debug'
+
+        config_file   : 'SPRConfig.yaml'
+
+    readme:
+        module: Simple_Python_REPL
+        filename: README.md
+        path: ""
+        md: ""
+        html: ""
+
+    exec:
+        # function name to autoexec when asked to run
+
+        autoexec : ui/hello
+
+        help:
+
+        # # a list of functions
+        functions :
+        #     id-it :
+        #         fn  : get reset wait pause pause identify
+        #         doc : 'Put your help text here'
+
+        hooks:
+            startup:
+
+            #- as/showin config
+            #- ui/msg "Where ami"
+
+            shutdown:
+
+            - ui/msg "Goodbye have a nice day!"
+
+
 namespace as "Application State functionality"
     Simple_Process_REPL.appstate
     help

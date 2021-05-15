@@ -8,6 +8,7 @@ import atexit
 import code
 from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
+    merge_yaml,
     merge_pkg_yaml,
     get_in,
     get_in_config,
@@ -122,20 +123,68 @@ def is_blank_line(line):
     return re.match(r"^[\s]*$", line)
 
 
+def inline_yaml(lines):
+    """take an iterator and read until the end or two blank lines are encountered.
+    Attempt to merge the resulting yaml and merge it into to yaml datastore."""
+    yaml = ""
+    blank_count = 0
+
+    logger.info("loading inline Yaml:")
+
+    while True:
+
+        try:
+            line = lines.__next__()
+            logger.debug("%s" % line)
+        except Exception:
+            break
+
+        if len(line) == 0 or is_blank_line(line):
+            blank_count += 1
+        else:
+            blank_count = 0
+
+        if blank_count == 2:
+            break
+
+        yaml += line + "\n"
+
+    merge_yaml(yaml)
+    return lines
+
+
 def load(reader):
     """Load a text reader (hopefully an spr file) into the interpreter."""
     txt = ""
-    for line in reader:
-        logger.debug("loading SPR: ")
-        logger.debug("%s" % line)
-        if len(line) == 0 or is_blank_line(line):
-            if len(txt) > 0:
-                eval_cmd(txt)
-                txt = ""
+    lines = reader.__iter__()
+    line = True
+    logger.info("loading SPR:")
+
+    while True:
+
+        try:
+            line = lines.__next__()
+            logger.debug("%s" % line)
+        except Exception:
+            break
+
+        if line == "'":
+            inline_yaml(lines)
+            txt = ""
+            continue
+
         else:
-            # get rid of newlines so the interpreter
-            # sees a continuous line.
-            txt += re.sub("\n", " ", line)
+            if len(line) == 0 or is_blank_line(line):
+                if len(txt) > 0:
+                    eval_cmd(txt)
+                    txt = ""
+            else:
+                # get rid of newlines so the interpreter
+                # sees a continuous line.
+                txt += re.sub("\n", " ", line)
+
+    if len(txt) > 0:
+        eval_cmd(txt)
 
 
 def import_lib_spr(module):
@@ -147,7 +196,7 @@ def import_lib_spr(module):
         name = module
     sprname = name + ".spr"
     yname = name + ".yaml"
-    logger.info("Import spr %s: %s" % (root, sprname))
+    logger.info("\nImport spr %s: %s" % (root, sprname))
 
     try:
         init = pkgutil.get_data(root, sprname).decode("utf-8").split("\n")
@@ -163,7 +212,7 @@ def import_lib_spr(module):
 
 def namespace(name, docstr, module, *funclist):
     global Root
-    logger.info("Creating Namespace: %s from Python module: %s" % (name, module))
+    logger.info("\nCreating Namespace: %s from Python module: %s" % (name, module))
     # logger.info(*funclist)
     ns = {
         "symbols": append_funcs({}, module, *funclist),
@@ -931,6 +980,22 @@ def _quit_():
     exit()
 
 
+def yaml_parse():
+    yaml = ""
+    while True:
+        try:
+            print("")
+            line = input("YAML...>")
+            if len(line):
+                yaml += line + "\n"
+            else:
+                break
+        except Exception as e:
+            logger.error(e)
+    merge_yaml(yaml)
+    return
+
+
 def repl(prompt="SPR:> ", init=None):
     """
     An input loop. nothing fancy. It does have history and
@@ -951,7 +1016,10 @@ def repl(prompt="SPR:> ", init=None):
         try:
             print("")
             line = input(prompt)
-            if len(line):
-                eval_list(parse(line))
+            if line == "'":
+                yaml_parse()
+            else:
+                if len(line):
+                    eval_list(parse(line))
         except Exception as e:
             logger.error(e)

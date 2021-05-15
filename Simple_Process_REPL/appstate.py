@@ -218,7 +218,7 @@ def eval_default_process():
 
 def merge_yaml(y):
     """Merge a yaml data structure into the yaml datastore."""
-    logger.info("Merge Yaml: %s:" % y)
+    logger.debug("Merge yaml-\n %s" % y)
     u.merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
@@ -233,7 +233,6 @@ def load_functions():
     # add in the user functions from the config file.
 
     fns = get_in_config(["exec", "functions"])
-    # logger.info(yaml.dump(fns))
 
     if fns is not None:
         for k, v in fns.items():

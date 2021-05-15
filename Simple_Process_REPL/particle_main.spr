@@ -1,3 +1,24 @@
+'
+config:
+    particle:
+        # Used by Particle product add (Beta) invalid command at 1.52.
+        product    : 'XXXXX'
+
+        images:
+            #flash   : '../boron-system-part1@2.0.1.bin'
+            flash   : 'R5Bin.bin'
+            test    : 'R5Test.bin'
+            tinker  : 'tinker-0.8.0-rc.27-boron.bin'
+
+device:
+  id: ''
+  last_id: ''
+  type: ''
+  serial: ''
+  name: ''
+  path: ''
+
+
 def id-it
     "Id the board. get, reset then identify. Need the reset and pauses for consistent success"
     pb/get pb/reset dev/wait pb/pause pb/pause pb/identify

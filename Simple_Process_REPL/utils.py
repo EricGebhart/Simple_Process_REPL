@@ -93,11 +93,11 @@ def load_pkg_resource(pkgname, filename):
 
 def load_pkg_yaml(pkgname, yamlname):
     """load a configuration file from a package."""
-    logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
     try:
         someyaml = yaml.load(
             load_pkg_resource(pkgname, yamlname), Loader=yaml.SafeLoader
         )
+        logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
         return someyaml
     except FileNotFoundError:
         pass
