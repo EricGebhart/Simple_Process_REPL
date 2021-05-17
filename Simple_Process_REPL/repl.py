@@ -8,11 +8,13 @@ import atexit
 import code
 from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
-    merge_yaml,
+    merge_yaml_with,
     merge_pkg_yaml,
     get_in,
+    get_from_path,
     get_in_config,
     get_keys_in,
+    show,
 )
 import Simple_Process_REPL.utils as u
 
@@ -46,6 +48,7 @@ Current_NS = "/"
 NS = Root
 
 logger = logging.getLogger()
+
 
 # yaml = u.load_pkg_yaml("Simple_Process_REPL", "bar_qr.yaml")
 
@@ -149,7 +152,7 @@ def inline_yaml(lines):
 
         yaml += line + "\n"
 
-    merge_yaml(yaml)
+    merge_yaml_with(yaml)
     return lines
 
 
@@ -346,7 +349,10 @@ def append_specials(st, slist):
 def _def_(name, helpstr, commandstr):
     """define a new symbol which is a 'dolist' of other symbols.
     example: def hello-world \"My help text\" ui/msg \"hello world\" """
-    _def_symbol(name, helpstr, commandstr, stype="dolist")
+    stype = "dolist"
+    if commandstr[0] == "/":
+        stype = "path"
+    _def_symbol(name, helpstr, commandstr, stype=stype)
 
 
 def partial(name, helpstr, commandstr):
@@ -459,11 +465,18 @@ def all_dolist_help(st):
 
 def dolist_help(k, v):
     """Format an dolist symbol's help."""
-    if isstype(v, "dolist") or isstype(v, "partial"):
+    if isstype(v, "dolist") or isstype(v, "partial") or isstype(v, "path"):
         print("\n {0[0]:20}\n--------------\n{0[1]}".format([k, v["doc"]]))
         print("    Type: %s" % v["stype"])
-        print("    Source: [%s]\n" % v["fn"])
+
+    if isstype(v, "path"):
+        print("    Path: [%s]\n" % v["fn"])
+
+    if isstype(v, "fptr"):
+        fptr_help(k, v)
+
     if isstype(v, "partial"):
+        print("    Source: [%s]\n" % v["fn"])
         print("  --- Derived from: ---")
         func_name = v["fn"].split(" ")[0]
         s = _get_symbol(func_name)
@@ -532,6 +545,9 @@ def print_sym(k, symbol):
 
     if isstype(symbol, "dolist"):
         print("   %-30s  Do List -->  %-20s" % (sig, symbol["fn"]))
+
+    if isstype(symbol, "path"):
+        print("   %-30s  Path -->  %-20s" % (sig, symbol["fn"]))
 
     if isstype(symbol, "fptr"):
         print("   %-30s" % sig)
@@ -646,7 +662,7 @@ def _help_(args=None):
         s = _get_symbol(sym)
         if isstype(s, "namespace"):
             namespace_help(sym, s)
-        if isstype(s, ["dolist", "partial"]):
+        if isstype(s, ["dolist", "partial", "path"]):
             dolist_help(sym, s)
         if isstype(s, ["fptr", "voidfptr"]):
             fptr_help(sym, s)
@@ -696,7 +712,7 @@ def _pyhelp_(args=None):
         if isstype(s, "partial"):
             n, s = get_parent_symbol(s)
             pydoc.help(s["fn"])
-        if isstype(s, "dolist"):
+        if isstype(s, ["dolist", "path"]):
             dolist_help(sym, s)
         if isstype(s, ["fptr", "voidfptr"]):
             pydoc.help(s["fn"])
@@ -736,6 +752,18 @@ def isa_fptr(cmd):
         return sym
 
 
+def isa_path(cmd):
+    "Quietly determine if a symbol is a path"
+    try:
+        sym = _get_symbol(cmd)
+        if not isstype(sym, "path"):
+            sym = None
+    except Exception:
+        return None
+    else:
+        return sym
+
+
 def get_specials_with_narg(st, nargs):
     """Get a list of specials which have number of args defined."""
     swn = []
@@ -743,6 +771,27 @@ def get_specials_with_narg(st, nargs):
         if isstype(v, "fptr") and v["nargs"] == nargs:
             swn.append(k)
     return swn
+
+
+def expand(commands):
+    """Expand the arguments into their values as needed.
+    So far this is just paths. With this, we have 'variables'.
+    Path symbols expand to their value.
+
+    Keeping it simple, one layer expansion, no recursion. It's enough
+    to give dangerous power.
+    """
+    res = []
+    for symbol in commands:
+        path = isa_path(symbol)
+        if path:
+            logger.debug("Expand: %s" % path["fn"])
+            res += get_from_path(path["fn"]).split(" ")
+        else:
+            res += [symbol]
+
+    logger.debug("Expand: %s" % res)
+    return res
 
 
 # I think this function is too complicated. could be simpler. but it is
@@ -755,12 +804,16 @@ def do_fptrs(commands):
     This get's the first shot. if the first token isn't an fptr, then it goes
     on to be evaluated elsewhere.
     """
+
     command = commands[0]
-    fptr = isa_fptr(command)
+
+    # logging.debug("do fptrs: %s" % command)
 
     # logging.debug("do fptrs: %s" % command)
     # logging.debug("full: %s" % commands)
-    # logging.debug("fptr: %s" % str(fptr))
+    # # logging.debug("fptr: %s" % str(fptr))
+
+    fptr = isa_fptr(command)
 
     if fptr is None:
         return False
@@ -768,17 +821,24 @@ def do_fptrs(commands):
     # logging.info("keys: %s" % str(special.keys()))
     # # logging.debug("nargs: %s" % str(special['nargs']))
 
+    # Such a mess. This needs to be fixed so it uses args and kwargs,
+    #  goes hand in hand with making with work.
+
     # logger.info("DO_FPTR %s" % fptr)
     fn = fptr["fn"]
     fnargs = fptr["nargs"]
     vargs = fptr["vargs"]
     def_index = fptr["def_index"]
-    # sig = fptr["signature"]
+    sig = fptr["signature"]
     nargs = len(commands) - 1
 
+    # logger.info("do-fptrs: %d, %s" % (nargs, commands))
+
     # logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
-    # "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
-    # % (command, func, sig, fnargs, nargs, vargs)
+    # logger.info(
+    #     "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
+    #     % (command, fn, sig, fnargs, nargs, vargs)
+    # )
 
     # oy. je n'aime pas des exceptions
     if command == "-def-" or command == "partial":
@@ -786,10 +846,13 @@ def do_fptrs(commands):
         fn(commands[1], commands[2], commandstr)
         return True
 
+    # oy. je n'aime pas des exceptions
+    if command == "as/set":
+        fn(commands[1], commands[2:])
+        return True
+
     if vargs and nargs == 0:
-        # logger.info("vargs and nargs=0.func() %s" % fn)
         fn()
-        # logger.info("After no args func()")
 
     elif vargs:
         if fnargs == 1:
@@ -903,6 +966,11 @@ def eval_list(commands):
     """
     logger.debug("eval list: %s" % commands)
 
+    # we have function pointers sort-of by having this here.
+    # if you put a symbol name for something in the yaml
+    # and a path symbol that points at it....
+    commands = expand(commands[0:])
+
     # if it's a partial expand it.
     first_sym = _get_symbol(commands[0])
 
@@ -922,9 +990,14 @@ def eval_cmd(commandstr):
 
 
 def eval_cmds(commands):
-    """Evaluate a commandstr."""
+    """Evaluate a command list."""
     for c in commands:
         eval_list(parse(c))
+
+
+def eval(*commands):
+    """Evaluate a list of symbols, varargs version of eval_cmds with a nice name."""
+    eval_cmds(commands[0])
 
 
 def repl_message():
@@ -987,7 +1060,6 @@ def yaml_parse():
     yaml = ""
     while True:
         try:
-            print("")
             line = input("YAML...>")
             if len(line):
                 yaml += line + "\n"
@@ -995,7 +1067,7 @@ def yaml_parse():
                 break
         except Exception as e:
             logger.error(e)
-    merge_yaml(yaml)
+    merge_yaml_with(yaml)
     return
 
 

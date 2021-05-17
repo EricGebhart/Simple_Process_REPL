@@ -50,6 +50,11 @@ namespace as "Application State functionality"
     show
     set_in
     set
+    set_with
+    _with
+    pop_with
+    _print_stack
+    _show_with
     eval_default_process
     save_config
     load_config

@@ -24,7 +24,7 @@ When writing python code to interact with SPR the appstate functions
 get_in, set_in, get_in_config, and get_in_device are of primary
 use.
 
-Within SPR code, showin, set-in, and set-in-from are of primary use.
+Within SPR code, show, set, and set-from are of primary use.
 
 """
 
@@ -45,6 +45,112 @@ AS = {
     },
     "platform": "",
 }
+
+with_stack = []
+
+
+def _ls_with():
+    path = with_stack[-1]["path"]
+    print(path)
+    print("-------------------------")
+    r.ls(path)
+
+
+def _with(path=None):
+    """
+    Show the current 'With' path or if a path is given,
+    Push a Yaml datastore path onto the 'with' stack.
+
+    If it is not yet there, it will appear when someone sets something.
+    """
+    global with_stack
+    #    logger.info("_with %s" % path)
+    #    logger.info("_stack %s" % with_stack)
+
+    if path is None:
+        _ls_with()
+        return
+
+    if path[0] != "/":
+        path = "/" + path
+
+    # Value vectors, paths, I need to get these
+    # symbols straightened out a bit. Seems like
+    # should be keeping withs, in the app state too.
+    # they seem a little stupid at the moment.
+    # basically a manual path stack.
+    vv = _get_vv_from_path(path)
+    try:
+        vv.remove("")
+    except Exception:
+        pass
+
+    if vv is None:
+        vv = []
+
+    with_stack.append(
+        {
+            "path": path,
+            "vv": vv,
+        }
+    )
+
+
+def pop_with():
+    """Pop a Yaml datastore path from the 'with' stack."""
+    global with_stack
+    if len(with_stack) > 1:
+        with_stack.pop()
+
+
+def _print_stack():
+    """Print the stack of 'withs/scopes'.
+    Show the contents of the top entry
+    and the entries of the stack which are below it."""
+    global with_stack
+    # print(reversed(with_stack))
+    # pretty print the dict at path.
+    for p in reversed(with_stack):
+        print(p["path"])
+
+
+def _show_with():
+    """Show the current 'With' tree."""
+    cwd = with_stack[-1]["path"]
+    print("%s" % cwd)
+    print("----------------------")
+    show(cwd)
+
+
+def _get_with_path():
+    """Return the current 'With' Vector as a path."""
+    return with_stack[-1]["path"]
+
+
+def _get_with_vv():
+    """Return the current 'With' Vector."""
+    return with_stack[-1]["vv"]
+
+
+def set_with(set_path, fromv):
+    """Takes a path or path symbol and a value
+    or 2 paths. Prepends the path of with and calls set.
+    """
+    if set_path[0] != "/":
+        set_path = "/" + set_path
+    set_path = _get_with_path() + set_path
+    # logger.debug("set-with %s" % set_path)
+    set(set_path, fromv)
+    pass
+
+
+def get_in_with(path):
+    vv = _get_with_vv() + _get_vv_from_path(path)
+    return get_in(vv)
+
+
+def _merge_with():
+    pass
 
 
 def _set_(d):
@@ -76,19 +182,47 @@ def get_from_path(path):
     return get_in(vv)
 
 
-def set(set_path, fromv=None):
-    """Takes a path and value or 2 paths.
-    If the second value begins with / it will be
-    treated a path, otherwise as a value.
+def set(set_path, fromv):
+    """Takes a path or path symbol and a value
+    or 2 paths.
+
+    Values begining with / will be
+    treated a path, otherwise as a symbol/value.
     """
     global AS
     set_keys = _get_vv_from_path(set_path)
+    path = r.isa_path(set_path)
+    if path:
+        set_keys = _get_vv_from_path(path)
+    else:
+        set_keys = _get_vv_from_path(set_path)
+
+    if isinstance(fromv, int) or isinstance(fromv, float):
+        fromv = fromv
+
+        # why did I do this?  I think a hack to keep going...
+    elif len(fromv) > 1:
+        if not isinstance(fromv, str) and isinstance(fromv, list):
+            res = None
+            for x in fromv:
+                if res is None:
+                    res = str(x)
+                else:
+                    res = res + " " + str(x)
+            fromv = res
+    else:
+        fromv = fromv[0]
+
     if isinstance(fromv, str):
-        if fromv[0] == "/":
-            fromv = fromv[1:]
-            fromv = get_from_path(fromv)
+        path = r.isa_path(fromv)
+        if path:
+            fromv = _get_vv_from_path(path)
+        else:
+            if fromv[0] == "/":
+                fromv = get_from_path(fromv[1:])
 
     set_keys += [fromv]
+    # logger.debug("setttt: %s " % set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -100,7 +234,11 @@ def get_in(keys):
 
 def get_keys_in(*keys):
     """Get just a list of keys from the thing at the value vector."""
-    return get_in(keys).keys()
+    thing = get_in(keys)
+    if isinstance(thing, list):
+        return thing
+    else:
+        return thing.keys()
 
 
 def get_vals_in(path, *keys):
@@ -214,6 +352,19 @@ def eval_default_process():
             raise Exception(e)
     else:
         hello()
+
+
+def merge_yaml_with(y):
+    """Merge a yaml data structure into the yaml datastore."""
+    logger.debug("Merge yaml-\n %s" % y)
+    root = _get_with_vv()
+    y = [yaml.load(y, Loader=yaml.SafeLoader)]
+    logger.info("merge: %s" % root)
+    y = root + y
+    d = u.make_dict(y)
+
+    logger.info(d)
+    u.merge(AS, d)
 
 
 def merge_yaml(y):
@@ -355,6 +506,8 @@ def init(parser, logger):
 
     AS["args"] = vars(parser.parse_args())
 
+    _with("/")
+
     load_configs()
 
     logs.add_file_handler(
@@ -362,7 +515,8 @@ def init(parser, logger):
         get_in_config(["files", "loglevel"]),
         get_in_config(["files", "logfile"]),
     )
-    set_in(["platform", platform()]),
+    set_in(["platform", platform()])
+    set_in(["_with_", with_stack])
 
     # load functions from the config into the interpreter.
     load_functions()

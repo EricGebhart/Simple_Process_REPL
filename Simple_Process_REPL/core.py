@@ -135,6 +135,7 @@ def init(symbols, specials, parser):
             "namespace",
             "load_file",
             "_quit_",
+            "eval",
         ],
     )
 
