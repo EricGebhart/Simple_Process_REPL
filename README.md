@@ -3,7 +3,7 @@
 A YAML datastore, a config file, a namespace manager, and an interpreter walk 
 into a bar...
 
-Trying very hard to keep it primitive so that it will only grow in necessary
+Trying very hard to keep this primitive so that it will only grow in necessary
 and helpful ways.
 
 I hope this document is not too annoying in it's repeating. I'm working on it.
@@ -70,11 +70,14 @@ behind it.
 
 It's been eating it's self lately, I find that super exciting.
 I think I have successfully avoided having variables per se.
-Adding partials felt like pandora's box. And now _with_, _results_, lists, stacks, 
-and smarter dynamic binding, it's getting interesting.
+Adding partials felt like pandora's box. And now a _with_ stack, 
+_result_ stacks, and smarter dynamic binding, it's getting interesting.
 
 
 The appstate feels like a configuration and data tree maker / navigator.
+It feels like this is the real innovation here. The repl is super primitive, 
+and I like that. It keeps the complexity in the python.
+
 It makes it easy to create, manipulate configuration and runtime data, 
 It enables the repl to ask for bindings and gives it a place to push results.
 In a lisp, appstate wouldn't exist. it would be the environment stack.
@@ -82,6 +85,9 @@ Instead we have a tree and you can shine the light on any part of it by pushing
 it on the 'with' stack. Yaml, set, etc will then operate as if you are located at
 that path location in the data tree.
 
+Even if I were to plug in a lisp interpreter, the appstate is still super useful
+and interesting. I am really curious how far it will go if I stay away
+from that and only create higher order functions.
 
 I've written other languages, my tagset language for SAS, 
 and a couple of lisps among other things.  This wasn't really intentional,
@@ -494,7 +500,7 @@ and the yaml datastore as another tree that is built from YAML.
 Symbols can be defined to represent paths. Those symbols can 
 then be used in other commands, when accessed they will resolve
 to their value.  Here is a sample session which creates some
-yaml, then a path to that yaml, showing the the *show* command
+yaml, then a path to that yaml, showing how the *show* command
 works with the new symbol.
 
 Then it gets interesting. mybar is define as `show foo`. Now,
@@ -512,33 +518,145 @@ YAML...>   baz: 100
 YAML...>
 
 SPR:> show foo
-do-fptrs: 1, ['as/show', 'foo']
 bar: 10
 baz: 100
 
 
 SPR:> def baz "my baz" /foo/baz
-do-fptrs: 3, ['-def-', 'baz', '"my baz"', '/foo/baz']
 
 SPR:> show baz
-do-fptrs: 1, ['as/show', '/foo/baz']
 100
 ...
 
 
 SPR:> set /foo/bar show baz
-do-fptrs: 3, ['as/set', '/foo/bar', 'show', '/foo/baz']
 
 SPR:> def mybar "show foo/baz" show foo
-do-fptrs: 4, ['-def-', 'mybar', '"show foo/baz"', 'show', 'foo']
 
 SPR:> mybar
-do-fptrs: 1, ['as/show', 'foo']
+bar: 10
+baz: 100
+
+### With /Some/path
+
+It is also possible to push a path onto the _with_ stack.
+Here is an example session showing _with_. 
+
+```
+SPR:> as/-with foo
+
+SPR:> '
+YAML...>bar: 10
+YAML...>baz: 100
+YAML...>
+
+SPR:> show foo
+bar: 10
+baz: 100
+
+SPR:> as/-show-with
+/foo
+----------------------
+bar: 10
+baz: 100
+
+SPR:> as/-print-stack
+/foo
+/
+
+SPR:> as/pop-with
+
+SPR:> as/-print-stack
+/
+
+SPR:> as/-with
+/
+-------------------------
+    config
+    args
+    defaults
+    platform
+    _with_
+    _Root_
+    device
+    network
+    bar-QR
+    markdown
+    readme
+    foo
+
+SPR:> show foo
 bar: 10
 baz: 100
 
 
+SPR:> ls /
+    config
+    args
+    defaults
+    platform
+    _with_
+    _Root_
+    device
+    network
+    bar-QR
+    markdown
+    readme
+    foo
+
+SPR:> ls /foo
+    bar
+    baz
+
+SPR:> as/-with
+/
+-------------------------
+    config
+    args
+    defaults
+    platform
+    _with_
+    _Root_
+    device
+    network
+    bar-QR
+    markdown
+    readme
+    foo
+
+SPR:> as/-with foo
+
+SPR:> as/-with
+/foo
+-------------------------
+    bar
+    baz
+
+SPR:> as/-show-with
+/foo
+----------------------
+bar: 10
+baz: 100
+'
+
+SPR:> '
+YAML...>foobar: this is foobar
+YAML...>
+
+SPR:> as/-show-with
+/foo
+----------------------
+bar: 10
+baz: 100
+foobar: this is foobar
+
+
+```
+    
+
 ### SPR/Python extensions
+
+** changing again, because of WITH. **
 
 An SPR library/module is a Python module with a python file, a yaml file and
 an spr file. An SPR library project can be created with the
@@ -650,6 +768,12 @@ config:
 
 
 #### SPR code
+
+The above method of defining the data structure still works, but it can
+now be within the spr code. A single quote **'** on a line by it's self 
+Followed by yaml code, and ending with 2 blank lines, will allow everything to
+exist together.
+
 This is where more Libraries can be imported and new symbols and partial functions 
 can be defined.  As well as the YAML if desired.
 
@@ -667,6 +791,35 @@ command ui/print-bcqr to create what appears to be a 2 step process called
 `print-codes`.
 
 ```
+'
+bar-QR:
+    src: Null
+    value: ''
+    QR_code:
+        code: Null
+        saved: ''
+    barcode:
+        code: Null
+        saved: ''
+
+config:
+    QR_code:
+        filename_suffix: 'QR'
+        prefix: 'K1'
+        suffix: 'A'
+        save_path: 'qrcodes'
+        font: DejaVuSans.ttf
+        font_size: 18
+    barcode:
+        filename_suffix: 'BC'
+        prefix: ''
+        suffix: ''
+        save_path: 'barcodes'
+        save_options:
+            module_height: 8
+            text_distance: 2
+
+
 def input-code
     "Dialog to get a string to encode to a bar or QR code"
     ui/input-string-to bar-QR value
@@ -696,23 +849,37 @@ contiguous. A blank line results in the command being executed. Here is a sample
 ```
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
-    do rm sleep
+    do 
+    rm 
+    sleep
 
 namespace log "logger controls and messages"
     Simple_Process_REPL.logs
-    level info warning error critical debug
+    level 
+    info 
+    warning 
+    error 
+    critical 
+    debug
 
 namespace dev "Device interaction, waiting for, handshaking."
     Simple_Process_REPL.device
-    wait handshake pause
+    wait 
+    handshake 
+    pause
 
 namespace nw "Networking stuff, Wifi"
-    Simple_Process_REPL.network connect_wifi
-    connect_tunnel create_tunnel sendlog
+    Simple_Process_REPL.network 
+    connect_wifi
+    connect_tunnel 
+    create_tunnel 
+    sendlog
 
 namespace bq "Bar and QR code generation and printing"
     Simple_Process_REPL.bar_qr
-    gen save read_barcode_from_camera
+    gen 
+    save 
+    read_barcode_from_camera
 
 in-ns
 
@@ -1077,3 +1244,4 @@ Ok, so comments, and inline Yaml.  These are nice things.
 With is here, almost. it works in appstate. the repl needs to bind with it.
 Adding push and pop so we have stacks and lists. so with is implemented with SPR. cool.
 
+Result stacks,....
