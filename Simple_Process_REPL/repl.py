@@ -168,7 +168,8 @@ def load(reader):
         try:
             line = lines.__next__()
             logger.debug("%s" % line)
-        except Exception:
+        except Exception as e:
+            logger.error(e)
             break
 
         if line and line[0] == "#":
@@ -604,16 +605,19 @@ def helpful_cmds():
     * `ls /` to list the contents of the Root, '/',  of the Application state.
     * `ls <ns>` to see a summary of a namespace.
     * `ls /path/to/something` to see a list of keys at that location in the Application State.
+    * `show /path/to/something` to see the contents of the Tree at that place.
+
     * `help` to get a summary.
     * `help /` to get help for the root namespace.
     * `help <ns>` to get help for a namespace.
-    * `help <ns>/<function>` to get help for a function in the namespace.
+    * `help <ns>/<function>` to get help for a function in a namespace.
 
     * `pyhelp <ns>` to get python help for a namespace.
-    * `pyhelp <ns>/<function>` to get python help for a function in the namespace.
+    * `pyhelp <ns>/<function>` to get python help for a function in a namespace.
 
-    * `showin <ns>` to see the Stateful Data used by the namespace.
-    * `showin config <ns>` to see the configuration data used by the namespace
+    * `show` to browse the Application State Data.
+    * `show <ns module>` to see the stateful data used by a namespace, if any.
+    * `show config <ns module>` to see the configuration data used by the namespace
 
     * `browse-doc`  To read the README.md in your browser.
     * `view-doc`  To read the README.md in an HTML viewer - does not require internet.

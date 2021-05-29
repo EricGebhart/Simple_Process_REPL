@@ -53,7 +53,15 @@ def _ls_with():
     path = with_stack[-1]["path"]
     print(path)
     print("-------------------------")
-    r.ls(path)
+    if path[0] == "/":
+        if len(path) == 1:
+            keys = get_keys_in()
+        else:
+            vv = path[1:].split("/")
+            keys = get_keys_in(*vv)
+
+        for k in keys:
+            print("    %-30s" % k)
 
 
 def _with(path=None):
@@ -132,16 +140,20 @@ def _get_with_vv():
     return with_stack[-1]["vv"]
 
 
+def _full_with_path(path):
+    """takes a path and prepends the with path."""
+    if path[0] != "/":
+        path = "/" + path
+    return _get_with_path() + path
+
+
 def set_with(set_path, fromv):
     """Takes a path or path symbol and a value
     or 2 paths. Prepends the path of with and calls set.
     """
-    if set_path[0] != "/":
-        set_path = "/" + set_path
-    set_path = _get_with_path() + set_path
+    set_path = _full_with_path(set_path)
     # logger.debug("set-with %s" % set_path)
     set(set_path, fromv)
-    pass
 
 
 def get_in_with(path):
@@ -149,13 +161,32 @@ def get_in_with(path):
     return get_in(vv)
 
 
+def select_keys(m, keys):
+    """Given a map and list of keys,
+    return a map of with those keys from the map.
+    """
+    d = {k: m[k] for k in keys}
+    return d
+
+
+def select_with(keys):
+    """Given a list of keys,
+    return a map of with those keys from the with map.
+    """
+    return select_keys(get_with(), keys)
+
+
+def get_with():
+    """Return the current with map."""
+    return get_in(_get_with_vv())
+
+
 def _merge_with():
     pass
 
 
 def _set_(d):
-    """
-    merge in a new dict, like the device dictionary, into
+    """Merge in a new dict, like the device dictionary, into
     the yaml datastore.
     """
     global AS
@@ -182,14 +213,91 @@ def get_from_path(path):
     return get_in(vv)
 
 
-def set(set_path, fromv):
+def clear_path(path):
+    """clear the value at path."""
+    global AS
+    set_keys = get_vv(path)
+    set_keys += [""]
+    AS = u.merge(AS, u.make_dict(set_keys))
+
+
+def pop(path):
+    """if the path is a list , pop the last value,
+    if it's not, clear it and return the value."""
+    value = get_from_path(path)
+    if isinstance(value, list):
+        return value.pop()
+    else:
+        clear_path(path)
+        return value
+
+
+def push(set_path, fromv):
     """Takes a path or path symbol and a value
     or 2 paths.
 
-    Values begining with / will be
+    Honors 'with'.
+
+    Values beginning with / will be
     treated a path, otherwise as a symbol/value.
+
+    pushes the value onto the list at set_path.
+    If set_path is not a list, it will be turned into one.
     """
     global AS
+    try:
+        dest = get_in_with(set_path)
+    except Exception:
+        dest = None
+    set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
+
+    val = get_fromv(fromv)
+    if dest and not isinstance(dest, list):
+        dest = [dest]
+
+    dest += [val]
+
+    logger.info("push: %s" % dest)
+    logger.info("keys: %s" % set_keys)
+
+    set_keys += [dest]
+    AS = u.merge(AS, u.make_dict(set_keys))
+
+
+def get_fromv(fromv):
+    """Get the value from there, if it's a there.
+    If its raw value is a list, then it's a string from the parser.
+    if it's a path, then get the value."""
+    if isinstance(fromv, int) or isinstance(fromv, float):
+        fromv = fromv
+
+    if isinstance(fromv, str):
+        # path = r.isa_path(fromv)
+        # if path:
+        #     fromv = _get_vv_from_path(path)
+        # else:
+
+        if fromv[0] == "/":
+            fromv = get_from_path(fromv[1:])
+
+    # We get a list from the parser, then it's a string....
+    elif isinstance(fromv, list):
+        res = None
+        for x in fromv:
+            if res is None:
+                res = str(x)
+            else:
+                res = res + " " + str(x)
+        fromv = res
+
+    elif fromv and len(fromv) == 1:
+        fromv = fromv[0]
+
+    return fromv
+
+
+def get_vv(set_path):
+    """return the value vector for a path."""
     set_keys = _get_vv_from_path(set_path)
     path = r.isa_path(set_path)
     if path:
@@ -197,32 +305,23 @@ def set(set_path, fromv):
     else:
         set_keys = _get_vv_from_path(set_path)
 
-    if isinstance(fromv, int) or isinstance(fromv, float):
-        fromv = fromv
+    return set_keys
 
-        # why did I do this?  I think a hack to keep going...
-    elif len(fromv) > 1:
-        if not isinstance(fromv, str) and isinstance(fromv, list):
-            res = None
-            for x in fromv:
-                if res is None:
-                    res = str(x)
-                else:
-                    res = res + " " + str(x)
-            fromv = res
-    else:
-        fromv = fromv[0]
 
-    if isinstance(fromv, str):
-        path = r.isa_path(fromv)
-        if path:
-            fromv = _get_vv_from_path(path)
-        else:
-            if fromv[0] == "/":
-                fromv = get_from_path(fromv[1:])
+def set(set_path, fromv):
+    """Takes a path or path symbol and a value
+    or 2 paths.
+
+    Values beginning with / will be
+    treated a path, otherwise as a symbol/value.
+    """
+    global AS
+    set_keys = get_vv(set_path)
+    fromv = get_fromv(fromv)
+
+    logging.info(fromv)
 
     set_keys += [fromv]
-    # logger.debug("setttt: %s " % set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 

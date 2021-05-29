@@ -75,7 +75,10 @@ def do_something():
       Do something one time. the cli commands or the autoexec,
     """
 
-    r.load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
+    try:
+        r.load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
+    except Exception as e:
+        logger.error(e)
 
     commands = A.get_in(["args", "commands"])
 

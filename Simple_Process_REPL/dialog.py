@@ -246,7 +246,7 @@ def print_file_loop_from(*keys):
 
 def continue_to_next():
     "Do another one? Dialog. returns True/False"
-    if not yes_no(A.get_in_config(["dialogs", "start_again"])):
+    if yes_no(A.get_in_config(["dialogs", "start_again"])):
         logger.info("exiting")
         return False
     return True

@@ -23,7 +23,7 @@ exec:
     hooks:
         startup:
 
-        #- as/showin config
+        #- as/show config
         #- ui/msg "Where ami"
 
         shutdown:

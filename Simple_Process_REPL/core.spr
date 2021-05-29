@@ -36,7 +36,7 @@ config:
         hooks:
             startup:
 
-            #- as/showin config
+            #- as/show config
             #- ui/msg "Where ami"
 
             shutdown:
@@ -50,6 +50,8 @@ namespace as "Application State functionality"
     show
     set_in
     set
+    push
+    pop
     set_with
     _with
     pop_with
@@ -138,12 +140,12 @@ namespace nw "Networking stuff, Wifi"
     connect_wifi
     connect_tunnel create_tunnel sendlog
 
-namespace bq "Bar and QR code generation and printing"
+namespace bq "Bar and QR code generation, scanning and printing"
     Simple_Process_REPL.bar_qr
     help
     gen save read_barcode_from_camera
 
-namespace pb "Particle Board interface"
+namespace pb "Particle Board CLI interface"
     Simple_Process_REPL.particle_main
     help
     particle_help archive_log

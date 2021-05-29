@@ -3,6 +3,9 @@
 A YAML datastore, a config file, a namespace manager, and an interpreter walk 
 into a bar...
 
+Trying very hard to keep it primitive so that it will only grow in necessary
+and helpful ways.
+
 I hope this document is not too annoying in it's repeating. I'm working on it.
 It some ways it less important now since help is so good.
 But I'd rather have too much than too little.
@@ -62,9 +65,23 @@ To start the REPL;
 Well, at this point it's kind of fun. It's been really interesting to see
 how it evolves. And why is it evolving? Well, because it's fun.
 
-And it's a nice way to make a new tool, that has all the power of Python.
+And it's a nice way to make a new tool, that has all the power of Python
+behind it.
 
 It's been eating it's self lately, I find that super exciting.
+I think I have successfully avoided having variables per se.
+Adding partials felt like pandora's box. And now _with_, _results_, lists, stacks, 
+and smarter dynamic binding, it's getting interesting.
+
+
+The appstate feels like a configuration and data tree maker / navigator.
+It makes it easy to create, manipulate configuration and runtime data, 
+It enables the repl to ask for bindings and gives it a place to push results.
+In a lisp, appstate wouldn't exist. it would be the environment stack.
+Instead we have a tree and you can shine the light on any part of it by pushing
+it on the 'with' stack. Yaml, set, etc will then operate as if you are located at
+that path location in the data tree.
+
 
 I've written other languages, my tagset language for SAS, 
 and a couple of lisps among other things.  This wasn't really intentional,
@@ -471,6 +488,55 @@ and the yaml datastore as another tree that is built from YAML.
     bar                           
     baz
 ```
+
+#### Path symbols.
+
+Symbols can be defined to represent paths. Those symbols can 
+then be used in other commands, when accessed they will resolve
+to their value.  Here is a sample session which creates some
+yaml, then a path to that yaml, showing the the *show* command
+works with the new symbol.
+
+Then it gets interesting. mybar is define as `show foo`. Now,
+at the prompt, mybar --> show foo --> as/show /foo
+
+
+SPR:> '
+
+YAML...>foo:
+
+YAML...>   bar: 10
+
+YAML...>   baz: 100
+
+YAML...>
+
+SPR:> show foo
+do-fptrs: 1, ['as/show', 'foo']
+bar: 10
+baz: 100
+
+
+SPR:> def baz "my baz" /foo/baz
+do-fptrs: 3, ['-def-', 'baz', '"my baz"', '/foo/baz']
+
+SPR:> show baz
+do-fptrs: 1, ['as/show', '/foo/baz']
+100
+...
+
+
+SPR:> set /foo/bar show baz
+do-fptrs: 3, ['as/set', '/foo/bar', 'show', '/foo/baz']
+
+SPR:> def mybar "show foo/baz" show foo
+do-fptrs: 4, ['-def-', 'mybar', '"show foo/baz"', 'show', 'foo']
+
+SPR:> mybar
+do-fptrs: 1, ['as/show', 'foo']
+bar: 10
+baz: 100
+
 
 ### SPR/Python extensions
 
@@ -1007,4 +1073,7 @@ So, endless fun. Why not.
 Ok, so comments, and inline Yaml.  These are nice things.
 
 **With** is coming, it's in my head swimming around.
+
+With is here, almost. it works in appstate. the repl needs to bind with it.
+Adding push and pop so we have stacks and lists. so with is implemented with SPR. cool.
 

@@ -1,6 +1,6 @@
 in-ns
 
-partial show "Showin the device" as/show
+partial show "Show the Application state datastore." as/show
 
 partial set "Set a value in the app state." as/set
 

@@ -214,7 +214,7 @@ The 'continue to next' and 'device failed' dialog windows are built in to
 the interactive loop. Any additional prompts, such as 'dialog-start' or
 'dialog-test' can be added to the process  with their commands.
 and prompt texts are defined in the configuration, which can be
-seen with 'showin config'.
+seen with 'show config'.
 
 When a process is deemed good, the autoexec can be set to it, and that
 will be what runs automatically, in the process loop, or as a oneshot,
