@@ -415,12 +415,15 @@ def _get_symbol(s):
     # This means that / means name space path...
     # traceback.print_stack() # getting called from atom. too much!
 
-    n, namespace = get_ns(s)
-    # logger.info("n and n: %s %s" % (n, namespace))
-    if namespace is not None:
-        symbol = namespace["symbols"].get(n)
+    if isinstance(s, str):
+        n, namespace = get_ns(s)
+        # logger.info("n and n: %s %s" % (n, namespace))
+        if namespace is not None:
+            symbol = namespace["symbols"].get(n)
+        else:
+            symbol = Root[s]
     else:
-        symbol = Root[s]
+        symbol = None
 
     logger.debug("Got Symbol: %s" % symbol)
 
@@ -432,8 +435,11 @@ def get_symbol(s):
     try:
         symbol = _get_symbol(s)
     except Exception:
-        logger.error("Unkown Symbol: %s" % s)
         symbol = None
+
+    if symbol is None:
+        logger.error("Unkown Symbol: %s" % s)
+
     return symbol
 
 
@@ -907,7 +913,6 @@ def do_fptrs(commands):
     command = commands[0]
 
     # logging.debug("do fptrs: %s" % command)
-
     # logging.debug("do fptrs: %s" % command)
     # logging.debug("full: %s" % commands)
     # # logging.debug("fptr: %s" % str(fptr))
@@ -1046,16 +1051,19 @@ def parse(commandstr):
 def eval_symbol(s):
     "Execute a function in the symbol table."
     logger.debug("eval symbol: %s" % s)
-    symbol = get_symbol(s)
 
-    if symbol is not None:
-        function = symbol["fn"]
+    try:
+        symbol = get_symbol(s)
+        if symbol is not None:
+            function = symbol["fn"]
 
-        # its a string of symbols.
-        if isinstance(function, str):
-            eval_list(parse(function))
-        else:
-            function()
+            # its a string of symbols.
+            if isinstance(function, str):
+                eval_list(parse(function))
+            else:
+                function()
+    except:
+        print(s)
 
 
 def eval_list(commands):
@@ -1072,6 +1080,10 @@ def eval_list(commands):
 
     # if it's a partial expand it.
     first_sym = _get_symbol(commands[0])
+
+    if first_sym is None:
+        logger.error("Unkown Symbol: %s" % commands[0])
+        return False
 
     if isstype(first_sym, "partial"):
         logger.debug("Partial: %s --> %s" % (commands[0], commands))

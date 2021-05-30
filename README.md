@@ -524,7 +524,7 @@ baz: 100
 
 SPR:> def baz "my baz" /foo/baz
 
-SPR:> show baz
+SPR:> baz
 100
 ...
 
