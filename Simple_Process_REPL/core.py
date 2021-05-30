@@ -132,6 +132,7 @@ def init(symbols, specials, parser):
             "_help_",
             "_pyhelp_",
             "_def_",
+            "_def_path",
             "_import_",
             "partial",
             "in_ns",

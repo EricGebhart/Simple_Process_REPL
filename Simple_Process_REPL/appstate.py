@@ -271,7 +271,7 @@ def get_fromv(fromv):
     if isinstance(fromv, int) or isinstance(fromv, float):
         fromv = fromv
 
-    if isinstance(fromv, str):
+    elif isinstance(fromv, str):
         # path = r.isa_path(fromv)
         # if path:
         #     fromv = _get_vv_from_path(path)
@@ -280,7 +280,6 @@ def get_fromv(fromv):
         if fromv[0] == "/":
             fromv = get_from_path(fromv[1:])
 
-    # We get a list from the parser, then it's a string....
     elif isinstance(fromv, list):
         res = None
         for x in fromv:
@@ -291,7 +290,7 @@ def get_fromv(fromv):
         fromv = res
 
     elif fromv and len(fromv) == 1:
-        fromv = fromv[0]
+        fromv = fromv  # [0]
 
     return fromv
 

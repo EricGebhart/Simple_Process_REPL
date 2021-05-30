@@ -356,6 +356,19 @@ def _def_(name, helpstr, commandstr):
     _def_symbol(name, helpstr, commandstr, stype=stype)
 
 
+def _def_path(name, helpstr, commandstr):
+    """define a new symbol which is a 'path' to another place.
+    absolute path;
+    example: def mybaz \"My baz path\" /foo/baz
+
+    Relative path to with;
+    def mybaz \"My baz path\" foo/baz"""
+    stype = "path"
+    if commandstr[0] != "/":
+        commandstr = _full_with_path(commandstr)
+    _def_symbol(name, helpstr, commandstr, stype=stype)
+
+
 def partial(name, helpstr, commandstr):
     """define a new function from an fptr function which has some
     of it's arguments filled in.
@@ -595,17 +608,89 @@ def ls(ns=None):
                 printns_syms(s)
 
 
+def help_summary():
+    """help"""
+    t = """Initially this was a simple alias to wrapped python functions. Such that
+    functions would be called sequentially entirely for their side effects which
+    would compound into a complete system.
+
+    Start with a configuration and clean system, accumulate information and data,
+    do whatever. do it again. or do it once, or do a part of it, etc.
+
+    A different job/application only needs a different configuration file and maybe
+    some spr code. Depending on the complexity, maybe an spr/python extension.
+
+    There is an Application datastore which is built from yaml config files
+    as well as by spr code within spr extensions.
+
+    An spr extension is not always needed, but provides a mechanism for importing
+    yaml data and spr code in conjunction of python code. An spr extension is a standard
+    python/pip type module with spr and yaml included. A template project can be created
+    with the `new_spr_extension_project` command.
+
+    This language, if you can call it that, has almost no syntax. words, double quoted
+    strings and numbers are it. It has no stack, no scope, no variables exactly.
+    Because all of the data is initially yaml, There is the idea of paths to data,
+    these look like unix paths. ie. /this/is/a/path/to/something.
+
+    There is namespaces, but only one layer deep. Root, '/', has some basic commands,
+    and the appstate module imported as 'as' has the rest of the most important commands.
+
+    SPR does have a `with` stack, which can be pointed anywhere in the data store, and it
+    understands yaml, so data manipulation within the datastore is very easy.
+
+    The idea is to point at a place in the datastore tree, fill it with what you
+    care about, let functions get their parameters from there and put their results
+    on the results stack there. Move the results around as needed, push or pop a `with`,
+    do another step, etc.  If anything fails, the process fails. Everything is logged.
+
+
+    yaml can be entered like so.
+
+    `'
+     foo:
+          bar: 10
+          baz: 100
+    `
+
+    and will be merged into the application datastore at the location of the current
+    `with`.
+
+    as/-with foo
+    '
+    spam: Hello
+
+
+    will put a spam entry into foo next to bar and baz.
+    """
+    print(t)
+
+
 def helpful_cmds():
     """Print a list of helpful commands"""
     t = """
-    Useful Commands: ls, help, pyhelp, show
+    The Simple Process REPL is a thin framework of configuration,
+    datastore, and REPL.  It can import python modules and use them
+    directly. Each module is usually associated with a namespace upon
+    import.
 
-    If the prescribed coding patterns for SPR extensions are adhered to:
-    * `ls` to list the contents of the Root, '/',  Namespace.
-    * `ls /` to list the contents of the Root, '/',  of the Application state.
-    * `ls <ns>` to see a summary of a namespace.
-    * `ls /path/to/something` to see a list of keys at that location in the Application State.
-    * `show /path/to/something` to see the contents of the Tree at that place.
+    SPR's purpose is to make it easy to create simple application type processes
+    which may interact with a user, other devices, or anything else.
+    It should be simple to compose processes which are repeatable and consistent
+    in behavior. It should also be easy to add new configuration options which can
+    also be easily used and over-ridden.
+
+    Python functions will bind to data in the `with` if they find what they want.
+
+    Python functions are imported with namespace or import.
+    Partial functions can be defined in spr code.
+    Do List functions can be defined in spr code or in the configuration file.
+    Datastore chunks can be defined in the configuration files, spr code, or in
+    extension yaml files.
+
+
+
+    Useful Commands: ls, help, pyhelp, show
 
     * `help` to get a summary.
     * `help /` to get help for the root namespace.
@@ -615,7 +700,17 @@ def helpful_cmds():
     * `pyhelp <ns>` to get python help for a namespace.
     * `pyhelp <ns>/<function>` to get python help for a function in a namespace.
 
+    * `ls` to list the contents of the Root, '/',  Namespace.
+    * `ls <ns>` to see a summary of a namespace.
+
+    / denotes a path into the application state datastore.
+    * `ls /` to list the contents of the Root, '/',  of the application state.
+    * `ls /path/to/something` to see a list of keys at that location in the Application State.
+
     * `show` to browse the Application State Data.
+    * `show /path/to/something` to see the contents of the datastore tree at that location.
+
+    By Convention;
     * `show <ns module>` to see the stateful data used by a namespace, if any.
     * `show config <ns module>` to see the configuration data used by the namespace
 
@@ -790,7 +885,7 @@ def expand(commands):
         path = isa_path(symbol)
         if path:
             logger.debug("Expand: %s" % path["fn"])
-            res += get_from_path(path["fn"]).split(" ")
+            res += [get_from_path(path["fn"])]
         else:
             res += [symbol]
 
