@@ -1,3 +1,4 @@
+import traceback
 import pydoc
 import pkgutil
 import readline
@@ -891,7 +892,11 @@ def expand(commands):
         path = isa_path(symbol)
         if path:
             logger.debug("Expand: %s" % path["fn"])
-            res += [get_from_path(path["fn"])]
+            v = get_from_path(path["fn"])
+            if not isinstance(v, str):
+                res += [v]
+            else:
+                res += v.split(" ")
         else:
             res += [symbol]
 
@@ -1078,6 +1083,7 @@ def eval_list(commands):
     # and a path symbol that points at it....
     commands = expand(commands[0:])
 
+    # logger.info(commands)
     # if it's a partial expand it.
     first_sym = _get_symbol(commands[0])
 
@@ -1209,5 +1215,9 @@ def repl(prompt="SPR:> ", init=None):
             else:
                 if len(line):
                     eval_list(parse(line))
+
+        # weird that I needed to add this...
+        except ValueError:
+            break
         except Exception as e:
             logger.error(e)

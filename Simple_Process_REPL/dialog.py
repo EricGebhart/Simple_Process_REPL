@@ -254,7 +254,7 @@ def continue_to_next():
 
 def failed():
     """dialog: Process failed."""
-    msg(A.get_in_config(["dialogs", "device_failed"]))
+    msg(A.get_in_config(["dialogs", "process_failed"]))
 
 
 def start():

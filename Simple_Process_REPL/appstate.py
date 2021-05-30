@@ -457,11 +457,11 @@ def merge_yaml_with(y):
     logger.debug("Merge yaml-\n %s" % y)
     root = _get_with_vv()
     y = [yaml.load(y, Loader=yaml.SafeLoader)]
-    logger.info("merge: %s" % root)
+    # logger.info("merge: %s" % root)
     y = root + y
     d = u.make_dict(y)
 
-    logger.info(d)
+    # logger.info(d)
     u.merge(AS, d)
 
 

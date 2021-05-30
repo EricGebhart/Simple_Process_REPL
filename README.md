@@ -508,34 +508,31 @@ at the prompt, mybar --> show foo --> as/show /foo
 
 
 SPR:> '
-
 YAML...>foo:
-
-YAML...>   bar: 10
-
-YAML...>   baz: 100
-
+YAML...>   bar: show /foo/baz
+YAML...>   baz: 110
 YAML...>
 
 SPR:> show foo
-bar: 10
-baz: 100
+bar: show /foo/baz
+baz: 110
 
+SPR:> def sbaz "foobaz" /foo/baz
 
-SPR:> def baz "my baz" /foo/baz
+SPR:> sbaz
+Unkown Symbol: 110
 
-SPR:> baz
-100
+SPR:> def showbaz "foobaz" /foo/bar
+
+SPR:> showbaz
+110
+
+SPR:> set /foo/bar show /foo
+
+SPR:> showbaz
+bar: show /foo
+baz: 110
 ...
-
-
-SPR:> set /foo/bar show baz
-
-SPR:> def mybar "show foo/baz" show foo
-
-SPR:> mybar
-bar: 10
-baz: 100
 
 ### With /Some/path
 

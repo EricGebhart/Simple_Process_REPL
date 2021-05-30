@@ -76,7 +76,7 @@ def msg(msg):
 
 def failed():
     """cli: Process failed."""
-    msg(A.get_in_config(["dialogs", "device_failed"]))
+    msg(A.get_in_config(["dialogs", "process_failed"]))
 
 
 # So we have parameter less functions for all of these.
