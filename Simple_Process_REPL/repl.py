@@ -7,6 +7,7 @@ import regex as re
 import os
 import atexit
 import code
+from sys import exit
 from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
     merge_yaml_with,
@@ -1067,8 +1068,8 @@ def eval_symbol(s):
                 eval_list(parse(function))
             else:
                 function()
-    except:
-        print(s)
+    except Exception:
+        pass
 
 
 def eval_list(commands):
@@ -1216,8 +1217,5 @@ def repl(prompt="SPR:> ", init=None):
                 if len(line):
                     eval_list(parse(line))
 
-        # weird that I needed to add this...
-        except ValueError:
-            break
         except Exception as e:
-            logger.error(e)
+            print(e)

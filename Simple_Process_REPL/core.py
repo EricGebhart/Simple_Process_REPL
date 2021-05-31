@@ -34,11 +34,11 @@ def interactive_loop(commands=None):
     while interactive is True:
         try:
             do_one(commands)
-            if D.continue_to_next_dialog():
+            if D.continue_to_next():
                 interactive = False
         except Exception as e:
             logger.error(e)
-            if D.continue_to_next_dialog():
+            if D.continue_to_next():
                 interactive = False
         A.reset_device()
 
@@ -101,7 +101,7 @@ def do_something():
         r.repl(A.get_in_config(["REPL", "prompt"]), None)
 
     # or run in a loop
-    if A.get_in(["args", "interactive"]) is True:
+    elif A.get_in(["args", "interactive"]) is True:
         interactive_loop(commands)
 
     else:
