@@ -52,7 +52,6 @@ namespace as "Application State functionality"
     set
     push
     pop
-    set_with
     _with
     pop_with
     _print_stack

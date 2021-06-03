@@ -147,13 +147,13 @@ def _full_with_path(path):
     return _get_with_path() + path
 
 
-def set_with(set_path, fromv):
-    """Takes a path or path symbol and a value
-    or 2 paths. Prepends the path of with and calls set.
-    """
-    set_path = _full_with_path(set_path)
-    # logger.debug("set-with %s" % set_path)
-    set(set_path, fromv)
+# def set_with(set_path, fromv):
+#     """Takes a path or path symbol and a value
+#     or 2 paths. Prepends the path of with and calls set.
+#     """
+#     set_path = _full_with_path(set_path)
+#     # logger.debug("set-with %s" % set_path)
+#     set(set_path, fromv)
 
 
 def get_in_with(path):
@@ -311,10 +311,19 @@ def set(set_path, fromv):
     """Takes a path or path symbol and a value
     or 2 paths.
 
+    Set path can be absolute, or relative to the with.
+    If set_path does not begin with / then it
+    will be searched from the 'with' root.
+
     Values beginning with / will be
     treated a path, otherwise as a symbol/value.
     """
     global AS
+    # with local and absolute paths.
+    # if set_path[0] != "/":
+    #    set_path = _full_with_path(set_path)
+    # logger.debug("set-with %s" % set_path)
+    set(set_path, fromv)
     set_keys = get_vv(set_path)
     fromv = get_fromv(fromv)
 
@@ -322,6 +331,19 @@ def set(set_path, fromv):
 
     set_keys += [fromv]
     AS = u.merge(AS, u.make_dict(set_keys))
+
+
+def get(path):
+    """Get a data value from a path in the datastore.
+    Without a leading / the path is considered relative
+    to the current 'with' path.
+    """
+    vv = _get_vv_from_path(path)
+
+    if path[0] != "/":
+        vv = _get_with_vv() + vv
+
+    return get_in(vv)
 
 
 def get_in(keys):

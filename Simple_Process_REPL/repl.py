@@ -12,6 +12,7 @@ from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
     merge_yaml_with,
     merge_pkg_yaml,
+    get,
     get_in,
     get_from_path,
     get_in_config,
@@ -422,8 +423,11 @@ def _get_symbol(s):
         # logger.info("n and n: %s %s" % (n, namespace))
         if namespace is not None:
             symbol = namespace["symbols"].get(n)
-        else:
+        elif Root[s]:
             symbol = Root[s]
+        else:
+            # get it from the appstate if we can.
+            symbol = get(s)
     else:
         symbol = None
 
@@ -941,6 +945,19 @@ def do_fptrs(commands):
     def_index = fptr["def_index"]
     sig = fptr["signature"]
     nargs = len(commands) - 1
+
+    ### Big cheat, just gonna try to expand variables and see what happens.
+    ## So yea, it works.  But really, why don't I just make this a proper
+    ## lisp implementation instead of this hack, simpler and more powerful.
+    ## on verra.
+    cmds = []
+    for symbol in commands:
+        v = get(symbol)
+        if v:
+            cmds += [v]
+        cmds += [symbol]
+
+    commands = cmds
 
     # logger.info("do-fptrs: %d, %s" % (nargs, commands))
 
