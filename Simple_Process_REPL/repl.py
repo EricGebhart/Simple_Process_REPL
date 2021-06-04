@@ -1,3 +1,4 @@
+import sys
 import traceback
 import pydoc
 import pkgutil
@@ -107,7 +108,7 @@ def append_funcs(st, module, funclist):
         # figure out if it's a var args [a*], or an [a b c*] varargs.
         # and how many args. Just to be nice and check later.
         # also stash the parameters in case do_fptrs() wants to get fancy.
-        signature, nargs, vargs, def_index = get_fsig(f)
+        signature, nargs, vargs, def_index, parms = get_fsig(f)
 
         name = fname.replace("_", "-")  # cause I don't like hitting shift.
 
@@ -115,6 +116,7 @@ def append_funcs(st, module, funclist):
             fn=f,
             doc=f.__doc__,
             signature=signature,
+            pkeys=parms,
             nargs=nargs,
             vargs=vargs,
             def_index=def_index,
@@ -316,19 +318,21 @@ def find_first_parameter_with_default(parameters):
 
 def get_fsig(f):
     if not callable(f):
-        return None, 0, False, 0
+        return None, 0, False, 0, []
 
     sig = signature(f)
     parameters = sig.parameters
     nargs = len(parameters)
+    pkeys = []
     varargs = False
     def_index = 0
     if nargs > 0:
-        last_arg_key = list(sig.parameters.keys())[nargs - 1]
+        pkeys = list(parameters.keys())
+        last_arg_key = pkeys[nargs - 1]
         last_arg_kind = parameters[last_arg_key].kind.name
         varargs = last_arg_kind in ["VAR_POSITIONAL", "VAR_KEYWORD"]
         def_index = find_first_parameter_with_default(parameters)
-    return str(sig), nargs, varargs, def_index
+    return str(sig), nargs, varargs, def_index, pkeys
 
 
 def append_specials(st, slist):
@@ -337,11 +341,12 @@ def append_specials(st, slist):
     ['name', function | str, nargs, 'help string']
     """
     for name, function, nargs, helptext in slist:
-        sig, nargs, vargs, def_index = get_fsig(function)
+        sig, nargs, vargs, def_index, parms = get_fsig(function)
         if sig:
             st[name] = dict(
                 fn=function,
                 signature=sig,
+                pkeys=parms,
                 nargs=nargs,
                 vargs=vargs,
                 def_index=def_index,
@@ -978,44 +983,55 @@ def do_fptrs(commands):
         fn(commands[1], commands[2:])
         return True
 
-    if vargs and nargs == 0:
-        fn()
-
-    elif vargs:
-        if fnargs == 1:
-            # logger.info("vargs 1 %s" % commands[1:])
-            fn(commands[1:])
-        if fnargs == 2:
-            fn(commands[1], commands[2:])
-        if fnargs == 3:
-            fn(commands[1], commands[2], commands[3:])
-        if fnargs == 4:
-            fn(commands[1], commands[2], commands[3], commands[4:])
-        if fnargs == 5:
-            fn(commands[1], commands[2], commands[3], commands[4], commands[5:])
-
-        return True
-
-    elif nargs <= fnargs and nargs >= def_index - 1:
-
-        # commands with 4 arguments.
-        if nargs == 4:
-            fn(commands[1], commands[2], commands[3], commands[4])
-
-        # commands with 3 arguments.
-        elif nargs == 3:
-            fn(commands[1], commands[2], commands[3])
-
-        # commands with 2 arguments.
-        elif nargs == 2:
-            fn(commands[1], commands[2])
-
-        # commands with 1 argument.
-        elif nargs == 1:
-            fn(commands[1])
-
-        elif nargs == 0:
+    try:
+        if vargs and nargs == 0:
             fn()
+            return True
+
+        elif vargs:
+            if fnargs == 1:
+                # logger.info("vargs 1 %s" % commands[1:])
+                fn(commands[1:])
+            if fnargs == 2:
+                fn(commands[1], commands[2:])
+            if fnargs == 3:
+                fn(commands[1], commands[2], commands[3:])
+            if fnargs == 4:
+                fn(commands[1], commands[2], commands[3], commands[4:])
+            if fnargs == 5:
+                fn(commands[1], commands[2], commands[3], commands[4], commands[5:])
+
+            return True
+
+        elif nargs <= fnargs and nargs >= def_index - 1:
+
+            # commands with 5 arguments.
+            if nargs == 5:
+                fn(commands[1], commands[2], commands[3], commands[4], commands[5])
+
+                # commands with 4 arguments.
+            if nargs == 4:
+                fn(commands[1], commands[2], commands[3], commands[4])
+
+            # commands with 3 arguments.
+            elif nargs == 3:
+                fn(commands[1], commands[2], commands[3])
+
+            # commands with 2 arguments.
+            elif nargs == 2:
+                fn(commands[1], commands[2])
+
+            # commands with 1 argument.
+            elif nargs == 1:
+                fn(commands[1])
+
+            elif nargs == 0:
+                fn()
+
+    except Exception as e:
+        logger.error(commands)
+        print(e)
+        traceback.print_exception(*sys.exc_info())
 
         return True
 
