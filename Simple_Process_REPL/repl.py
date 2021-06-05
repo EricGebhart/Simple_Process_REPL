@@ -13,6 +13,8 @@ from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
     merge_yaml_with,
     merge_pkg_yaml,
+    _full_with_path,
+    select_with,
     get,
     get_in,
     get_from_path,
@@ -327,8 +329,8 @@ def get_fsig(f):
     varargs = False
     def_index = 0
     if nargs > 0:
-        pkeys = list(parameters.keys())
-        last_arg_key = pkeys[nargs - 1]
+        pkeys = parameters.keys()
+        last_arg_key = list(pkeys)[nargs - 1]
         last_arg_kind = parameters[last_arg_key].kind.name
         varargs = last_arg_kind in ["VAR_POSITIONAL", "VAR_KEYWORD"]
         def_index = find_first_parameter_with_default(parameters)
@@ -372,8 +374,10 @@ def _def_path(name, helpstr, commandstr):
     Relative path to with;
     def mybaz \"My baz path\" foo/baz"""
     stype = "path"
-    if commandstr[0] != "/":
-        commandstr = _full_with_path(commandstr)
+
+    # if commandstr[0] != "/":
+    #     commandstr = _full_with_path(commandstr)
+
     _def_symbol(name, helpstr, commandstr, stype=stype)
 
 
@@ -902,7 +906,7 @@ def expand(commands):
         path = isa_path(symbol)
         if path:
             logger.debug("Expand: %s" % path["fn"])
-            v = get_from_path(path["fn"])
+            v = get(path["fn"])
             if not isinstance(v, str):
                 res += [v]
             else:
@@ -925,6 +929,7 @@ def do_fptrs(commands):
     on to be evaluated elsewhere.
     """
 
+    result = -999
     command = commands[0]
 
     # logging.debug("do fptrs: %s" % command)
@@ -950,23 +955,13 @@ def do_fptrs(commands):
     def_index = fptr["def_index"]
     sig = fptr["signature"]
     nargs = len(commands) - 1
-
-    ### Big cheat, just gonna try to expand variables and see what happens.
-    ## So yea, it works.  But really, why don't I just make this a proper
-    ## lisp implementation instead of this hack, simpler and more powerful.
-    ## on verra.
-    cmds = []
-    for symbol in commands:
-        v = get(symbol)
-        if v:
-            cmds += [v]
-        cmds += [symbol]
-
-    commands = cmds
+    pkeys = fptr["pkeys"]
 
     # logger.info("do-fptrs: %d, %s" % (nargs, commands))
 
-    # logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
+    # logger.info("args: %s" % args)
+
+    logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
     # logger.info(
     #     "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
     #     % (command, fn, sig, fnargs, nargs, vargs)
@@ -983,50 +978,63 @@ def do_fptrs(commands):
         fn(commands[1], commands[2:])
         return True
 
+    ### Big cheat, just gonna try to expand variables and see what happens.
+    ## So yea, it works.  But really, why don't I just make this a proper
+    ## lisp implementation instead of this hack, simpler and more powerful.
+    ## hackyyyyyy... side effects... ouch. I dunno... Time to make a real
+    ## interpreter.
+    ## on verra.
+    if len(commands) > 2:
+        cmds = commands[:2]
+        for symbol in commands[2:]:
+            if isinstance(symbol, str):
+                v = get(symbol)
+                if v:
+                    cmds += [v]
+                cmds += [symbol]
+            else:
+                cmds += [symbol]
+
+        commands = cmds
+
     try:
         if vargs and nargs == 0:
-            fn()
+            result = fn()
             return True
 
         elif vargs:
+            try:
+                args = dict(zip(pkeys, commands[: fnargs - 1]))
+                # uuuugly..
+                args += {list(pkeys)[fnargs:][0]: commands[fnargs:]}
+            except Exception:
+                args = {}
+
             if fnargs == 1:
                 # logger.info("vargs 1 %s" % commands[1:])
-                fn(commands[1:])
+                result = fn(commands[1:])
             if fnargs == 2:
-                fn(commands[1], commands[2:])
+                result = fn(commands[1], commands[2:])
             if fnargs == 3:
-                fn(commands[1], commands[2], commands[3:])
+                result = fn(commands[1], commands[2], commands[3:])
             if fnargs == 4:
-                fn(commands[1], commands[2], commands[3], commands[4:])
+                result = fn(commands[1], commands[2], commands[3], commands[4:])
             if fnargs == 5:
-                fn(commands[1], commands[2], commands[3], commands[4], commands[5:])
+                result = fn(
+                    commands[1], commands[2], commands[3], commands[4], commands[5:]
+                )
 
             return True
 
         elif nargs <= fnargs and nargs >= def_index - 1:
+            try:
+                args = dict(zip(pkeys, commands[1:]))
+                if nargs < fnargs:
+                    args += select_with(list(pkeys)[nargs:])
+            except Exception:
+                args = {}
 
-            # commands with 5 arguments.
-            if nargs == 5:
-                fn(commands[1], commands[2], commands[3], commands[4], commands[5])
-
-                # commands with 4 arguments.
-            if nargs == 4:
-                fn(commands[1], commands[2], commands[3], commands[4])
-
-            # commands with 3 arguments.
-            elif nargs == 3:
-                fn(commands[1], commands[2], commands[3])
-
-            # commands with 2 arguments.
-            elif nargs == 2:
-                fn(commands[1], commands[2])
-
-            # commands with 1 argument.
-            elif nargs == 1:
-                fn(commands[1])
-
-            elif nargs == 0:
-                fn()
+            result = fn(**args)
 
     except Exception as e:
         logger.error(commands)

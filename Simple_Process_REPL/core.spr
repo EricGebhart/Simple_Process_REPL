@@ -44,6 +44,8 @@ config:
             - ui/msg "Goodbye have a nice day!"
 
 
+-def-path _results_ "The results stack, relative to With" results
+
 namespace as "Application State functionality"
     Simple_Process_REPL.appstate
     help

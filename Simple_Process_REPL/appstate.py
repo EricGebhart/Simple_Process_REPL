@@ -142,7 +142,9 @@ def _get_with_vv():
 
 def _full_with_path(path):
     """takes a path and prepends the with path."""
-    if path[0] != "/":
+    withpath = _get_with_path()
+
+    if withpath != "/" and path[0] != "/":
         path = "/" + path
     return _get_with_path() + path
 
@@ -323,7 +325,6 @@ def set(set_path, fromv):
     # if set_path[0] != "/":
     #    set_path = _full_with_path(set_path)
     # logger.debug("set-with %s" % set_path)
-    set(set_path, fromv)
     set_keys = get_vv(set_path)
     fromv = get_fromv(fromv)
 
