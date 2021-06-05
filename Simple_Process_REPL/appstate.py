@@ -254,13 +254,15 @@ def push(set_path, fromv):
     set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
 
     val = get_fromv(fromv)
-    if dest and not isinstance(dest, list):
-        dest = [dest]
+    if dest:
+        if not isinstance(dest, list):
+            dest = [dest]
+        dest += [val]
+    else:
+        dest = [val]
 
-    dest += [val]
-
-    logger.info("push: %s" % dest)
-    logger.info("keys: %s" % set_keys)
+    # logger.info("push: %s" % dest)
+    # logger.info("keys: %s" % set_keys)
 
     set_keys += [dest]
     AS = u.merge(AS, u.make_dict(set_keys))
@@ -422,10 +424,11 @@ def show(pathname="/"):
 
     will display the yaml datastore tree from the device node on.
     """
-    if pathname == "/":
+    if pathname == "/" or pathname == None:
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
     else:
+        logger.info(pathname)
         # so we don't have to type the first / in the path.
         if pathname[0] == "/":
             pathname = pathname[1:]

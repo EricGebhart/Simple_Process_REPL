@@ -15,6 +15,7 @@ from Simple_Process_REPL.appstate import (
     merge_pkg_yaml,
     _full_with_path,
     select_with,
+    push,
     get,
     get_in,
     get_from_path,
@@ -102,7 +103,7 @@ def append_funcs(st, module, funclist):
     # logger.info("Append Funcs: %s %d" % (funclist, len(funclist)))
     for fname in list(funclist):
         if type(fname) is not str:
-            logger.info("Not str: %s" % str(fname))
+            # logger.info("Not str: %s" % str(fname))
             return
         else:
             f = getattr(lib, fname)
@@ -918,6 +919,27 @@ def expand(commands):
     return res
 
 
+def resolve_vars(commands, start_index=1):
+    """Big cheat, just gonna try to expand variables and see what happens.
+    So yea, it works. Sorta. Too well. too much. Need a more real interpreter.
+    on verra.
+    """
+
+    # if len(commands) > start_index:
+    #     cmds = commands[:start_index]
+    #     for symbol in commands[start_index:]:
+    #         if isinstance(symbol, str):
+    #             v = get(symbol)
+    #             if v:
+    #                 cmds += [v]
+    #             cmds += [symbol]
+    #         else:
+    #             cmds += [symbol]
+    #     commands = cmds
+
+    return commands
+
+
 # I think this function is too complicated. could be simpler. but it is
 # working at the moment.
 def do_fptrs(commands):
@@ -929,7 +951,7 @@ def do_fptrs(commands):
     on to be evaluated elsewhere.
     """
 
-    result = -999
+    result = None
     command = commands[0]
 
     # logging.debug("do fptrs: %s" % command)
@@ -961,7 +983,7 @@ def do_fptrs(commands):
 
     # logger.info("args: %s" % args)
 
-    logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
+    # logger.info("Fptr: %s\nNargs: %d\nVargs: %d\nSig: %s" % (fptr, nargs, vargs, sig))
     # logger.info(
     #     "Command: %s - %s %s\n argcount: %d prms: %d varargs: %d"
     #     % (command, fn, sig, fnargs, nargs, vargs)
@@ -969,62 +991,30 @@ def do_fptrs(commands):
 
     # oy. je n'aime pas des exceptions
     if command == "-def-" or command == "partial":
+        # commands = resolve_vars(commands, start_index=2)
         commandstr = " ".join(commands[3:])
         fn(commands[1], commands[2], commandstr)
         return True
 
     # oy. je n'aime pas des exceptions
     if command == "as/set":
+        # noop ? - yes
+        # commands = resolve_vars(commands, start_index=2)
         fn(commands[1], commands[2:])
         return True
 
-    ### Big cheat, just gonna try to expand variables and see what happens.
-    ## So yea, it works.  But really, why don't I just make this a proper
-    ## lisp implementation instead of this hack, simpler and more powerful.
-    ## hackyyyyyy... side effects... ouch. I dunno... Time to make a real
-    ## interpreter.
-    ## on verra.
-    if len(commands) > 2:
-        cmds = commands[:2]
-        for symbol in commands[2:]:
-            if isinstance(symbol, str):
-                v = get(symbol)
-                if v:
-                    cmds += [v]
-                cmds += [symbol]
-            else:
-                cmds += [symbol]
-
-        commands = cmds
+    # noop ? - yes
+    # commands = resolve_vars(commands, start_index=1)
 
     try:
         if vargs and nargs == 0:
             result = fn()
-            return True
 
         elif vargs:
-            try:
-                args = dict(zip(pkeys, commands[: fnargs - 1]))
-                # uuuugly..
-                args += {list(pkeys)[fnargs:][0]: commands[fnargs:]}
-            except Exception:
-                args = {}
 
-            if fnargs == 1:
-                # logger.info("vargs 1 %s" % commands[1:])
-                result = fn(commands[1:])
-            if fnargs == 2:
-                result = fn(commands[1], commands[2:])
-            if fnargs == 3:
-                result = fn(commands[1], commands[2], commands[3:])
-            if fnargs == 4:
-                result = fn(commands[1], commands[2], commands[3], commands[4:])
-            if fnargs == 5:
-                result = fn(
-                    commands[1], commands[2], commands[3], commands[4], commands[5:]
-                )
-
-            return True
+            args = commands[1:fnargs]
+            args += [commands[fnargs:]]
+            result = fn(*args)
 
         elif nargs <= fnargs and nargs >= def_index - 1:
             try:
@@ -1035,6 +1025,9 @@ def do_fptrs(commands):
                 args = {}
 
             result = fn(**args)
+
+            if result is not None:
+                push("_results_", result)
 
     except Exception as e:
         logger.error(commands)
