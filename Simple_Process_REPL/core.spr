@@ -180,6 +180,8 @@ in-ns
 
 import Simple_Process_REPL.mkext new_spr_extension_project
 
+# Set up readme folder with stuff,
+# then load the readme and convert to html.
 with /readme
 
 '
@@ -190,8 +192,10 @@ title: "The SPR README!!!"
 
 
 # load the resource at readme. put it in markdown.
+# works because, 'with', readme has vars which match the function signature.
 as/load-pkg-resource
 
+# pop the last result to markdown.
 pop results markdown
 
 # convert the markdown to html, put it in html.
