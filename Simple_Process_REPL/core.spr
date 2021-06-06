@@ -62,6 +62,7 @@ namespace as "Application State functionality"
     save_config
     load_config
     load_yaml
+    load_pkg_resource
     load_pkg_resource_to
     load_pkg_resource_with
     merge_yaml
@@ -160,6 +161,7 @@ namespace pb "Particle Board CLI interface"
 namespace md "Markdown conversion to HTML"
     Simple_Process_REPL.markdown
     help
+    html
     html_to
     html_from
 
@@ -168,7 +170,9 @@ namespace web "View HTML and urls."
     help
     view_url_from
     view_html_from
+    view
     view_with
+    browse
     browse_with
     browse_url_from
 
@@ -176,19 +180,27 @@ in-ns
 
 import Simple_Process_REPL.mkext new_spr_extension_project
 
-set readme/package Simple_Process_REPL
+with /readme
 
-set readme/filename README.md
+'
+package: Simple_Process_REPL
+filename: README.md
+url: https://github.com/EricGebhart/Simple_Process_REPL/blob/main/README.md
+title: "The SPR README!!!"
 
-set readme/url
-    https://github.com/EricGebhart/Simple_Process_REPL/blob/main/README.md
 
-as/load-pkg-resource-with readme
+# load the resource at readme. put it in markdown.
+as/load-pkg-resource
 
-md/html-from readme content
+pop results markdown
 
-set readme/title "The SPR README!!!"
+# convert the markdown to html, put it in html.
+md/html
 
+pop results html
+
+# view-with and browse-with are handy to have.
+# view and browse use the current 'with'...
 def view-doc "Display the Readme documentation in an html viewer."
     web/view-with readme
 

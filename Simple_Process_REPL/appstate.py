@@ -223,15 +223,29 @@ def clear_path(path):
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
-def pop(path):
+def pop(path, destination=None):
     """if the path is a list , pop the last value,
-    if it's not, clear it and return the value."""
-    value = get_from_path(path)
+    if it is not a list, clear it.
+    If destination is set, place the value popped there.
+    """
+    if path[0] != "/":
+        value = get_in_with(path)
+    else:
+        value = get_from_path(path)
+
     if isinstance(value, list):
-        return value.pop()
+        if len(value):
+            v = value.pop()
+        else:
+            v = None
+
     else:
         clear_path(path)
-        return value
+        v = value
+
+    if destination is not None:
+        logger.info(destination)
+        set(destination, v)
 
 
 def push(set_path, fromv):
@@ -247,13 +261,15 @@ def push(set_path, fromv):
     If set_path is not a list, it will be turned into one.
     """
     global AS
+
+    set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
+    val = get_fromv(fromv)
+
     try:
         dest = get_in_with(set_path)
     except Exception:
         dest = None
-    set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
 
-    val = get_fromv(fromv)
     if dest:
         if not isinstance(dest, list):
             dest = [dest]
@@ -262,9 +278,11 @@ def push(set_path, fromv):
         dest = [val]
 
     # logger.info("push: %s" % dest)
-    # logger.info("keys: %s" % set_keys)
+    logger.info("keys: %s" % set_keys)
 
     set_keys += [dest]
+    d = u.make_dict(set_keys)
+    logger.info("Made Dict %s" % d)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -320,19 +338,20 @@ def set(set_path, fromv):
     will be searched from the 'with' root.
 
     Values beginning with / will be
-    treated a path, otherwise as a symbol/value.
+    treated as a path, otherwise as a symbol/value.
     """
     global AS
     # with local and absolute paths.
-    # if set_path[0] != "/":
-    #    set_path = _full_with_path(set_path)
-    # logger.debug("set-with %s" % set_path)
+    if set_path[0] != "/":
+        set_path = _full_with_path(set_path)
+    logger.debug("set-with %s" % set_path)
     set_keys = get_vv(set_path)
     fromv = get_fromv(fromv)
 
     logging.info(fromv)
 
     set_keys += [fromv]
+    logging.info(set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -528,10 +547,10 @@ def load_defaults(state_init, pkgname=None, yamlname=None):
     return AS
 
 
-def merge_pkg_yaml(pkgname, yamlname):
+def merge_pkg_yaml(package, yamlname):
     """load a yaml file from a package into the yaml datastore."""
     global AS
-    AS = u.merge(AS, u.load_pkg_yaml(pkgname, yamlname))
+    AS = u.merge(AS, u.load_pkg_yaml(package, yamlname))
 
 
 def load_base_config():
@@ -539,7 +558,7 @@ def load_base_config():
     return u.load_pkg_yaml(__name__, "SPR-defaults.yaml")
 
 
-def load_pkg_resource_to(pkgname, filename, *keys):
+def load_pkg_resource_to(package, filename, *keys):
     """load a python package resource file and place the contents
     at the value vector given.
 
@@ -548,8 +567,12 @@ def load_pkg_resource_to(pkgname, filename, *keys):
     Will place the contents of the README.md file into the value vector
     readme/md.
     """
-    res = u.load_pkg_resource(pkgname, filename)
+    res = u.load_pkg_resource(package, filename)
     set_in(keys[0] + [res])
+
+
+def load_pkg_resource(package, filename):
+    return u.load_pkg_resource(package, filename)
 
 
 def load_pkg_resource_with(path):
@@ -566,7 +589,7 @@ def load_pkg_resource_with(path):
     readme:
          package: "Simple_Process_REPL"
          filename: "README.md"
-         contents: ""
+         content: ""
 
     example: load-pkg-resource-with readme
 
@@ -575,9 +598,11 @@ def load_pkg_resource_with(path):
 
     In SPR:
 
-    set readme package Simple_Process_REPL
+    with readme
+    '
+    package: Simple_Process_REPL
+    filename: README.md
 
-    set readme filename README.md
 
     load-pkg-resources-with readme
 

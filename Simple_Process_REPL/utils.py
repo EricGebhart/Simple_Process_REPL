@@ -40,12 +40,16 @@ def merge(a, b, path=None, update=True):
                 pass  # same leaf value
             elif isinstance(a[key], list) and isinstance(b[key], list):
                 for idx, val in enumerate(b[key]):
-                    a[key][idx] = merge(
-                        a[key][idx],
-                        b[key][idx],
-                        path + [str(key), str(idx)],
-                        update=update,
-                    )
+                    if len(a[key]):
+                        a[key][idx] = merge(
+                            a[key][idx],
+                            b[key][idx],
+                            path + [str(key), str(idx)],
+                            update=update,
+                        )
+                    else:
+                        a[key] = b[key]
+
             elif update:
                 a[key] = b[key]
             else:
@@ -86,18 +90,18 @@ def load_yaml_file(filename):
     return someyaml
 
 
-def load_pkg_resource(pkgname, filename):
+def load_pkg_resource(package, filename):
     """Load a file from a python package, and return it."""
-    return pkgutil.get_data(pkgname, filename).decode("utf-8")
+    return pkgutil.get_data(package, filename).decode("utf-8")
 
 
-def load_pkg_yaml(pkgname, yamlname):
+def load_pkg_yaml(package, yamlname):
     """load a configuration file from a package."""
     try:
         someyaml = yaml.load(
-            load_pkg_resource(pkgname, yamlname), Loader=yaml.SafeLoader
+            load_pkg_resource(package, yamlname), Loader=yaml.SafeLoader
         )
-        logger.info("Loading YAML from Module: %s: %s" % (pkgname, yamlname))
+        logger.info("Loading YAML from Module: %s: %s" % (package, yamlname))
         return someyaml
     except FileNotFoundError:
         pass
@@ -105,6 +109,6 @@ def load_pkg_yaml(pkgname, yamlname):
         print(e)
 
 
-def dump_pkg_yaml(pkgname, yamlname):
+def dump_pkg_yaml(package, yamlname):
     """load a yaml file from a python package and dump it."""
-    return yaml.dump(load_pkg_yaml(pkgname, yamlname))
+    return yaml.dump(load_pkg_yaml(package, yamlname))

@@ -101,8 +101,27 @@ def browse_url_from(path):
     webbrowser.open(url)
 
 
-def view_with(*keys):
-    """Given a value vector, use the values located there for title, html, and url.
+def view(html=None, url=None, title=""):
+    """
+    The html wins over url if both are given.
+
+    Uses PyWebViewer
+
+    example: with /readme
+             web/view
+
+    """
+    webview.create_window(
+        title,
+        html=html,
+        url=url,
+        confirm_close=True,
+    )
+    webview.start()
+
+
+def view_with(path):
+    """Given a path, use the values located there for title, html, and url.
     The html wins over url if both are given.
 
     Uses PyWebViewer
@@ -114,13 +133,23 @@ def view_with(*keys):
     """
 
     # I think this can be a lot easier, with kwargs. - refactor
-    html, url, title = A.get_vals_in(*keys, ["html", "url", "title"])
-    webview.create_window(
-        title,
-        html=html,
-        url=url,
-        confirm_close=True,
-    )
+    html, url, title = A.get_vals_in(path, ["html", "url", "title"])
+    view(html, url, title)
+
+
+def browse(url, open_tab=None):
+    """Browse the url, if open tab is not set, use the setting
+    in /config/browser/open-tab.
+    If not true, a new browser window will open.
+    """
+    if open_tab is None:
+        open_tab = A.get_in_config([Root, "browser", "open-tab"])
+
+    if open_tab:
+        webbrowser.open_new_tab(url)
+    else:
+        webbrowser.open_new(url)
+
     webview.start()
 
 
@@ -143,11 +172,6 @@ def browse_with(path):
     url, ltab = A.get_vals_in(path, ["url", "open-tab"])
 
     if ltab:
-        tab = ltab
-
-    if tab:
-        webbrowser.open_new_tab(url)
+        browse(url, ltab)
     else:
-        webbrowser.open_new(url)
-
-    webview.start()
+        browse(url, tab)

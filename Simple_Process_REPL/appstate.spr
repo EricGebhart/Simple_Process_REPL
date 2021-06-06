@@ -4,4 +4,12 @@ partial show "Show the Application state datastore." as/show
 
 partial set "Set a value in the app state." as/set
 
+partial pop "Pop a value from a stack in the app state." as/pop
+
+partial push "Push a value onto a stack in the app state." as/push
+
 partial run "Run the autoexec command set in the configuration" as/eval-default-process
+
+partial with "Set or show the current with path." as/-with
+
+partial pop-with "Set or show the current with path." as/pop-with

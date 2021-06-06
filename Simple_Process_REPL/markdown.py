@@ -18,6 +18,14 @@ HelpText = (
     """
 markdown: - Converting Markdown to HTML  -
 
+
+Works with 'With'. so put your markdown in _markdown_.
+call md/html,
+pop the result where you want it. Probabaly 'html'.
+
+
+The rest can be ignored I think....
+
 Markdown uses these parts of the Application state.
 
 %s
@@ -38,6 +46,13 @@ next to it in the data structure.
 def help():
     """Additional SPR help For the markdown Module."""
     print(HelpText)
+
+
+def html(markdown):
+    """
+    convert markdown to html
+    """
+    return m.markdown(markdown)
 
 
 def html_from(*keys):

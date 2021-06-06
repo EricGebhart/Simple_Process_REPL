@@ -228,7 +228,6 @@ def import_lib_spr(module):
 def namespace(name, docstr, module, *funclist):
     global Root
     logger.info("\nCreating Namespace: %s from Python module: %s" % (name, module))
-    # logger.info(*funclist)
     ns = {
         "symbols": append_funcs({}, module, *funclist),
         "doc": docstr,
@@ -1007,7 +1006,7 @@ def do_fptrs(commands):
     # commands = resolve_vars(commands, start_index=1)
 
     try:
-        if vargs and nargs == 0:
+        if fnargs == 0 and nargs == 0:
             result = fn()
 
         elif vargs:
@@ -1020,19 +1019,21 @@ def do_fptrs(commands):
             try:
                 args = dict(zip(pkeys, commands[1:]))
                 if nargs < fnargs:
-                    args += select_with(list(pkeys)[nargs:])
+                    args.update(select_with(list(pkeys)[nargs:]))
+
             except Exception:
+                # print(e)
                 args = {}
 
             result = fn(**args)
 
             if result is not None:
-                push("_results_", result)
+                push("results", result)
 
     except Exception as e:
         logger.error(commands)
         print(e)
-        traceback.print_exception(*sys.exc_info())
+        # traceback.print_exception(*sys.exc_info())
 
         return True
 
