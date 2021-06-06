@@ -167,7 +167,11 @@ def select_keys(m, keys):
     """Given a map and list of keys,
     return a map of with those keys from the map.
     """
-    d = {k: m[k] for k in keys}
+    d = None
+    try:
+        d = {k: m[k] for k in keys}
+    except Exception:
+        pass
     return d
 
 
@@ -278,11 +282,11 @@ def push(set_path, fromv):
         dest = [val]
 
     # logger.info("push: %s" % dest)
-    logger.info("keys: %s" % set_keys)
+    # logger.info("keys: %s" % set_keys)
 
     set_keys += [dest]
     d = u.make_dict(set_keys)
-    logger.info("Made Dict %s" % d)
+    # logger.info("Made Dict %s" % d)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 

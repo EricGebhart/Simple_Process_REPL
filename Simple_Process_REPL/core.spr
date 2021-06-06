@@ -91,6 +91,9 @@ namespace ui "User interface using dialog"
     print_file_from
     print_file_loop
     print_file
+    input_count
+    _input_string
+    input_string
     input_count_to
     input_string_to
     hello
@@ -145,7 +148,7 @@ namespace nw "Networking stuff, Wifi"
 namespace bq "Bar and QR code generation, scanning and printing"
     Simple_Process_REPL.bar_qr
     help
-    gen save read_barcode_from_camera
+    gen save write read_barcode_from_camera
 
 namespace pb "Particle Board CLI interface"
     Simple_Process_REPL.particle_main

@@ -57,38 +57,51 @@ def help():
     print(HelpText)
 
 
-def gen(codetype=BarCodeType):
-    "Generate a bar code for the current barQR value."
+def gen(value, codetype=BarCodeType):
+    """Generate a bar or QR code for the value.
+    returns: the generated code
+    """
     try:
-        v = A.get_in([Root, "value"])
         if codetype == BarCodeType:
-            code = create_bar_code(v)
+            code = create_bar_code(value)
         elif codetype == QRCodeType:
-            code = create_qr_code(v)
-
-        A.set_in([Root, codetype, "code", code])
-        A.set_in([Root, codetype, "saved", ""])
+            code = create_qr_code(value)
 
     except Exception as e:
         logger.error(e)
 
+    return code
 
-def save(codetype=BarCodeType):
-    "Save the codetype, 'barcode/QR_code', for the current barQR value to it's png file"
-    sn = A.get_in([Root, "value"])
-    code = A.get_in([Root, codetype, "code"])
 
+def save(value, code, codetype=BarCodeType):
+    """Save the codetype, 'barcode/QR_code',
+    for value with generated code, code.
+
+    Write code for value to a file with a nice name generated
+    from the value and type.
+
+    returns: filename
+    """
     if codetype == BarCodeType:
-        fname = get_bc_filename(sn)
+        fname = get_bc_filename(value)
         save_barcode(code, fname)
         # because the extension is automatic on the save.
         fname = "%s%s" % (fname, ".png")
     elif codetype == QRCodeType:
-        fname = get_qr_filename(sn)
+        fname = get_qr_filename(value)
         save_qr_code(code, fname)
 
-    A.set_in([Root, codetype, "saved", fname])
-    return fn
+    return fname
+
+
+def write(value, codetype=BarCodeType):
+    """Generate and write a bar or QR code for
+    value into a file which is appropriately named.
+
+    Returns: filename."""
+    c = gen(value, codetype)
+    filename = save(value, c, codetype)
+    return filename
 
 
 def pad_num(n):
@@ -231,7 +244,7 @@ def read_barcodes(frame):
 # maybe a way to get the rectangle back?  I don't know.
 # needs some expermenting I think.
 def read_barcode_from_camera():
-    """read a Bar or QR code from the camera and store it in the Application state."""
+    """Read a Bar or QR code from the camera."""
     camera = cv2.VideoCapture(0)
     ret = True
     while ret:

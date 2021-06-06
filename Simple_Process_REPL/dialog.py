@@ -1,10 +1,8 @@
 import os
 from dialog import Dialog
 import logging
-import traceback
 
 import regex as re
-import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.appstate as A
 import Simple_Process_REPL.bar_qr as bq
 import Simple_Process_REPL.utils as u
@@ -72,30 +70,59 @@ def input_count(msg):
     return res
 
 
-def _input_count_to(msg, keys):
-    """Dialog to get a string and set it in the Application state with a value vector."""
-    v = keys + [input_count(msg)]
-    A.set_in(v)
+def _input_string(msg, regex=None, correct=None, must=None):
+    """
+    Give an input dialog which will check the entered value against
+    a regular expression.
+
+    Allows for the elimination of the confirmation
+    dialog and setting of confirmation and error messages.
+
+    If the result matches the regular expression,
+    and a 'correct' message is provided,
+    Then there will be a confirmation dialog provided.
+
+    If incorrect, the message provided by must or in
+    /config/dialogs/must is displayed along with the regular
+    expression which failed.
+
+    An example of yaml to hold a regex.
+    This one is for 8 digits.
+    regex : r"^\d{8}$"
+
+    """
+    if regex is None:
+        return input_string(msg)
+
+    if must is None:
+        must = (A.get_in_config(["dialogs", "must"]),)
+
+    while True:
+        res = input_string(msg)
+        if re.match(regex, res):
+            if correct is not None:
+                yno_msg = "%s : %s" % (correct, res)
+                if yes_no(yno_msg):
+                    break
+            else:
+                break
+        else:
+            if must is not None:
+                msg("%s : %s" % ("must", regex))
+
+    return res
 
 
-def _input_string_to(msg, keys):
-    """Dialog to get a string and set it in the Application state with a value vector."""
-    v = keys + [input_string(msg)]
-    A.set_in(v)
+def input_count_to(msg, path):
+    """Dialog to get a number and set it into that path."""
+    v = input_count(msg)
+    A.set(path, v)
 
 
-def input_string_to(v):
-    """varargs version of _input_string_to which takes a vector,
-    the first entry should be a string which will be displayed in the dialog window.
-    The rest will be used as the value vector to set in the Application state."""
-    _input_string_to(v[0], v[1:])
-
-
-def input_count_to(v):
-    """varargs version of _input_count_to which takes a vector,
-    the first entry should be a string which will be displayed in the dialog window.
-    The rest will be used as the value vector to set in the Application state."""
-    _input_count_to(v[0], v[1:])
+def input_string_to(msg, set_path):
+    """Dialog to get a string and set it into to that path."""
+    v = input_string(msg)
+    A.set(set_path, v)
 
 
 def dialog_print(fname):

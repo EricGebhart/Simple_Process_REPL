@@ -14,6 +14,8 @@ config:
         images_seen      : 'Please verify the test image is shown on the screen.'
         serial_is_correct : 'This serial number is correct?'
         serial_must      : 'Serial Number must be 8 digits.'
+        correct          : 'This Entry is correct ?'
+        must             : 'Entry must match regex.'
         continue         : 'Ready to Continue ?'
         process_finish   : 'Turn the Power Switch Off and Disconnect the Battery and USB.'
 

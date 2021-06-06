@@ -1013,17 +1013,22 @@ def do_fptrs(commands):
 
             args = commands[1:fnargs]
             args += [commands[fnargs:]]
+            logger.info("args: %s" % args)
             result = fn(*args)
 
-        elif nargs <= fnargs and nargs >= def_index - 1:
+        # elif nargs <= fnargs and nargs >= def_index - 1:
+        else:
+
+            args = dict(zip(pkeys, commands[1:]))
+            with_vars = select_with(list(pkeys)[nargs:])
+
             try:
                 args = dict(zip(pkeys, commands[1:]))
-                if nargs < fnargs:
-                    args.update(select_with(list(pkeys)[nargs:]))
+                if with_vars and nargs < fnargs:
+                    args.update(with_vars)
 
-            except Exception:
-                # print(e)
-                args = {}
+            except Exception as e:
+                print(e)
 
             result = fn(**args)
 
