@@ -6,6 +6,31 @@ into a bar...
 Trying very hard to keep this primitive so that it will only grow in necessary
 and helpful ways.
 
+I think, really, this would be better, if I just replaced the core repl with plysp.
+But, I'm riding it out to see where it goes. 
+
+These latest changes have altered things dramatically, to the point that earlier
+design patterns have gone away, and the necessity for python code is disappearing.
+
+I did add variable resolution only to remove it. There is still no scope or stack,
+paths allow for pointer like behavior. __With__ means you probably will
+never care if variables in the common sense exist.
+
+Data structures are easy to make with inline YAML which automatically merges into
+the system.
+
+The results stack is an example of both a path which moves, and a list/stack.
+Data can be pushed and popped to their locations. Lists are created automatically
+as needed. popping a non-stack will behave as if it was one.
+
+
+The _with_ concept works really well, and the results stack which moves
+around with the _with_, `pop results to/somewhere`
+
+Look at the end of _core.spr_ to see the code for the Readme as an example.
+
+Paths without a leading / are relative to the setting of the _with_.
+
 I hope this document is not too annoying in it's repeating. I'm working on it.
 It some ways it less important now since help is so good.
 But I'd rather have too much than too little.
