@@ -70,7 +70,7 @@ def input_count(msg):
     return res
 
 
-def _input_string(msg, regex=None, correct=None, must=None):
+def _input_string(msg, regex=None, correct=None, must=None, confirmation=True):
     """
     Give an input dialog which will check the entered value against
     a regular expression.
@@ -97,10 +97,13 @@ def _input_string(msg, regex=None, correct=None, must=None):
     if must is None:
         must = (A.get_in_config(["dialogs", "must"]),)
 
+    if correct is None:
+        correct = A.get_in_config(["dialogs", "correct"])
+
     while True:
         res = input_string(msg)
         if re.match(regex, res):
-            if correct is not None:
+            if confirmation:
                 yno_msg = "%s : %s" % (correct, res)
                 if yes_no(yno_msg):
                     break
@@ -111,18 +114,6 @@ def _input_string(msg, regex=None, correct=None, must=None):
                 msg("%s : %s" % ("must", regex))
 
     return res
-
-
-def input_count_to(msg, path):
-    """Dialog to get a number and set it into that path."""
-    v = input_count(msg)
-    A.set(path, v)
-
-
-def input_string_to(msg, set_path):
-    """Dialog to get a string and set it into to that path."""
-    v = input_string(msg)
-    A.set(set_path, v)
 
 
 def dialog_print(fname):
@@ -139,10 +130,15 @@ def dialog_print_loop(fname):
     return cmd_name, command, count
 
 
-def msg(text):
-    "Display a simple message box, enter to continue."
+def msg(msg):
+    """Display a simple message box, with either
+    the msg or the text located at msg if it begins with a /..
+    """
+    if msg[0] == "/":
+        msg = A.get(msg)
+
     d.msgbox(
-        text,
+        msg,
         title=A.get_in_config(["dialogs", "title"]),
         height=10,
         width=50,
@@ -151,7 +147,15 @@ def msg(text):
 
 
 def yes_no(msg):
-    "Display a yesno dialog, return True or False."
+    """Display a yesno dialog,
+    If msg is a path, use the contents of path.
+
+    return True or False."
+    """
+
+    if msg[0] == "/":
+        msg = A.get(msg)
+
     response = d.yesno(
         msg,
         title=A.get_in_config(["dialogs", "title"]),
@@ -166,6 +170,9 @@ def yes_no(msg):
 
 
 def radiolist(msg, choices):
+    if msg[0] == "/":
+        msg = A.get(msg)
+
     (code, tag) = d.radiolist(
         msg,
         width=50,
@@ -176,6 +183,9 @@ def radiolist(msg, choices):
 
 
 def select_choice(msg, choices):
+    if msg[0] == "/":
+        msg = A.get(msg)
+
     logger.info("select choice: %s", choices)
     code, choice = d.menu(
         msg,
@@ -249,26 +259,16 @@ def _print_file(fname, cmd_name, command, count=1):
         os.system(command)
 
 
-def print_file(fname):
+def print_file(filename):
     """Print a filename with a series of dialog prompts."""
-    name, cmd = dialog_print(fname)
-    _print_file(fname, name, cmd, 1)
+    name, cmd = dialog_print(filename)
+    _print_file(filename, name, cmd, 1)
 
 
-def print_file_loop(fname):
+def print_file_loop(filename):
     """Print a filename A number of times with a series of dialog prompts."""
-    name, cmd, count = dialog_print_loop(fname)
-    _print_file(fname, name, cmd, count)
-
-
-def print_file_from(*keys):
-    """Given a value vector, print the filename value held there."""
-    print_file(A.get_in(keys[0]))
-
-
-def print_file_loop_from(*keys):
-    """Given a value vector, print the filename value held there, how ever many times they say."""
-    print_file_loop(A.get_in(keys[0]))
+    name, cmd, count = dialog_print_loop(filename)
+    _print_file(filename, name, cmd, count)
 
 
 def continue_to_next():
@@ -277,28 +277,3 @@ def continue_to_next():
         logger.info("exiting")
         return False
     return True
-
-
-def failed():
-    """dialog: Process failed."""
-    msg(A.get_in_config(["dialogs", "process_failed"]))
-
-
-def start():
-    """dialog: Plugin a board and start a process."""
-    msg(A.get_in_config(["dialogs", "plugin_start"]))
-
-
-def finish():
-    """dialog: unplug and shutdown a board at the end of a process."""
-    msg(A.get_in_config(["dialogs", "process_finish"]))
-
-
-def test():
-    """dialog: Ready to test?"""
-    msg(A.get_in_config(["dialogs", "ready_to_test"]))
-
-
-def flash():
-    """dialog: Ready to flash?"""
-    msg(A.get_in_config(["dialogs", "ready_to_flash"]))

@@ -63,8 +63,6 @@ namespace as "Application State functionality"
     load_config
     load_yaml
     load_pkg_resource
-    load_pkg_resource_to
-    load_pkg_resource_with
     merge_yaml
     sync_functions
     reset_device
@@ -75,33 +73,17 @@ namespace cli "User interface using the cli"
     help
     msg
     yes_no
-    hello
-    start
-    test
-    flash
-    failed
-    finish
 
 namespace ui "User interface using dialog"
     Simple_Process_REPL.dialog
     help
     msg
     yes_no
-    print_file_loop_from
-    print_file_from
     print_file_loop
     print_file
     input_count
     _input_string
     input_string
-    input_count_to
-    input_string_to
-    hello
-    start
-    test
-    flash
-    failed
-    finish
     save_bcqr
     print_bcqr
 
@@ -165,19 +147,12 @@ namespace md "Markdown conversion to HTML"
     Simple_Process_REPL.markdown
     help
     html
-    html_to
-    html_from
 
 namespace web "View HTML and urls."
     Simple_Process_REPL.webview
     help
-    view_url_from
-    view_html_from
     view
-    view_with
     browse
-    browse_with
-    browse_url_from
 
 in-ns
 

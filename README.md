@@ -23,9 +23,39 @@ The results stack is an example of both a path which moves, and a list/stack.
 Data can be pushed and popped to their locations. Lists are created automatically
 as needed. popping a non-stack will behave as if it was one.
 
+The code patterns are still emerging and changing. but currently something like this,
+is showing up. 
+
+ * Point at some path in the application data store using _with_.
+ * set __value__ and __codetype__ in that location using YAML syntax.
+ * Call the bar code generation function `bq/gen` which uses the values in _with_.
+ * pop the last result from the results stack and put it in __code__.
+
+
+```
+with /mystuff/barcode
+
+'
+value : ABC
+codetype : barcode
+# codetype : QR-code
+
+
+bq/gen
+
+pop results code
+
+pop-with
+```
+
+
 
 The _with_ concept works really well, and the results stack which moves
 around with the _with_, `pop results to/somewhere`
+
+The parameter bindings do their best when calling python functions.
+If some parameters but not all are given, the current _with_ will fill
+in the rest if it can find matches to the parameters.
 
 Look at the end of _core.spr_ to see the code for the Readme as an example.
 
@@ -93,11 +123,21 @@ how it evolves. And why is it evolving? Well, because it's fun.
 And it's a nice way to make a new tool, that has all the power of Python
 behind it.
 
+And the next time I need something, and I can make a cool thing in a small
+amount of time, using this fun thing to make it, that's a win.
+
+So far, I like it's simplicity, but can't help but wonder if that's a red 
+herring in a way. If I took the appstate piece and core and combined it
+with plysp that would be super powerful, but then perhaps daunting to
+someone that would be comfortable with the way PBR or SPR work 
+in their, non-lispless way.
+
 It's been eating it's self lately, I find that super exciting.
 I think I have successfully avoided having variables per se.
 Adding partials felt like pandora's box. And now a _with_ stack, 
 _result_ stacks, and smarter dynamic binding, it's getting interesting.
 
+So still no variables, added them, took them out, don't miss them.
 
 The appstate feels like a configuration and data tree maker / navigator.
 It feels like this is the real innovation here. The repl is super primitive, 

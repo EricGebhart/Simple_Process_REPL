@@ -136,9 +136,9 @@ def release():
     P.release(A.get_in_device("id"))
 
 
-def name(n):
+def name(name):
     """Name/Rename the current device."""
-    P.name(A.get_in_device("id"), n)
+    P.name(A.get_in_device("id"), name)
 
 
 def name_from(varpath):

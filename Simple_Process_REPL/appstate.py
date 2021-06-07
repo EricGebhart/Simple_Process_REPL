@@ -248,7 +248,7 @@ def pop(path, destination=None):
         v = value
 
     if destination is not None:
-        logger.info(destination)
+        # logger.info(destination)
         set(destination, v)
 
 
@@ -285,8 +285,6 @@ def push(set_path, fromv):
     # logger.info("keys: %s" % set_keys)
 
     set_keys += [dest]
-    d = u.make_dict(set_keys)
-    # logger.info("Made Dict %s" % d)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 

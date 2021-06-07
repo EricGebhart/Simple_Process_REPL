@@ -54,7 +54,7 @@ def print_command_menu():
     return choice, p_dict[choice]
 
 
-def yes_no(message):
+def yes_no(msg):
     "Yes or No message, returns True or False."
     if re.match("^[yY]?$", input(message)):
         return True
@@ -70,31 +70,9 @@ def continue_to_next():
 
 def msg(msg):
     """Display a message on the cli and wait for input."""
+
+    if msg[0] == "/":
+        msg = A.get(msg)
+
     print(msg)
     input("Press any key to continue;")
-
-
-def failed():
-    """cli: Process failed."""
-    msg(A.get_in_config(["dialogs", "process_failed"]))
-
-
-# So we have parameter less functions for all of these.
-def start():
-    """cli: Plugin a board and start a process."""
-    msg(A.get_in_config(["dialogs", "plugin_start"]))
-
-
-def finish():
-    """cli: unplug and shutdown a board at the end of a process."""
-    msg(A.get_in_config(["dialogs", "process_finish"]))
-
-
-def test():
-    """cli: Ready to test?"""
-    msg(A.get_in_config(["dialogs", "ready_to_test"]))
-
-
-def flash():
-    """cli: Ready to flash?"""
-    msg(A.get_in_config(["dialogs", "ready_to_flash"]))
