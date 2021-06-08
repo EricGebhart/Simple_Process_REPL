@@ -60,8 +60,11 @@ def _ls_with():
             vv = path[1:].split("/")
             keys = get_keys_in(*vv)
 
+    if keys:
         for k in keys:
             print("    %-30s" % k)
+    else:
+        print("Is Empty.")
 
 
 def _with(path=None):
@@ -102,6 +105,10 @@ def _with(path=None):
             "vv": vv,
         }
     )
+    try:
+        _ls_with()
+    except Exception:
+        pass
 
 
 def pop_with():
@@ -350,10 +357,7 @@ def set(set_path, fromv):
     set_keys = get_vv(set_path)
     fromv = get_fromv(fromv)
 
-    logging.info(fromv)
-
     set_keys += [fromv]
-    logging.info(set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -381,8 +385,9 @@ def get_keys_in(*keys):
     thing = get_in(keys)
     if isinstance(thing, list):
         return thing
-    else:
+    elif thing:
         return thing.keys()
+    return None
 
 
 def get_vals_in(path, *keys):

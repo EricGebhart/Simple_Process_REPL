@@ -146,7 +146,7 @@ def inline_yaml(lines):
 
         try:
             line = lines.__next__()
-            logger.debug("%s" % line)
+            logger.info("%s" % line.rstrip())
         except Exception:
             break
 
@@ -175,15 +175,13 @@ def load(reader):
 
         try:
             line = lines.__next__()
-            logger.debug("%s" % line)
-        except Exception as e:
-            logger.error(e)
+        except Exception:
             break
 
         if line and line[0] == "#":
             continue
 
-        if line == "'":
+        if line.strip() == "'":
             inline_yaml(lines)
             txt = ""
             continue
@@ -196,6 +194,7 @@ def load(reader):
             else:
                 # get rid of newlines so the interpreter
                 # sees a continuous line.
+                logger.info("%s" % line)
                 txt += re.sub("\n", " ", line)
 
     if len(txt) > 0:
@@ -1013,7 +1012,6 @@ def do_fptrs(commands):
 
             args = commands[1:fnargs]
             args += [commands[fnargs:]]
-            logger.info("args: %s" % args)
             result = fn(*args)
 
         # elif nargs <= fnargs and nargs >= def_index - 1:
@@ -1153,9 +1151,13 @@ def eval_cmds(commands):
         eval_list(parse(c))
 
 
-def eval(*commands):
+def eval(path):
     """Evaluate a list of symbols, varargs version of eval_cmds with a nice name."""
-    eval_cmds(commands[0])
+    v = get(path)
+    if isinstance(v, list):
+        eval_cmds(v)
+    else:
+        eval_cmd(v)
 
 
 def repl_message():
@@ -1203,6 +1205,7 @@ class HistoryConsole(code.InteractiveConsole):
 
 def load_file(filename):
     """load an SPR file into the application."""
+    logger.info("Loading SPR file: %s" % filename)
     with open(filename, "r") as reader:
         load(reader)
 

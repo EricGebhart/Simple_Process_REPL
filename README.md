@@ -3,11 +3,301 @@
 A YAML datastore, a config file, a namespace manager, and an interpreter walk 
 into a bar...
 
+I hope this document is not too annoying in it's repeating. I'm working on it.
+It some ways it less important now since help is so good.
+But I'd rather have too much than too little.
+
 Trying very hard to keep this primitive so that it will only grow in necessary
 and helpful ways.
 
 I think, really, this would be better, if I just replaced the core repl with plysp.
 But, I'm riding it out to see where it goes. 
+
+At this point, I think it has enough that it should be used and evaluated for
+the coding patterns needed to create solutions. It seems powerful enough, and
+not annoying. 
+
+The readme section of the app is one example, as it uses _with_, the _results_ stack,
+automatic parameter binding, markdown, webviewer,
+and webbrowser. Refactoring the particle board code to the emerging code patterns
+is another step. 
+
+Because of the _with_ stack, there is now stack and list capabilities. _With_
+should be refactored to be written in spr instead of python. 
+That would then cause the pop-with function to go away, as the regular
+_pop_ could do it.  Maybe it already can since the internal with stack is
+surfaced in the appstate. Need to check, ah, works already. Should be prettier.
+See below.
+
+```
+SPR:> ls /
+    config                        
+    args                          
+    defaults                      
+    platform                      
+    _with_                        
+    _Root_                        
+    device                        
+    network                       
+    markdown                      
+    readme                        
+    foo                           
+
+SPR:> ls  /_with_
+    {'path': '/', 'vv': []}       
+
+SPR:> show  /_with_
+/_with_
+- path: /
+  vv: []
+  
+  
+SPR:> with foo
+
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+    msg                           
+
+SPR:> pop /_with_
+
+SPR:> with
+/
+-------------------------
+    config                        
+    args                          
+    defaults                      
+    platform                      
+    _with_                        
+    _Root_                        
+    device                        
+    network                       
+    markdown                      
+    readme                        
+    foo               
+    
+```
+
+
+Python code is disappearing, after this last refactor I think the _markdown.py_ 
+file can just go away. But it needs to be tested.
+
+The way things work and read is a bit surprising. Here is basic use,
+showing strings, path resolution.
+
+There is also with, combined with YAML, and automatic parameter binding.
+
+Here is some examples to show how things are working.
+
+```
+# stupid simple, give a message dialog window. 
+SPR:> help cli/msg
+
+SPR Help
+=============================================
+
+cli/msg(msg)        
+----------------
+Display a message on the cli and wait for input.
+
+SPR:> cli/msg "Hello World"
+"Hello World"
+Press any key to continue;
+
+SPR:> set /foo/mymsg "Hello World"
+"Hello World"
+
+SPR:> ls /foo
+    mymsg                         
+
+SPR:> show /foo
+/foo
+mymsg: '"Hello World"'
+
+
+SPR:> cli/msg /foo/mymsg
+"Hello World"
+Press any key to continue;
+
+SPR:> with /foo
+
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+
+SPR:> '
+YAML...>msg: This is another message to say hello.
+YAML...>
+
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+    msg                           
+
+SPR:> ls /foo
+    mymsg                         
+    msg                           
+
+SPR:> show /foo
+/foo
+msg: This is another message to say hello.
+mymsg: '"Hello World"'
+
+
+SPR:> cli/msg
+This is another message to say hello.
+Press any key to continue;
+
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+    msg                           
+
+```
+
+#### The With Stack.
+
+Here is the continuation of that session, to show the _with_ stack
+and how it works.
+
+
+```
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+    msg                           
+
+SPR:> help with
+
+SPR Help
+=============================================
+
+ with                
+--------------
+"Set or show the current with path."
+    Type: partial
+    Source: [as/-with]
+
+  --- Derived from: ---
+
+    as/-with(path=None) 
+    ----------------
+    
+    Show the current 'With' path or if a path is given,
+    Push a Yaml datastore path onto the 'with' stack.
+
+    If it is not yet there, it will appear when someone sets something.
+    
+
+SPR:> ls as
+
+as         Simple_Process_REPL.appstate: 
+---------------------------------------------
+"Application State functionality"
+   -print-stack()                
+   -show-with()                  
+   -with(path=None)              
+   archive-log(new_name)         
+   eval-default-process()        
+   help()                        
+   load-config(filename)         
+   load-pkg-resource(package, filename)
+   load-yaml(yaml_file)          
+   merge-yaml(y)                 
+   pop(path, destination=None)   
+   pop-with()                    
+   push(set_path, fromv)         
+   reset-device()                
+   save-config(filename)         
+   set(set_path, fromv)          
+   set-in(*keys)                 
+   show(pathname='/')            
+   sync-functions()              
+
+SPR:> as/-print-stack
+/foo
+/readme
+/
+
+SPR:> as/-show-with
+/foo
+----------------------
+/foo
+msg: This is another message to say hello.
+mymsg: '"Hello World"'
+
+
+SPR:> with
+/foo
+-------------------------
+    mymsg                         
+    msg                           
+
+SPR:> ls /foo
+    mymsg                         
+    msg                           
+
+SPR:> as/-print-stack
+/foo
+/readme
+/
+
+SPR:> pop-with
+
+SPR:> as/-print-stack
+/readme
+/
+
+SPR:> with
+/readme
+-------------------------
+    package                       
+    filename                      
+    url                           
+    title                         
+    results                       
+    markdown                      
+    html                          
+
+SPR:> pop-with
+
+SPR:> as/-print-stack
+/
+
+SPR:> with
+/
+-------------------------
+    config                        
+    args                          
+    defaults                      
+    platform                      
+    _with_                        
+    _Root_                        
+    device                        
+    network                       
+    markdown                      
+    readme                        
+    foo                           
+
+SPR:> ls foo
+Unkown Symbol: foo
+'NoneType' object is not subscriptable
+
+SPR:> ls /foo
+    mymsg                         
+    msg                           
+
+SPR:> show /foo
+/foo
+msg: This is another message to say hello.
+mymsg: '"Hello World"'
+
+```
 
 These latest changes have altered things dramatically, to the point that earlier
 design patterns have gone away, and the necessity for python code is disappearing.
@@ -32,6 +322,22 @@ is showing up.
  * pop the last result from the results stack and put it in __code__.
 
 
+#### A current, simple code pattern:
+
+```
+with foo
+'
+url: someurlsomewhere
+msg: some message.
+
+cli/msg
+web/browse
+
+pop-with
+```
+
+#### A real example.
+
 ```
 with /mystuff/barcode
 
@@ -48,7 +354,60 @@ pop results code
 pop-with
 ```
 
+#### A more complex code pattern.
+This is from _core.spr_ and is what configures and creates
+the readme functionality in SPR. The steps it takes are:
 
+  * Create and move to a new path called _/readme_ 
+  * Use Yaml to define the data needed by **as/load-pkg-resource**.
+  * Call **load-pkg-resource** 
+  * move the result of that to _/readme/markdown_ with the 
+  `pop results markdown` command.
+  * Call **md/html** to convert the markdown to html
+  * move the result of that to _/readme/html_ with the 
+  `pop results html` command.
+  * Define two new commands to view/browse the readme.
+  
+If this is as common as it seems it will be, a _partial_ for 
+`pop results` would be nice.
+
+A function to add a function's parameter map to a path would be nice
+to have. 
+
+
+```
+# Set up readme folder with stuff,
+# then load the readme and convert to html.
+with /readme
+
+'
+package: Simple_Process_REPL
+filename: README.md
+url: https://github.com/EricGebhart/Simple_Process_REPL/blob/main/README.md
+title: "The SPR README!!!"
+
+
+# load the resource at readme. 
+# works because, 'with', readme has vars which match the function signature.
+as/load-pkg-resource
+
+# pop the last result to markdown.
+pop results markdown
+
+# convert the markdown to html.
+md/html
+
+# move the last result to html.
+pop results html
+
+# view-with and browse-with are handy to have. - they can point where they want.
+# view and browse use the current 'with'...
+def view-doc "Display the Readme documentation in an html viewer."
+    web/view-with readme
+
+def browse-doc "Display the Readme documentation in a browser window."
+    web/browse-with readme
+```
 
 The _with_ concept works really well, and the results stack which moves
 around with the _with_, `pop results to/somewhere`
@@ -57,13 +416,109 @@ The parameter bindings do their best when calling python functions.
 If some parameters but not all are given, the current _with_ will fill
 in the rest if it can find matches to the parameters.
 
-Look at the end of _core.spr_ to see the code for the Readme as an example.
-
 Paths without a leading / are relative to the setting of the _with_.
 
-I hope this document is not too annoying in it's repeating. I'm working on it.
-It some ways it less important now since help is so good.
-But I'd rather have too much than too little.
+#### Possible pattern
+
+I can see that it could be super beneficial to make it so that _with_ can 
+be initialized from another data tree or trees.  So that a configuration
+could be set up, then copied and used when anyone wanted to do that thing.
+
+This is possible already using set. the following would create tree1 as needed
+from a merge of tree1 and tree2 and tree3, it then moves to tree1 and
+adds some yaml which will also be merged into tree1.
+
+```
+Set tree1 /config/tree2
+Set tree1 /config/tree3
+with tree1
+'
+some: yaml
+```
+
+
+
+### Creating functions.
+
+This is just some of the entertaining things that come about. it turns out,
+that because eval knows how to process a list of commands, and because we
+can easily create lists, we can then easily create a sequence of things to
+be done and do them.  Our code is data, our data is code.
+
+This session creates a dataspace/folder/dictionary at /foo and pushes it
+on the with stack. 
+It then creates entries for msg, bar, and baz. 
+Notice that bar is spr code, and baz is a yaml list of spr code.
+
+__with__ and __show__ show what is there.
+
+Then we get a bunch of messages, in different ways.
+De-referencing and executing the data.
+
+```
+SPR:> with /foo
+
+SPR:> '
+YAML...>msg: this is my message. Hello.
+YAML...>bar: cli/msg /foo/msg
+YAML...>baz:
+YAML...>- cli/msg /foo/msg
+YAML...>- cli/msg Hello from the middle
+YAML...>- cli/msg /foo/msg
+YAML...>- cli/msg Goodbye.
+YAML...>
+
+SPR:> with
+/foo
+-------------------------
+    msg                           
+    bar                           
+    baz                           
+
+SPR:> ls /
+    config                        
+    args                          
+    defaults                      
+    platform                      
+    _with_                        
+    _Root_                        
+    device                        
+    network                       
+    markdown                      
+    readme                        
+    foo       
+
+SPR:> show /foo
+/foo
+bar: cli/msg /foo/msg
+baz:
+- cli/msg /foo/msg
+- cli/msg Hello
+- cli/msg /foo/msg
+- cli/msg Goodbye.
+msg: this is my message.
+
+
+SPR:> cli/msg /foo/msg
+this is my message.
+Press any key to continue;
+
+SPR:> eval /foo/bar
+this is my message.
+Press any key to continue;
+
+SPR:> eval /foo/baz
+this is my message. 
+Press any key to continue;
+Hello
+Press any key to continue;
+this is my message.
+Press any key to continue;
+Goodbye.
+Press any key to continue;
+```
+
+
 
 I could probably chop this down to 
 
@@ -78,7 +533,47 @@ I could probably chop this down to
 
 ### What is it?
 
-It's a fun to use tool to create applications which do processes.
+The original need, was a process to interact with a particle board
+and a person, in order to do a variety of steps that would register, 
+test and flash a particle.io based device, to it's completed state. 
+To be able to do that process once, or interactively over and over.
+
+That purpose came with a variety of requirements, that come with many 
+applications. It should be Documented, configurable, easy to maintain, 
+use and adapt. It needed wifi, and dialog windows, and a way to execute
+shell commands. Possibly ssh, and barcode reading and writing. 
+The ability to easily update to a new process remotely.
+
+The ideal that has been held in mind in SPR's creation, which was
+born of the initial shell script, is to create an easy to use tool 
+that will enable the creation of
+repeatable processes which are easily configured. The processes
+could be interactive or not, dialog and a cli interface are
+provided for that.
+
+Text translation was always a possibility, so all messages should be
+configurable.
+
+It needed to also be self documenting, such that it could be easily 
+understood and reasoned about.
+
+It should be easy to import and use python code and
+leverage the abilities of python and libraries with a glue 
+that is easy to understand and compose. 
+
+In a way, it feels like python did in 1995. It was the glue that was
+easy to use to put things together with. Python hasn't lost it's abilities,
+but it's not that simple glue anymore, and it's not what I consider 
+a high level language at this point. Python feels much closer to C, to me,
+than it used to. Probably because I've been ruined by programming in
+clojure and haskell.  I don't want to have to write a list comprehension
+every time I want to do anything.  I'm accustomed to a simple one liner,
+map/reduce/select/filter, walk, update-in, not a python list comprehension. 
+
+I like to think about what I'm doing not the syntax for the language that
+I'm trying to do it in.
+
+SPR is a fun to use tool to create applications which do processes.
 It's just stupid enough to be transparent and easy, and just smart
 enough to not be too annoying. 
 
@@ -280,7 +775,7 @@ baz: 10
 
 ```
 
-no logic, Just a big yaml datastore Tree and
+Just a big yaml datastore Tree and
 python functions. Failures are expected.
 It's easy to get and put things into the yaml datastore 
 which is represented as a big tree of Yaml. 
@@ -1307,3 +1802,5 @@ With is here, almost. it works in appstate. the repl needs to bind with it.
 Adding push and pop so we have stacks and lists. so with is implemented with SPR. cool.
 
 Result stacks,....
+
+Working!!!!

@@ -188,3 +188,14 @@ def view-doc "Display the Readme documentation in an html viewer."
 
 def browse-doc "Display the Readme documentation in a browser window."
     web/browse-with readme
+
+pop-with
+
+with /foo
+
+'
+msg: this is my message. Hello.
+bar: cli/msg /foo/msg
+baz:
+- cli/msg /foo/msg
+- cli/msg "Hello from the middle"

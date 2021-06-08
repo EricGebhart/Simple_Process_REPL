@@ -91,10 +91,13 @@ def do_something():
         r.eval_cmds(startup_hook)
 
     # Load a file if we got one.
-    filereader = A.get_in(["args", "file"])
+    sprfile = A.get_in(["args", "file"])
 
-    if filereader:
-        r.load(filereader)
+    if sprfile:
+        try:
+            r.load_file(sprfile)
+        except Exception as e:
+            logger.error(e)
 
     # Maybe Run the repl.
     if A.get_in(["args", "repl"]):

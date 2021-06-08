@@ -110,13 +110,13 @@ def create_parser(defaults):
         "--file",
         dest="file",
         help="File name of spr code to execute",
-        type=argparse.FileType(mode="r"),
+        action="store",
     )
 
     parser.add_argument(
         "--logfile",
         default=defaults["logfile"],
-        action="store_true",
+        action="store",
         help="logfile to use",
     )
 
