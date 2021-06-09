@@ -67,12 +67,14 @@ def _ls_with():
         print("Is Empty.")
 
 
-def _with(path=None):
+def _with(path=None, command=None):
     """
     Show the current 'With' path or if a path is given,
     Push a Yaml datastore path onto the 'with' stack.
 
     If it is not yet there, it will appear when someone sets something.
+
+    If a command is given, execute the command and pop.
     """
     global with_stack
     #    logger.info("_with %s" % path)
@@ -105,10 +107,14 @@ def _with(path=None):
             "vv": vv,
         }
     )
-    try:
-        _ls_with()
-    except Exception:
-        pass
+    if command:
+        r.eval_cmd(command)
+        pop_with()
+    else:
+        try:
+            _ls_with()
+        except Exception:
+            pass
 
 
 def pop_with():

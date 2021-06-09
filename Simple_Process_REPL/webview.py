@@ -35,14 +35,26 @@ Web uses these parts of the Application state.
 
 Web View will show the HTML, instead of the url if both are given.
 
-SPR:> with /foo
-'
-YAML:> url : http://ericgebhart.com
-       title: My viewer title.
-       open_tab: True
+The easiest way to use them is by using a with as it is not currently
+possible to give a None, or use keyword arguments otherwise.
+
+ with /foo
+
+ '
+ url : http://ericgebhart.com
+ title: My viewer title.
+ open_tab: True
 
  web/view
+
  web/browse
+
+ pop-with
+
+ with /foo web/view
+
+ with /foo web/browse
+
 
 The viewer is very basic.
 The browser only understands urls, and if you want a new tab or window.
@@ -73,8 +85,7 @@ def view(html=None, url=None, title=""):
 
     Uses PyWebViewer
 
-    example: with /readme
-             web/view
+    example: with /readme web/view
 
     """
     webview.create_window(
@@ -87,8 +98,11 @@ def view(html=None, url=None, title=""):
 
 
 def browse(url, open_tab=None):
-    """Browse the url, if open tab is not set, use the setting
+    """Browse the url, Will try to use your default browser.
+
+    If open tab is not set, use the setting
     in /config/browser/open-tab.
+
     If not true, a new browser window will open.
     """
     if open_tab is None:
