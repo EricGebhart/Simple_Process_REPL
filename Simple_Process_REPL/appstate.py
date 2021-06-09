@@ -194,10 +194,6 @@ def get_with():
     return get_in(_get_with_vv())
 
 
-def _merge_with():
-    pass
-
-
 def _set_(d):
     """Merge in a new dict, like the device dictionary, into
     the yaml datastore.
@@ -211,8 +207,6 @@ def set_in(*keys):
     into the Yaml Datastore dictionary tree."""
     global AS
     AS = u.merge(AS, u.make_dict(*keys))
-
-    # Refactor. Should be set. and set in from at the same time.
 
 
 def _get_vv_from_path(path):
@@ -284,7 +278,7 @@ def push(set_path, fromv):
     if dest:
         if not isinstance(dest, list):
             dest = [dest]
-        dest += [val]
+            dest += [val]
     else:
         dest = [val]
 
@@ -318,7 +312,7 @@ def get_fromv(fromv):
                 res = str(x)
             else:
                 res = res + " " + str(x)
-        fromv = res
+                fromv = res
 
     elif fromv and len(fromv) == 1:
         fromv = fromv  # [0]
@@ -338,6 +332,23 @@ def get_vv(set_path):
     return set_keys
 
 
+def _merge(fromv, set_path=None):
+    """merge a dictionary into the current with"""
+    fromv = get_fromv(fromv)
+
+    if set_path is None:
+        set_keys = _get_with_vv()
+
+    elif set_path[0] != "/":
+        set_path = _full_with_path(set_path)
+        logger.debug("set-with %s" % set_path)
+        set_keys = get_vv(set_path)
+
+    set_keys += [fromv]
+    AS = u.merge(AS, u.make_dict(set_keys))
+    u.merge(AS, d)
+
+
 def set(set_path, fromv):
     """Takes a path or path symbol and a value
     or 2 paths.
@@ -351,10 +362,14 @@ def set(set_path, fromv):
     """
     global AS
     # with local and absolute paths.
-    if set_path[0] != "/":
+    if set_path is None:
+        set_keys = _get_with_vv()
+
+    elif set_path[0] != "/":
         set_path = _full_with_path(set_path)
-    logger.debug("set-with %s" % set_path)
-    set_keys = get_vv(set_path)
+        logger.debug("set-with %s" % set_path)
+        set_keys = get_vv(set_path)
+
     fromv = get_fromv(fromv)
 
     set_keys += [fromv]
@@ -579,6 +594,10 @@ def load_pkg_resource_to(package, filename, *keys):
 
 
 def load_pkg_resource(package, filename):
+    """load a python package resource file.
+    Find a resource file in a python module
+    and return it.
+    """
     return u.load_pkg_resource(package, filename)
 
 

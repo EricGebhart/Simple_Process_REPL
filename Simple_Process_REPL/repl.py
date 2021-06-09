@@ -111,7 +111,7 @@ def append_funcs(st, module, funclist):
         # figure out if it's a var args [a*], or an [a b c*] varargs.
         # and how many args. Just to be nice and check later.
         # also stash the parameters in case do_fptrs() wants to get fancy.
-        signature, nargs, vargs, def_index, parms = get_fsig(f)
+        signature, nargs, vargs, def_index, parms, sigmap = get_fsig(f)
 
         name = fname.replace("_", "-")  # cause I don't like hitting shift.
 
@@ -120,6 +120,7 @@ def append_funcs(st, module, funclist):
             doc=f.__doc__,
             signature=signature,
             pkeys=parms,
+            sigmap=sigmap,
             nargs=nargs,
             vargs=vargs,
             def_index=def_index,
@@ -202,7 +203,8 @@ def load(reader):
 
 
 def import_lib_spr(module):
-    """Look for an spr file with the same name in the module and load it if found."""
+    """Look for spr and yaml files within the python module which are
+    named after the module. Load them in the current namespace if found."""
     if re.findall("\.", module):
         root, name = module.split(".")
     else:
@@ -225,6 +227,11 @@ def import_lib_spr(module):
 
 
 def namespace(name, docstr, module, *funclist):
+    """
+    Create a name space with name. From the python module, import the functions listed.
+    Will also import any spr or yaml files found within the module having the
+    same name as the module. As per the import_lib_spr function.
+    """
     global Root
     logger.info("\nCreating Namespace: %s from Python module: %s" % (name, module))
     ns = {
@@ -240,7 +247,12 @@ def namespace(name, docstr, module, *funclist):
 
 
 def _import_(module, *funclist):
-    """import functions from a python module into the current namespace."""
+    """import functions from a python module into the current namespace.
+    Then import the module's yaml and spr files if found.
+
+    A complete python-SPR module 'foo' would have a foo.py, foo.spr,
+    and possibly a foo.yaml.
+    """
     global NS
     if NS == Root:
         append_funcs(NS, module, *funclist)
@@ -265,7 +277,7 @@ def ns():
 
 
 def in_ns(ns=None):
-    """Change into a namespace Only one level of depth of Namespaces for now."""
+    """Change into a namespace."""
     global Root
     global NS
     global Current_NS
@@ -289,7 +301,7 @@ def in_ns(ns=None):
 
 def append_symbols(st, slist):
     """
-    Given a list of symbols add them to the symbol table.
+    Given a list of symbols, add them to the symbol table given.
     each symbol should be in the form of
     ['name', function | str, 'help string']
     """
@@ -317,6 +329,21 @@ def find_first_parameter_with_default(parameters):
     return res
 
 
+def get_fsig_map(parameters):
+    """Create a map of parameters with their default values."""
+    res = {}
+    count = 0
+    for k in parameters.keys():
+        count += 1
+        p = parameters[k]
+        v = p.default
+        if v == _empty:
+            v = None
+        res[p.name] = v
+
+    return res
+
+
 def get_fsig(f):
     if not callable(f):
         return None, 0, False, 0, []
@@ -325,15 +352,17 @@ def get_fsig(f):
     parameters = sig.parameters
     nargs = len(parameters)
     pkeys = []
+    sigmap = {}
     varargs = False
     def_index = 0
     if nargs > 0:
         pkeys = parameters.keys()
+        sigmap = get_fsig_map(parameters)
         last_arg_key = list(pkeys)[nargs - 1]
         last_arg_kind = parameters[last_arg_key].kind.name
         varargs = last_arg_kind in ["VAR_POSITIONAL", "VAR_KEYWORD"]
         def_index = find_first_parameter_with_default(parameters)
-    return str(sig), nargs, varargs, def_index, pkeys
+    return str(sig), nargs, varargs, def_index, pkeys, sigmap
 
 
 def append_specials(st, slist):
@@ -342,12 +371,13 @@ def append_specials(st, slist):
     ['name', function | str, nargs, 'help string']
     """
     for name, function, nargs, helptext in slist:
-        sig, nargs, vargs, def_index, parms = get_fsig(function)
+        sig, nargs, vargs, def_index, parms, sigmap = get_fsig(function)
         if sig:
             st[name] = dict(
                 fn=function,
                 signature=sig,
                 pkeys=parms,
+                sigmap=sigmap,
                 nargs=nargs,
                 vargs=vargs,
                 def_index=def_index,
@@ -487,6 +517,7 @@ def fptr_help(k, v, indent=False):
         indention = "    "
 
     print("\n%s%-20s" % (indention, sig))
+    print("\n%sSignature Map: %-40s" % (indention, v["sigmap"]))
     print("%s----------------\n%s%s" % (indention, indention, v["doc"]))
 
 
@@ -892,6 +923,14 @@ def get_specials_with_narg(st, nargs):
     return swn
 
 
+def get_sig_map(symbol, path):
+    fptr = isa_fptr(symbol)
+    if fptr:
+        sigmap = fptr["sigmap"]
+    if path is None:
+        set(_get_with_path(), sigmap)
+
+
 def expand(commands):
     """Expand the arguments into their values as needed.
     So far this is just paths. With this, we have 'variables'.
@@ -1152,7 +1191,31 @@ def eval_cmds(commands):
 
 
 def eval(path):
-    """Evaluate a list of symbols, varargs version of eval_cmds with a nice name."""
+    """Evaluate a list of symbols, from a path, if what is held there is
+    a string, then evaluate it.
+    If it is a list evaluate each entry in turn.
+
+    ```
+    set mymessage cli/msg "hello there"
+
+    eval mymessage
+    ```
+
+    An example using 'with' to construct a list of commands.
+
+    ```
+    with my/func/of/stuff
+
+    '
+    - cli/msg hello
+    - cli/msg goodbye
+
+    pop-with
+    eval /my/func/of/stuff
+
+    def myfunc "My function that does more than one thing." eval /my/func/of/stuff
+    ```
+    """
     v = get(path)
     if isinstance(v, list):
         eval_cmds(v)
