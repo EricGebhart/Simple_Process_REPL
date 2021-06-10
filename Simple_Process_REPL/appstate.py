@@ -67,7 +67,7 @@ def _ls_with():
         print("Is Empty.")
 
 
-def _with(path=None, command=None):
+def _with(wpath=None, wcommand=None, destpath=None):
     """
     Show the current 'With' path or if a path is given,
     Push a Yaml datastore path onto the 'with' stack.
@@ -75,24 +75,25 @@ def _with(path=None, command=None):
     If it is not yet there, it will appear when someone sets something.
 
     If a command is given, execute the command and pop.
+    if a destination is given pop the last result to that path.
     """
     global with_stack
     #    logger.info("_with %s" % path)
     #    logger.info("_stack %s" % with_stack)
 
-    if path is None:
+    if wpath is None:
         _ls_with()
         return
 
-    if path[0] != "/":
-        path = "/" + path
+    if wpath[0] != "/":
+        wpath = "/" + wpath
 
     # Value vectors, paths, I need to get these
     # symbols straightened out a bit. Seems like
     # should be keeping withs, in the app state too.
     # they seem a little stupid at the moment.
     # basically a manual path stack.
-    vv = _get_vv_from_path(path)
+    vv = _get_vv_from_path(wpath)
     try:
         vv.remove("")
     except Exception:
@@ -103,25 +104,20 @@ def _with(path=None, command=None):
 
     with_stack.append(
         {
-            "path": path,
+            "path": wpath,
             "vv": vv,
         }
     )
-    if command:
-        r.eval_cmd(command)
-        pop_with()
+    if wcommand:
+        r.eval_cmd(wcommand)
+        if destpath is not None:
+            pop("results", destpath)
+        pop("/_with_")
     else:
         try:
             _ls_with()
         except Exception:
             pass
-
-
-def pop_with():
-    """Pop a Yaml datastore path from the 'with' stack."""
-    global with_stack
-    if len(with_stack) > 1:
-        with_stack.pop()
 
 
 def _print_stack():
@@ -133,14 +129,6 @@ def _print_stack():
     # pretty print the dict at path.
     for p in reversed(with_stack):
         print(p["path"])
-
-
-def _show_with():
-    """Show the current 'With' tree."""
-    cwd = with_stack[-1]["path"]
-    print("%s" % cwd)
-    print("----------------------")
-    show(cwd)
 
 
 def _get_with_path():
@@ -464,24 +452,44 @@ def get_in_device(key):
     return _get_in(AS["device"], [key])
 
 
-def show(pathname="/"):
+def show(pathname=None):
     """Show a sub-tree in the Yaml Datastore with a path.
+
+    If no path is given, the current _with_ is shown. if
+    the current _with_ is '/', it is listed instead of
+    shown, as showing that is rarely what we would want.
+
+    If you really want to 'show' the entire tree it has to
+    be explicit.  `show /`
 
     example: show /device
 
-    will display the yaml datastore tree from the device node on.
+    This will display the yaml datastore tree from the device node on.
     """
-    if pathname == "/" or pathname == None:
+    qqc = None
+
+    # point at with if we got Nothing.
+    if pathname is None:
+        pathname = _get_with_path()
+        # We really don't want to 'show' that on accident.
+        if pathname == "/":
+            pathname = None
+            _ls_with()
+
+    if pathname == "/":
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
-    else:
+
+    elif pathname:
         logger.info(pathname)
         # so we don't have to type the first / in the path.
         if pathname[0] == "/":
             pathname = pathname[1:]
         vv = pathname.split("/")
         qqc = get_in(vv)
-    logger.info(yaml.dump(qqc))
+
+    if qqc:
+        logger.info(yaml.dump(qqc))
 
 
 def archive_log(new_name):

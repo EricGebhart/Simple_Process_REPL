@@ -12,4 +12,4 @@ partial run "Run the autoexec command set in the configuration" as/eval-default-
 
 partial with "Set or show the current with path." as/-with
 
-partial pop-with "Set or show the current with path." as/pop-with
+partial pop-with "Pop the current with from the stack." as/pop /_with_
