@@ -35,7 +35,7 @@ setup(
         "regex",
         "python-barcode",
         "qrcode",
-        "PIL",
+        "Pillow",
         "opencv-python",
         "numpy",
         "Image",
