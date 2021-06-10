@@ -143,6 +143,7 @@ def init(symbols, specials, parser):
             "load_file",
             "_quit_",
             "eval",
+            "_set_sig_map",
         ],
     )
 

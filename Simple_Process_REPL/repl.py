@@ -17,6 +17,7 @@ from Simple_Process_REPL.appstate import (
     select_with,
     push,
     get,
+    _set_in,
     get_in,
     get_from_path,
     get_in_config,
@@ -923,12 +924,16 @@ def get_specials_with_narg(st, nargs):
     return swn
 
 
-def get_sig_map(symbol, path):
+def _set_sig_map(symbol, path=None):
+    """Get the signature map for a symbol/python function
+    and set/merge it into the path given.
+
+    If path is not specified, merges into the current with path.
+    """
     fptr = isa_fptr(symbol)
     if fptr:
         sigmap = fptr["sigmap"]
-    if path is None:
-        set(_get_with_path(), sigmap)
+        _set_in(sigmap, path)
 
 
 def expand(commands):

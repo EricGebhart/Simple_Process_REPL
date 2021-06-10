@@ -1,0 +1,11 @@
+def hello "message for when Autoexec is not set" cli/msg /config/dialogs/hellomsg
+
+def start "message for start of Process"  cli/msg /config/dialogs/plugin_start
+
+def test "message for start of Test"      cli/msg /config/dialogs/ready_to_test
+
+def flash "message for start of Flash"    cli/msg /config/dialogs/ready_to_flash
+
+def failed "message for Process Failure"   cli/msg /config/dialogs/process_failed
+
+def finish "message for finish of Process" cli/msg /config/dialogs/process_finish

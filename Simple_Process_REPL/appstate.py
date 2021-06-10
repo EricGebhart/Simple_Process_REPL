@@ -196,6 +196,11 @@ def _set_(d):
     AS = u.merge(AS, d)
 
 
+def _set_in(value, path=None):
+    """Set a value at path or with-path if path is None."""
+    set_in(resolve_path(path) + [value])
+
+
 def set_in(*keys):
     """Takes a list of keys ending with the value to assign
     into the Yaml Datastore dictionary tree."""
@@ -326,21 +331,16 @@ def get_vv(set_path):
     return set_keys
 
 
-def _merge(fromv, set_path=None):
-    """merge a dictionary into the current with"""
-    fromv = get_fromv(fromv)
-
-    if set_path is None:
+def resolve_path(path):
+    """get the vv for path even if it's empty. """
+    if path is None:
         set_keys = _get_with_vv()
 
-    elif set_path[0] != "/":
-        set_path = _full_with_path(set_path)
-        logger.debug("set-with %s" % set_path)
-        set_keys = get_vv(set_path)
+    elif path[0] != "/":
+        path = _full_with_path(path)
+        set_keys = get_vv(path)
 
-    set_keys += [fromv]
-    AS = u.merge(AS, u.make_dict(set_keys))
-    u.merge(AS, d)
+    return set_keys
 
 
 def set(set_path, fromv):
@@ -356,13 +356,7 @@ def set(set_path, fromv):
     """
     global AS
     # with local and absolute paths.
-    if set_path is None:
-        set_keys = _get_with_vv()
-
-    elif set_path[0] != "/":
-        set_path = _full_with_path(set_path)
-        logger.debug("set-with %s" % set_path)
-        set_keys = get_vv(set_path)
+    set_keys = resolve_path(set_path)
 
     fromv = get_fromv(fromv)
 
