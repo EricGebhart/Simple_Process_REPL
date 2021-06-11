@@ -1,5 +1,5 @@
-import sys
 import traceback
+import yaml
 import pydoc
 import pkgutil
 import readline
@@ -393,7 +393,13 @@ def _def_(name, helpstr, commandstr):
     stype = "dolist"
     if commandstr[0] == "/":
         stype = "path"
-    _def_symbol(name, helpstr, commandstr, stype=stype)
+
+    if commandstr[0:2] == "- ":
+        commands = [c.strip() for c in commandstr.split("-")[1:]]
+    else:
+        commands = commandstr
+
+    _def_symbol(name, helpstr, commands, stype=stype)
 
 
 def _def_path(name, helpstr, commandstr):
@@ -422,14 +428,14 @@ def partial(name, helpstr, commandstr):
     _def_symbol(name, helpstr, commandstr, stype="partial")
 
 
-def _def_symbol(name, helpstr, commandstr, stype="dolist"):
+def _def_symbol(name, helpstr, commands, stype="dolist"):
     """Define a new symbol in the symbol table of the current namespace."""
     global NS
     global Current_NS
     logging.debug(
-        "Define: %s/%s, %s, %s, %s" % (Current_NS, name, commandstr, helpstr, stype)
+        "Define: %s/%s, %s, %s, %s" % (Current_NS, name, commands, helpstr, stype)
     )
-    s = dict(fn=commandstr, doc=helpstr, stype=stype)
+    s = dict(fn=commands, doc=helpstr, stype=stype)
     if NS == Root:
         NS[name] = s
     else:
@@ -531,23 +537,27 @@ def all_dolist_help(st):
 
 def dolist_help(k, v):
     """Format an dolist symbol's help."""
+    fn = v["fn"]
     if isstype(v, "dolist") or isstype(v, "partial") or isstype(v, "path"):
         print("\n {0[0]:20}\n--------------\n{0[1]}".format([k, v["doc"]]))
         print("    Type: %s" % v["stype"])
 
     if isstype(v, "dolist"):
-        print("    Source: [%s]\n" % v["fn"])
+        if isinstance(fn, str):
+            print("    Source: [%s]\n" % fn)
+        if isinstance(fn, list):
+            print("Source:\n%s\n" % yaml.dump(fn))
 
     if isstype(v, "path"):
-        print("    Path: [%s]\n" % v["fn"])
+        print("    Path: [%s]\n" % fn)
 
     if isstype(v, "fptr"):
         fptr_help(k, v)
 
     if isstype(v, "partial"):
-        print("    Source: [%s]\n" % v["fn"])
+        print("    Source: [%s]\n" % fn)
         print("  --- Derived from: ---")
-        func_name = v["fn"].split(" ")[0]
+        func_name = fn.split(" ")[0]
         s = _get_symbol(func_name)
         fptr_help(func_name, s, indent=True)
 
@@ -613,7 +623,10 @@ def print_sym(k, symbol):
         print("   %-30s  Partial -->  %-20s" % (sig, fptr_sig(parent_name, parent)))
 
     if isstype(symbol, "dolist"):
-        print("   %-30s  Do List -->  %-20s" % (sig, symbol["fn"]))
+        if isinstance(symbol["fn"], str):
+            print("   %-30s  Do List -->  %-20s" % (sig, symbol["fn"]))
+        else:
+            print("   %-30s  Do List" % sig)
 
     if isstype(symbol, "path"):
         print("   %-30s  Path -->  %-20s" % (sig, symbol["fn"]))
@@ -1146,11 +1159,15 @@ def eval_symbol(s):
     try:
         symbol = get_symbol(s)
         if symbol is not None:
-            function = symbol["fn"]
+            fn = symbol["fn"]
 
             # its a string of symbols.
-            if isinstance(function, str):
-                eval_list(parse(function))
+            if isinstance(fn, str):
+                eval_list(parse(fn))
+
+            elif isinstance(fn, list):
+                eval_cmds(fn)
+
             else:
                 function()
     except Exception:
@@ -1183,6 +1200,7 @@ def eval_list(commands):
         return
 
     if do_fptrs(commands) is False:
+        # it's a do-list
         for cmd in commands:
             eval_symbol(cmd)
 
