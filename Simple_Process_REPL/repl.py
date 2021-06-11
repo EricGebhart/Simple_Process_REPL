@@ -535,6 +535,9 @@ def dolist_help(k, v):
         print("\n {0[0]:20}\n--------------\n{0[1]}".format([k, v["doc"]]))
         print("    Type: %s" % v["stype"])
 
+    if isstype(v, "dolist"):
+        print("    Source: [%s]\n" % v["fn"])
+
     if isstype(v, "path"):
         print("    Path: [%s]\n" % v["fn"])
 
