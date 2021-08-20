@@ -212,11 +212,24 @@ def select_keys(m, keys):
 
 
 def flatten_with():
-    """go through the with stack and flatten it, ignoring the last root /, layer."""
+    """Go through the with stack and flatten it,
+    Only go to the depth set by /with_depth.
+
+    If < 0 will go all the way to the layer above /.
+
+    A simple method for variable resolution with scope.
+    """
+    depth = get_in(["with_depth"])
     fd = {}
+    i = 0
     for w in with_stack[1:]:
         d = get_in(w["vv"])
         fd |= d
+
+        if depth >= 0 and i == depth:
+            break
+        i += 1
+
     return fd
 
 
@@ -526,7 +539,7 @@ def show(pathname=None):
             pathname = None
             _ls_with()
 
-    elif pathname == "/":
+    if pathname == "/":
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
 
