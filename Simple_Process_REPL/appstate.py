@@ -46,6 +46,7 @@ AS = {
         "logfile": "PBR.log",
     },
     "platform": "",
+    "with_depth": -1,
 }
 
 with_stack = []
@@ -210,11 +211,21 @@ def select_keys(m, keys):
     return d
 
 
+def flatten_with():
+    """go through the with stack and flatten it, ignoring the last root /, layer."""
+    fd = {}
+    for w in with_stack[1:]:
+        d = get_in(w["vv"])
+        fd |= d
+    return fd
+
+
 def select_with(keys):
     """Given a list of keys,
     return a map of with those keys from the with map.
     """
-    return select_keys(get_with(), keys)
+    # used to be get_with()
+    return select_keys(flatten_with(), keys)
 
 
 def get_with():
@@ -337,6 +348,11 @@ def get_fromv(fromv):
 
         if fromv[0] == "/":
             fromv = get_from_path(fromv[1:])
+            logger.info(fromv)
+
+        elif fromv[0] == ".":
+            vv = _get_vv_from_path(fromv[1:])
+            fromv = get_in(_get_with_vv() + vv)
 
     elif isinstance(fromv, list):
         res = None
@@ -403,10 +419,16 @@ def get(path):
     Without a leading / the path is considered relative
     to the current 'with' path.
     """
-    vv = _get_vv_from_path(path)
 
     if path[0] != "/":
+        vv = _get_vv_from_path(path[1:])
         vv = _get_with_vv() + vv
+
+    elif path[0] == ".":
+        vv = _get_vv_from_path(path[1:])
+        vv = _get_with_vv() + vv
+
+    vv = _get_vv_from_path(path)
 
     return get_in(vv)
 
@@ -504,7 +526,7 @@ def show(pathname=None):
             pathname = None
             _ls_with()
 
-    if pathname == "/":
+    elif pathname == "/":
         # remove _Root_ from showing unless asked.
         qqc = AS | {"_Root_": None}
 
@@ -512,6 +534,8 @@ def show(pathname=None):
         logger.info(pathname)
         # so we don't have to type the first / in the path.
         if pathname[0] == "/":
+            pathname = pathname[1:]
+        else:
             pathname = pathname[1:]
         vv = pathname.split("/")
         qqc = get_in(vv)

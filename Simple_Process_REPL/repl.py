@@ -1078,12 +1078,16 @@ def do_fptrs(commands):
             fn(commands[1], commands[2], commandstr)
         return True
 
-    # oy. je n'aime pas des exceptions
-    if command == "as/set":
-        # noop ? - yes
-        # commands = resolve_vars(commands, start_index=2)
-        fn(commands[1], commands[2:])
-        return True
+    # # oy. je n'aime pas des exceptions
+    # this allows set to take a list of words and set a string.
+    # the reality is that yaml syntax is easier for that,
+    # and quoting should be handled better. ie.
+    # stripped from quoted strings.
+    # if command == "as/set":
+    #     # noop ? - yes
+    #     # commands = resolve_vars(commands, start_index=2)
+    #     fn(commands[1], commands[2:])
+    #     return True
 
     # noop ? - yes
     # commands = resolve_vars(commands, start_index=1)
