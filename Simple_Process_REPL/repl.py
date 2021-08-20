@@ -11,12 +11,16 @@ import code
 from sys import exit
 from inspect import signature, _empty
 from Simple_Process_REPL.appstate import (
+    yaml_load,
     merge_yaml_with,
     merge_pkg_yaml,
+    setgensym,
+    getgensym,
     _full_with_path,
     select_with,
     push,
     get,
+    _set_,
     _set_in,
     get_in,
     get_from_path,
@@ -136,11 +140,12 @@ def is_blank_line(line):
     return re.match(r"^[\s]*$", line)
 
 
-def inline_yaml(lines):
-    """take an iterator and read until the end or two blank lines are encountered.
-    Attempt to merge the resulting yaml and merge it into to yaml datastore."""
+def inline_yaml(lines, txt=None):
+    """Take an iterator and read until the end or two blank lines are encountered.
+    Create a gensym and store the safely loaded yaml there. Return the gensym."""
     yaml = ""
     blank_count = 0
+    gensym = None
 
     logger.info("loading inline Yaml:")
 
@@ -162,8 +167,11 @@ def inline_yaml(lines):
 
         yaml += line + "\n"
 
-    merge_yaml_with(yaml)
-    return lines
+    if txt is not None and len(txt):
+        gensym = setgensym(yaml_load(yaml))
+    else:
+        merge_yaml_with(yaml)
+    return gensym, lines
 
 
 def load(reader):
@@ -177,6 +185,7 @@ def load(reader):
 
         try:
             line = lines.__next__()
+            logger.info("%s" % line.rstrip())
         except Exception:
             break
 
@@ -184,20 +193,21 @@ def load(reader):
             continue
 
         if line.strip() == "'":
-            inline_yaml(lines)
-            txt = ""
+            gensym, _ = inline_yaml(lines, txt)
+
+            if len(txt) > 0:
+                txt += " %s" % gensym
+
             continue
 
+        if len(line) == 0 or is_blank_line(line):
+            if len(txt) > 0:
+                eval_cmd(txt)
+                txt = ""
         else:
-            if len(line) == 0 or is_blank_line(line):
-                if len(txt) > 0:
-                    eval_cmd(txt)
-                    txt = ""
-            else:
-                # get rid of newlines so the interpreter
-                # sees a continuous line.
-                logger.info("%s" % line)
-                txt += re.sub("\n", " ", line)
+            # get rid of newlines so the interpreter
+            # sees a continuous line.
+            txt += re.sub("\n", " ", line)
 
     if len(txt) > 0:
         eval_cmd(txt)
@@ -218,6 +228,7 @@ def import_lib_spr(module):
     try:
         init = pkgutil.get_data(root, sprname).decode("utf-8").split("\n")
         load(init)
+
     except Exception:
         pass
 
@@ -387,17 +398,17 @@ def append_specials(st, slist):
             )
 
 
-def _def_(name, helpstr, commandstr):
+def _def_(name, helpstr, commands):
     """define a new symbol which is a 'dolist' of other symbols.
     example: def hello-world \"My help text\" ui/msg \"hello world\" """
     stype = "dolist"
-    if commandstr[0] == "/":
-        stype = "path"
+    if isinstance(commands, str):
+        if commands[0] == "/":
+            stype = "path"
 
-    if commandstr[0:2] == "- ":
-        commands = [c.strip() for c in commandstr.split("-")[1:]]
-    else:
-        commands = commandstr
+        # execute yaml directly?
+        if commands[0:2] == "- ":
+            commands = [c.strip() for c in commands.split("-")[1:]]
 
     _def_symbol(name, helpstr, commands, stype=stype)
 
@@ -417,7 +428,7 @@ def _def_path(name, helpstr, commandstr):
     _def_symbol(name, helpstr, commandstr, stype=stype)
 
 
-def partial(name, helpstr, commandstr):
+def partial(name, helpstr, commands):
     """define a new function from an fptr function which has some
     of it's arguments filled in.
 
@@ -425,7 +436,7 @@ def partial(name, helpstr, commandstr):
 
     will create a new function get-bar-code-from that takes a value vector
     just like set-in-from would. Because it is."""
-    _def_symbol(name, helpstr, commandstr, stype="partial")
+    _def_symbol(name, helpstr, commands, stype="partial")
 
 
 def _def_symbol(name, helpstr, commands, stype="dolist"):
@@ -535,6 +546,10 @@ def all_dolist_help(st):
             dolist_help(k, v)
 
 
+def isgensym(sym):
+    return sym[0:5] == "__G__"
+
+
 def dolist_help(k, v):
     """Format an dolist symbol's help."""
     fn = v["fn"]
@@ -544,7 +559,10 @@ def dolist_help(k, v):
 
     if isstype(v, "dolist"):
         if isinstance(fn, str):
-            print("    Source: [%s]\n" % fn)
+            if isgensym(fn):
+                print("Source:\n%s\n" % yaml.dump(getgensym(fn)))
+            else:
+                print("    Source: [%s]\n" % fn)
         if isinstance(fn, list):
             print("Source:\n%s\n" % yaml.dump(fn))
 
@@ -582,7 +600,7 @@ def list_namespace():
 
 
 def ns_tree():
-    """List the namespaces and all of their symbols """
+    """List the namespaces and all of their symbols"""
     list_namespace()
     print("\n")
     for k, v in sorted(Root.items()):
@@ -1050,8 +1068,11 @@ def do_fptrs(commands):
     # oy. je n'aime pas des exceptions
     if command == "-def-" or command == "partial":
         # commands = resolve_vars(commands, start_index=2)
-        commandstr = " ".join(commands[3:])
-        fn(commands[1], commands[2], commandstr)
+        if isinstance(commands[3], list):
+            fn(commands[1], commands[2], commands[3])
+        else:
+            commandstr = " ".join(commands[3:])
+            fn(commands[1], commands[2], commandstr)
         return True
 
     # oy. je n'aime pas des exceptions
@@ -1102,7 +1123,8 @@ def do_fptrs(commands):
 
 
 def atom(token):
-    'Numbers become numbers; "..." string; otherwise Symbol/cmd.'
+    """Numbers become numbers; quotes make strings; otherwise Symbol/cmd."""
+
     if token[0] == '"':
         # to get rid of the quotes, but that doesn't serve us.
         # return token[1:-1].encode('utf_8').decode('unicode_escape')
@@ -1142,7 +1164,7 @@ def read(tokens):
     commands = []
     for token in tokens:
         commands.append(atom(token))
-    logging.debug("read %s" % commands)
+        logging.debug("read %s" % commands)
     return commands
 
 
@@ -1160,6 +1182,9 @@ def eval_symbol(s):
         symbol = get_symbol(s)
         if symbol is not None:
             fn = symbol["fn"]
+
+            if isgensym(fn):
+                fn = getgensym(fn)
 
             # its a string of symbols.
             if isinstance(fn, str):

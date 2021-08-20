@@ -1,0 +1,23 @@
+with /testfoo
+
+
+'
+msg: this is my message. Hello.
+bar: cli/msg /testfoo/msg
+baz:
+    - cli/msg /testfoo/msg
+    - cli/msg Hello from the middle
+
+
+
+def foo "this is a test, to make a function with yaml"
+'
+- cli/msg hello
+- cli/msg gooodbye
+
+
+
+def functest "We can make functions with yaml"
+'
+- cli/msg
+- cli/msg Goodbye

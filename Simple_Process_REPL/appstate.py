@@ -3,6 +3,7 @@ from platform import system as platform
 from Simple_Process_REPL.options import create_parser
 import Simple_Process_REPL.logs as logs
 import os
+from uuid import uuid4
 import logging
 import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.utils as u
@@ -37,6 +38,7 @@ def help():
 # yaml datastore, which will contain merged data from the application layer.
 AS = {
     "config": {},
+    "__gensyms__": {},
     "args": {"commands": {}},
     "defaults": {
         "config_file": "PBRConfig.yaml",
@@ -47,6 +49,33 @@ AS = {
 }
 
 with_stack = []
+
+
+def gensym(prefix="__G__"):
+    """Create a unique symbol"""
+    return prefix + str(uuid4())
+
+
+def setgensym(value, prefix=None):
+    """Create and set a gensym in __gensyms__, returning it's name"""
+    if prefix is not None:
+        gs = gensym(prefix)
+    else:
+        gs = gensym()
+
+    # logger.inf("merge: %s" % root)
+    gv = ["__gensyms__", gs] + value
+    d = u.make_dict(gv)
+
+    # logger.info(d)
+    u.merge(AS, d)
+    return gs
+
+
+def getgensym(sym):
+    """Convenience function to get a gensym's value."""
+    path = ["__gensyms__", sym]
+    return get_in(path)
 
 
 def _ls_with():
@@ -118,6 +147,11 @@ def _with(wpath=None, wcommand=None, destpath=None):
             _ls_with()
         except Exception:
             pass
+
+
+def _pop_with():
+    """until it gets surfaced."""
+    with_stack.pop()
 
 
 def _print_stack():
@@ -332,7 +366,7 @@ def get_vv(set_path):
 
 
 def resolve_path(path):
-    """get the vv for path even if it's empty. """
+    """get the vv for path even if it's empty."""
     if path is None:
         set_keys = _get_with_vv()
 
@@ -525,6 +559,11 @@ def eval_default_process():
             raise Exception(e)
     else:
         hello()
+
+
+def yaml_load(y):
+    """Safely load some yaml and return it as a list."""
+    return [yaml.load(y, Loader=yaml.SafeLoader)]
 
 
 def merge_yaml_with(y):

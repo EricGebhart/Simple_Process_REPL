@@ -18,6 +18,48 @@ device:
   name: ''
   path: ''
 
+def flash_image "Flash the flash image"
+    pb/flash /config/particle/images/flash
+
+
+def flash_tinker "Flash the tinker image"
+    pb/flash /config/particle/images/tinker
+
+
+def flash_test
+    "Flash the test image"
+    pb/flash /config/particle/images/test
+
+
+def product_add
+    """ product device add product id - associate the device wit a product"""
+    set product /config/particle/product
+    pb/product_add
+
+def list-w-timeout():
+    "Do a serial list, trying repeatedly on failure for a timeout period"
+    with /config/waiting pb/-list-usb-w-timeout
+
+
+def get_usb_and_id():
+    """
+    Retrieve and set the USB device, the board name,  and the device id.
+    Uses 'particle serial list' in a timeout loop. This is required
+    for most things. Wait and handshake, use the usb device,
+    and the id is needed by many things.
+    """
+    # PB['usb_device'], PB['device_id'] = P.get_usb_and_id()
+    path, name, id = P.get_w_timeout(A.get_in_config(["waiting", "timeout"]))
+    A._set_({"device": {"path": path, "name": name, "id": id}})
+
+
+def wait_for_plist():
+    """Wait for particle serial list to succeed with timeout, doesn't
+    really work."""
+    # we don't care about the results, just to wait.
+    with /config/waiting pb/-get-w-timeout
+
+
 
 def id-it
     "Id the board. get, reset then identify. Need the reset and pauses for consistent success"

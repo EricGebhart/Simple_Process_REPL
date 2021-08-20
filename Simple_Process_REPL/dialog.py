@@ -134,16 +134,21 @@ def msg(msg):
     """Display a simple message box, with either
     the msg or the text located at msg if it begins with a /..
     """
+    logging.info(msg)
+
     if msg[0] == "/":
         msg = A.get(msg)
 
-    d.msgbox(
-        msg,
-        title=A.get_in_config(["dialogs", "title"]),
-        height=10,
-        width=50,
-    )
-    os.system("clear")
+    logging.info(msg)
+
+    if msg is not None:
+        d.msgbox(
+            msg,
+            title=A.get_in_config(["dialogs", "title"]),
+            height=10,
+            width=50,
+        )
+        os.system("clear")
 
 
 def yes_no(msg):

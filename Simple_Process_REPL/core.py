@@ -52,13 +52,13 @@ def do_one(commands=None):
         else:
             r.eval_cmds(commands)
 
-        D.finish()
+        D.msg("/config/dialogs/process_finish")
 
     except Exception as e:
         logger.error("Process Failed")
         logger.error(e)
-        D.failed()
-        D.finish()
+        D.msg("/config/dialogs/process_failed")
+        D.msg("/config/dialogs/process_finish")
 
 
 def do_something():
