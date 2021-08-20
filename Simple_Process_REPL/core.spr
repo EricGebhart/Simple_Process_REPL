@@ -130,18 +130,8 @@ namespace nw "Networking stuff, Wifi"
 namespace bq "Bar and QR code generation, scanning and printing"
     Simple_Process_REPL.bar_qr
     help
-    gen save write read_barcode_from_camera
-
-namespace pb "Particle Board CLI interface"
-    Simple_Process_REPL.particle_main
-    help
-    particle_help archive_log
-    reset_usb add product_add claim flash_image
-    release flash_tinker flash_test cloud_status
-    get_usb_and_id archive_log input_serial
-    dfu listen list identify inspect login
-    logout update setup_done _doctor _flash pcmd
-    name name_from
+    gen save write
+    read_barcode_from_camera
 
 namespace md "Markdown conversion to HTML"
     Simple_Process_REPL.markdown
@@ -154,8 +144,24 @@ namespace web "View HTML and urls."
     view
     browse
 
+namespace pb "Particle Board CLI interface"
+    Simple_Process_REPL.particle
+    help
+    reset_usb list_usb
+    get_usb_and_id
+    add product_add claim name
+    release cloud_status
+    dfu_mode listen
+    identify inspect
+    login logout
+    update set_setup_bit
+    doctor _doctor flash do_pcmd
+    archive_log
+
+
 in-ns
 
+# import new_spr into top level namespace.
 import Simple_Process_REPL.mkext new_spr_extension_project
 
 # Set up readme folder with stuff,

@@ -5,8 +5,87 @@ import subprocess
 import logging
 import time
 import Simple_Process_REPL.subcmd as s
+import Simple_Process_REPL.appstate as A
+import Simple_Process_REPL.utils as u
 
 logger = logging.getLogger()
+
+
+yaml = u.dump_pkg_yaml("Simple_Process_REPL", "particle.yaml")
+spr = u.load_pkg_resource("Simple_Process_REPL", "particle.spr")
+
+# format and fill in as you wish.
+HelpText = """
+particle: - A particle.io device interface.  -
+
+Interact with particle boards.  list, identify, claim, flash, test, etc.
+
+Particle uses these parts of the Application state
+
+%s
+
+Particle Defines This SPR code.
+
+%s
+
+
+
+
+
+Particle defines /device as the location for the working device by default.
+using 'with /device' will give predictable results.
+
+Some functions do use timeouts and dialogs, putting
+'/config/dialogs' in your 'with' stack will resolve any default values needed.
+
+    with /config/timeout
+    with /config/dialogs
+    with /device
+
+A 'with_init' function is provided which will do this.
+
+When working with a Particle.io board, the first step is to 'get'
+the id and device. There are many commands here which need the usb device
+or the device id.  With that, the basic commands for the process we have
+been intending would be;
+
+'start, setup, claim, testit, flash, and archive_log'.
+
+The 'continue to next' and 'device failed' dialog windows are built in to
+the interactive loop of SPR. Any additional prompts, such as 'dialog-start' or
+'dialog-test' can be added to the process  with their commands. If a more
+interactive process is desired.
+
+When working with a Particle.io board, the first step is to 'get'
+the id and device. There are many commands here which need the usb device
+or the device id. So the first step is always a `get`.
+
+It is also useful to do `list` to see what devices are there.
+
+A 'get' will retrieve the id, path and name of the currently connected
+device and put them at the current 'with', which is possibly /device.
+
+After that, it is possible to continue working with that device
+to update it, set it's setup bit, flash it, handshake with it etc.
+
+If a repeatable process is desired, simply create one by defining more
+complex commands.
+
+
+""" % (
+    yaml,
+    spr,
+)
+
+
+def help():
+    """Additional SPR specific Help for the Particle Module."""
+    print(HelpText)
+
+
+def archive_log(id):
+    "Move the current logfile to one named after the current value of id."
+    A.archive_log("%s.log" % id)
 
 
 def do_pcmd_w_timeout(cmd, timeout):
@@ -41,6 +120,7 @@ def get_w_timeout(timeout):
     This is actually nice behavior because it gives a chance to
     replug your particle board. And this is the first step to
     any set of operations on a device.
+    returns path,name and id.
     """
     start = time.time()
     while True:
@@ -50,7 +130,7 @@ def get_w_timeout(timeout):
         if stdout.split(" ")[0] != "No":
             device_line = stdout.split("\n")[1]
             devices = device_line.split(" - ")
-            return [devices[0], devices[1], devices[2]]
+            return {path: devices[0], name: devices[1], id: devices[2]}
 
         if time.time() - start >= timeout:
             logger.error("Getting USB and device ID timed out")
@@ -121,14 +201,14 @@ def identify():
 
 
 def doctor():
-    """Run particle doctor. (list, dfu, doctor)"""
+    """Run particle doctor. (list usb, dfu mode then -> doctor)"""
     list_usb()
     dfu_mode()
     return do_pcmd("-v doctor")
 
 
 def _doctor():
-    """Run particle doctor. (doctor)"""
+    """Run particle doctor. (just doctor)"""
     return do_pcmd("-v doctor")
 
 
@@ -139,7 +219,7 @@ def listen():
 
 
 def update():
-    """ Update the device OS. ie. dfu, update."""
+    """Update the device OS. ie. dfu, update."""
     logger.info("Updating device")
     dfu_mode()
     return do_pcmd("update")
@@ -153,44 +233,52 @@ def set_setup_bit():
 
 # no command product add...
 # particle help product add --> gives nothing.
-def add(device_id):
+def add(id):
     """Register/claim device with 'particle device add'"""
     logger.info("Registering device:")
     # particle product add $product_id $device_id
-    do_pcmd("device add {}".format(device_id))
+    do_pcmd("device add {}".format(id))
 
 
-def product_add(product, device_id):
-    """Associate device with a product 'particle product device add'"""
+def product_add(product, id):
+    """Associate device with a product 'particle product device add'
+    Associate the device with a product.
+    The default product is in config/particle.
+    id would be in /device by default.
+
+    Use 'with /config/particle
+         with /device.'
+
+    or another place where 'id' is set"""
     logger.info("Registering device:")
-    do_pcmd("product device add %s %s" % (product, device_id))
+    do_pcmd("product device add %s %s" % (product, id))
 
 
-def claim(device_id):
+def claim(id):
     """Cloud claim device with 'particle cloud claim'"""
     logger.info("Claiming device:")
     # particle product add $product_id $device_id
-    do_pcmd("cloud claim {}".format(device_id))
+    do_pcmd("cloud claim {}".format(id))
 
 
-def release(device_id):
+def release(id):
     """Release the claim on a device"""
-    do_pcmd("device remove {}".format(device_id))
+    do_pcmd("device remove {}".format(id))
 
 
-def cloud_status(device_id):
+def cloud_status(id):
     """Check the cloud-status of the device."""
-    do_pcmd("usb cloud-status {}".format(device_id))
+    do_pcmd("usb cloud-status {}".format(id))
 
 
-def reset_usb(device_id):
+def reset_usb(id):
     """Reset the device on the usb."""
-    do_pcmd("usb reset {}".format(device_id))
+    do_pcmd("usb reset {}".format(id))
 
 
-def name(device_id, n):
+def name(id, name):
     """Name/Rename a device"""
-    do_pcmd("device rename %s %s" % (device_id, n))
+    do_pcmd("device rename %s %s" % (id, name))
 
 
 def flash(image):
@@ -208,3 +296,19 @@ def flash(image):
 def dfu_mode():
     """Put USB device in dfu mode."""
     do_pcmd("usb dfu")
+
+
+def get_usb_and_id(timeout):
+    """
+    Retrieve and set the USB device, the board name,  and the device id.
+    Uses 'particle serial list' in a timeout loop. This is required
+    for most things. Wait and handshake, use the usb device,
+    and the id is needed by many things.
+
+    Sets path, name and id in current 'with'
+    Use 'with /device' or another location where you would like the results.
+    """
+    # it's strange, if we add timeout to the args, and use with, we can
+    # remove the explicit get-in-config.
+    path, name, id = get_w_timeout(timeout)
+    A._set_in({"path": path, "name": name, "id": id})

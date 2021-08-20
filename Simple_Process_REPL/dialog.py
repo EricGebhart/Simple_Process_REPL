@@ -282,3 +282,63 @@ def continue_to_next():
         logger.info("exiting")
         return False
     return True
+
+
+def yno_fail(question):
+    """Ask if the test images are seen, using the value in images_seen,
+    possibly found in /config/dialogs/images_seen.
+    ie. do 'with /config/dialogs'
+    fail if the answer is no."""
+    if not yes_no(question):
+        raise Exception("Failure: %s No!" % yno_msg)
+
+
+def input_with_regex(
+    message,
+    regex,
+    title,
+    is_correct,
+    must,
+    height=10,
+    width=50,
+    question=None,
+):
+    """
+    Give a set of dialogs to input a value which matches a regex.
+
+    If a question is given, ask and fail if the answer is no.
+    Loop on input until input matches regex or user exits.
+
+    Set 'with' to /config/dialogs, or another place which has the
+    values desired.
+
+    message - The request to input something.
+    regex - the regex to match the input.
+    title - usually the application title for all dialogs.
+    is_correct - question if result is correct.
+    must - message to say what it must match.
+    height - height of dialog.
+    width - width of dialog.
+    question - additional confirmation question to start. Exception if no.
+
+    Asks question,
+    then presents a dialog loop to receive an input which matches the regex.
+    the result is returned.
+    """
+    # =r"^\d{8}$",
+    if question is not None:
+        yno_fail(question)
+
+    # msg = A.get_in_config(["dialogs", "input_serial"])
+    while True:
+        code, res = inputbox(message, title=title, height=height, width=width)
+        if re.match(regex, res):
+            yno_msg = "%s : %s" % (is_correct, res)
+            if yes_no(yno_msg):
+                break
+        else:
+            msg("%s : %s" % (must, regex))
+
+            os.system("clear")
+            logger.info("Value Entered is: %s" % res)
+        return res

@@ -216,6 +216,7 @@ def load(reader):
 def import_lib_spr(module):
     """Look for spr and yaml files within the python module which are
     named after the module. Load them in the current namespace if found."""
+    logger.info("import lib spr %s" % module)
     if re.findall("\.", module):
         root, name = module.split(".")
     else:
@@ -230,12 +231,14 @@ def import_lib_spr(module):
         load(init)
 
     except Exception:
+        # logger.info("\nImport spr failed: %s" % e)
         pass
 
     try:
         merge_pkg_yaml(module, yname)
     except Exception:
         pass
+        # logger.info("\nImport yaml failed: %s" % e)
 
 
 def namespace(name, docstr, module, *funclist):
