@@ -33,3 +33,29 @@ def functest "We can make functions with yaml"
 '
 - cli/msg
 - cli/msg Goodbye
+
+
+# with stack scoping. cli/msg looks through to find a value for msg.
+# a local _with_ var can be referenced with . as a prefix.
+
+show
+
+as/-print-stack
+
+cli/msg
+
+set msg .nomsg
+
+show
+
+cli/msg
+
+set msg /foo/msg
+
+show
+
+cli/msg
+
+set foobar /foo
+
+show
