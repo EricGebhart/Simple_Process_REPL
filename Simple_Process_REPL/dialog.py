@@ -26,6 +26,14 @@ There is currently no stateful data.
     %s
 
 dialog is an old curses library written in C used for simple dialogs.
+
+With the new 'with' functionality and the results stack, a lot of this
+could maybe go away.  _msg, _yes_no, _menu are closer to the bare dialog
+functions to see how that works out.  dialog uses **kwargs, so I could just
+send in the whole flattened with stack when it gets called in do_fptrs.
+
+
+
 """
     % yaml
 )
@@ -64,7 +72,7 @@ def input_count(msg):
         try:
             res = int(res)
         except Exception:
-            msg("count must be an integer")
+            logger.info("count must be an integer")
             continue
         break
     return res
@@ -94,16 +102,10 @@ def _input_string(msg, regex=None, correct=None, must=None, confirmation=True):
     if regex is None:
         return input_string(msg)
 
-    if must is None:
-        must = (A.get_in_config(["dialogs", "must"]),)
-
-    if correct is None:
-        correct = A.get_in_config(["dialogs", "correct"])
-
     while True:
         res = input_string(msg)
         if re.match(regex, res):
-            if confirmation:
+            if confirmation and correct is not None:
                 yno_msg = "%s : %s" % (correct, res)
                 if yes_no(yno_msg):
                     break
@@ -112,6 +114,8 @@ def _input_string(msg, regex=None, correct=None, must=None, confirmation=True):
         else:
             if must is not None:
                 msg("%s : %s" % ("must", regex))
+            else:
+                break
 
     return res
 
@@ -128,6 +132,24 @@ def dialog_print_loop(fname):
     cmd_name, command = dialog_print(fname)
     count = input_count("How many to Print ?")
     return cmd_name, command, count
+
+
+def _msg(msg, title, height, width):
+    d.msgbox(
+        msg,
+        title=title,
+        height=height,
+        width=width,
+    )
+
+
+def _yes_no(yn_msg, title, height, width):
+    return "ok" == d.yesno(
+        msg,
+        title=title,
+        height=height,
+        width=width,
+    )
 
 
 def msg(msg):
@@ -174,6 +196,16 @@ def yes_no(msg):
         return False
 
 
+def _radiolist(msg, title, height, width, choices):
+    return d.radiolist(
+        msg,
+        title=A.get_in_config(["dialogs", "title"]),
+        choices=choices,
+        height=50,
+        width=50,
+    )
+
+
 def radiolist(msg, choices):
     if msg[0] == "/":
         msg = A.get(msg)
@@ -185,6 +217,16 @@ def radiolist(msg, choices):
         choices=choices,
     )
     return tag
+
+
+def _menu(msg, title, height, width, choices):
+    return d.menu(
+        msg,
+        title=A.get_in_config(["dialogs", "title"]),
+        choices=choices,
+        height=50,
+        width=50,
+    )
 
 
 def select_choice(msg, choices):
@@ -203,6 +245,7 @@ def select_choice(msg, choices):
     return choice
 
 
+# I believe this could be more easily done with just spr.
 def print_command_menu():
     """Give a menu of possible print commands for the current platform"""
     p_dict = A.get_in_config(["print_commands", A.get_in(["platform"])])
@@ -213,6 +256,7 @@ def print_command_menu():
     return choice, p_dict[choice]
 
 
+# If _menu works well, there's probably no need for all this.
 def BC_or_QR_menu():
     return select_choice(
         "Which would you like to print?",
@@ -284,12 +328,13 @@ def continue_to_next():
     return True
 
 
-def yno_fail(question):
+def yno_fail(yno_msg):
     """Ask if the test images are seen, using the value in images_seen,
     possibly found in /config/dialogs/images_seen.
     ie. do 'with /config/dialogs'
     fail if the answer is no."""
-    if not yes_no(question):
+
+    if yno_msg is not None and not yes_no(yno_msg):
         raise Exception("Failure: %s No!" % yno_msg)
 
 

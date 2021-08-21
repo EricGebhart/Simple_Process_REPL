@@ -1,4 +1,13 @@
+with /foo
+
+'
+msg: this is my message. Hello.
+bar: cli/msg /foo/msg
+baz:
+- cli/msg /foo/msg
+- cli/msg "Hello from the middle"
 with /testfoo
+
 
 '
 msg: this is my message. Hello.

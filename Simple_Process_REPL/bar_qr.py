@@ -4,6 +4,7 @@ from barcode.writer import ImageWriter
 import qrcode
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 import Simple_Process_REPL.utils as u
+import Simple_Process_REPL.appstate as A
 import os
 import logging
 
@@ -241,8 +242,7 @@ def read_barcodes(frame):
 # Need to take a closer look at this stuff. It's not very nice.
 # read barcodes did show a nice green rectangle and the code but
 # now it goes away as soon as it matches, so no help.
-# maybe a way to get the rectangle back?  I don't know.
-# needs some expermenting I think.
+# maybe a way to get the rectangle back?  I think there is no time.
 def read_barcode_from_camera():
     """Read a Bar or QR code from the camera."""
     camera = cv2.VideoCapture(0)

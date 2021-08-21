@@ -54,14 +54,12 @@ def print_command_menu():
     return choice, p_dict[choice]
 
 
-def yes_no(msg):
+def yes_no(yn_msg):
     "Yes or No message, returns True or False."
-    if re.match("^[yY]?$", input(message)):
-        return True
-    return False
+    return re.match("^[yY]?$", input(yn_msg))
 
 
-def continue_to_next():
+def continue_to_next(continue_to_next):
     "Continue to next. raise exception if not Y/y."
     if yes_no(A.get_in_config(["dialogs", "continue_to_next"])):
         return True
@@ -71,8 +69,8 @@ def continue_to_next():
 def msg(msg):
     """Display a message on the cli and wait for input."""
 
-    if msg[0] == "/":
-        msg = A.get(msg)
+    # if msg[0] == "/":
+    #    msg = A.get(msg)
 
     print(msg)
     input("Press any key to continue;")

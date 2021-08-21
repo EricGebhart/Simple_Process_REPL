@@ -78,7 +78,9 @@ namespace ui "User interface using dialog"
     Simple_Process_REPL.dialog
     help
     msg
+    _msg
     yes_no
+    _yes_no
     print_file_loop
     print_file
     input_count
@@ -119,7 +121,7 @@ namespace log "logger controls and messages"
 namespace dev "Device interaction, waiting for, handshaking."
     Simple_Process_REPL.device
     help
-    wait handshake pause
+    wait _wait handshake _handshake pause _pause
 
 namespace nw "Networking stuff, Wifi"
     Simple_Process_REPL.network
@@ -190,18 +192,32 @@ pop results html
 # view-with and browse-with are handy to have.
 # view and browse use the current 'with'...
 def view-doc "Display the Readme documentation in an html viewer."
-    web/view-with readme
+    with readme web/view
 
 def browse-doc "Display the Readme documentation in a browser window."
-    web/browse-with readme
+    with readme web/browse
+
+as/-print-stack
 
 pop-with
 
-with /foo
+with /wiki
+
 
 '
-msg: this is my message. Hello.
-bar: cli/msg /foo/msg
-baz:
-- cli/msg /foo/msg
-- cli/msg "Hello from the middle"
+url: https://github.com/EricGebhart/Simple_Process_REPL/wiki
+title: The SPR Wiki
+
+
+pop-with
+
+as/-print-stack
+
+def browse-wiki "Browse the SPR Wiki with your browser."
+    with /wiki web/browse
+
+
+with /home
+
+'
+msg: hello, welcome home.

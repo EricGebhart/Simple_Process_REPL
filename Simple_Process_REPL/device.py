@@ -56,10 +56,23 @@ Here are the steps that _handshake()_ does.
   qqc = quelque chose = something.
 
   In the config the do_qqc_function is set to input-serial,
+  which is _input_string in dialog.
   as an example. Input-serial prompts for a serial number,
   validates it, and returns it.
-  input-serial at the
-  _SPR:>_ prompt.
+  input-serial at the _SPR:>_ prompt.
+
+  Things are changing, calls to get_in_config are going away
+  in other modules as functions with args in conjuntion with 'with' are
+  easy to use and more flexible
+
+  Currently _pause, _wait, _handshake are the hard path free versions.
+  At the same time, everything needed is available with this with-stack.
+
+  with /config/dialogs
+  with /config/device/handshake
+  with /config/device/serial
+  with /config/device/waiting
+  with /device
 
 """
     % yaml
@@ -71,12 +84,17 @@ def help():
     print(HelpText)
 
 
+def _pause(pause_time):
+    "Sleep for configured number of some # of seconds."
+    time.sleep(pause_time)
+
+
 def pause():
     "Sleep for configured number of some # of seconds."
-    time.sleep(A.get_in_config(["waiting", "pause_time"]))
+    time.sleep(A.get_in_config(["device", "waiting", "pause_time"]))
 
 
-def wait_for_file(path, timeout):
+def _wait(path, timeout):
     """
     Look for a file at path for the given timeout period.
     returns True or False, works for /dev/ttyUSB...
@@ -91,8 +109,8 @@ def wait_for_file(path, timeout):
 
 def wait():
     """wait for our device to appear."""
-    return wait_for_file(
-        A.get_in_device("path"), A.get_in_config(["waiting", "timeout"])
+    return _wait(
+        A.get_in_device("path"), A.get_in_config(["device", "waiting", "timeout"])
     )
 
 
@@ -132,7 +150,7 @@ def handshake():
     if do_qqc, then call function and send return to the
     serial device.
     """
-    init_string = A.get_in_config(["device", "handshake", "start_string"])
+    init_string = A.get_in_config(["device", "handshake", "init_string"])
     response_string = A.get_in_config(["device", "handshake", "response_string"])
     do_qqc_func = A.get_in_config(["device", "handshake", "do_qqc_func"])
     baudrate = A.get_in_config(["device", "serial", "baudrate"])

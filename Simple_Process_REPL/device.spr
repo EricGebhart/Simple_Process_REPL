@@ -11,16 +11,29 @@ config:
     device:
         serial:
             baudrate      : 9600
+            regex         : r"^\d{8}$"
 
         handshake:
-            start_string    : Some handshake string
+            init_string     : Some handshake string
             response_string : some response string
             fail_regex      : ^F:.*
             done_regex      : ^I:Test All Done
             do_qqc_regex    : ^I:Now Setting Serial Number
-            do_qqc_func     : input-serial
+            do_qqc_func     : dev/input-serial
 
         #number of seconds to wait for a response.
         waiting:
             timeout      : 30
             pause_time   : 5
+
+
+
+def input-serial "input a serial number"
+'
+- with /config/dialogs
+- with /config/device/serial
+- with /tmp
+- ui/-input-string
+- as/pop-with
+- pop-with
+- pop-with
