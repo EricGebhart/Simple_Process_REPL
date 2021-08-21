@@ -539,6 +539,7 @@ def fptr_help(k, v, indent=False):
 
     print("\n%s%-20s" % (indention, sig))
     print("\n%sSignature Map: %-40s" % (indention, v["sigmap"]))
+    print("\n'\n%-50s" % yaml.dump(v["sigmap"]))
     print("%s----------------\n%s%s" % (indention, indention, v["doc"]))
 
 
