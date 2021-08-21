@@ -6,6 +6,8 @@ bar: cli/msg /foo/msg
 baz:
 - cli/msg /foo/msg
 - cli/msg "Hello from the middle"
+
+
 with /testfoo
 
 
@@ -29,16 +31,21 @@ with /baz
 nomsg: this is baz
 
 
+# function definitions like this need to be followed by 3 blank lines.
+# 2 to end the yaml, and one to end the statement.
+
 def foo "this is a test, to make a function with yaml"
 '
 - cli/msg hello
 - cli/msg gooodbye
 
 
+
 def functest "We can make functions with yaml"
 '
 - cli/msg
 - cli/msg Goodbye
+
 
 
 # with stack scoping. cli/msg looks through to find a value for msg.

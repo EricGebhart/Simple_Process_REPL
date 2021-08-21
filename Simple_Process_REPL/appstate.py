@@ -600,17 +600,32 @@ def eval_default_process():
 
 def yaml_load(y):
     """Safely load some yaml and return it as a list."""
-    return [yaml.load(y, Loader=yaml.SafeLoader)]
+    try:
+        d = yaml.load(y, Loader=yaml.SafeLoader)
+    except Exception as e:
+        logger.error("Yaml load failed.")
+        logger.error("y")
+        logger.error(e)
+        d = None
+        raise Exception(e)
+    return [d]
 
 
 def merge_yaml_with(y):
     """Merge a yaml data structure into the yaml datastore."""
     logger.debug("Merge yaml-\n %s" % y)
     root = _get_with_vv()
-    y = [yaml.load(y, Loader=yaml.SafeLoader)]
+    try:
+        d = [yaml.load(y, Loader=yaml.SafeLoader)]
+    except Exception as e:
+        logger.error("Yaml load/merge failed.")
+        logger.error("y")
+        logger.error(e)
+        raise Exception(e)
+        return
+
     # logger.info("merge: %s" % root)
-    y = root + y
-    d = u.make_dict(y)
+    d = u.make_dict(root + d)
 
     # logger.info(d)
     u.merge(AS, d)
