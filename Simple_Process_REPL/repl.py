@@ -1084,11 +1084,15 @@ def do_fptrs(commands):
     # the reality is that yaml syntax is easier for that,
     # and quoting should be handled better. ie.
     # stripped from quoted strings.
-    # if command == "as/set":
-    #     # noop ? - yes
-    #     # commands = resolve_vars(commands, start_index=2)
-    #     fn(commands[1], commands[2:])
-    #     return True
+
+    if command == "as/set":
+        # noop ? - yes
+        # commands = resolve_vars(commands, start_index=2)
+        if len(commands[2:]) > 1:
+            fn(commands[1], commands[2:])
+        else:
+            fn(commands[1], commands[2])
+        return True
 
     # noop ? - yes
     # commands = resolve_vars(commands, start_index=1)
