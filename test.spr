@@ -14,19 +14,16 @@ with /bar
 msg: this is bar
 
 
-
 with /baz
 
 '
 nomsg: this is baz
 
 
-
 def foo "this is a test, to make a function with yaml"
 '
 - cli/msg hello
 - cli/msg gooodbye
-
 
 
 def functest "We can make functions with yaml"
