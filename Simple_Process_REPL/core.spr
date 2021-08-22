@@ -149,16 +149,15 @@ namespace web "View HTML and urls."
 namespace pb "Particle Board CLI interface"
     Simple_Process_REPL.particle
     help
-    reset_usb list_usb
+    list_usb
     get_usb_and_id
-    add product_add claim name
-    release cloud_status
-    dfu_mode listen
-    identify inspect
-    login logout
-    update set_setup_bit
-    doctor _doctor flash do_pcmd
-    archive_log
+    product_add
+    name
+    dfu_mode
+    identify
+    flash
+    do_pcmd
+    do_id_pcmd
 
 
 in-ns

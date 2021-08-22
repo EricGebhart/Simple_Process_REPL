@@ -5,7 +5,6 @@ import subprocess
 import logging
 import time
 import Simple_Process_REPL.subcmd as s
-import Simple_Process_REPL.appstate as A
 import Simple_Process_REPL.utils as u
 
 logger = logging.getLogger()
@@ -38,7 +37,9 @@ using 'with /device' will give predictable results.
 Some functions do use timeouts and dialogs, putting
 '/config/dialogs' in your 'with' stack will resolve any default values needed.
 
-    with /config/timeout
+    with /config/device/waiting
+    with /config/device/serial
+    with /config/device/handshake
     with /config/dialogs
     with /device
 
@@ -83,9 +84,22 @@ def help():
     print(HelpText)
 
 
-def archive_log(id):
-    "Move the current logfile to one named after the current value of id."
-    A.archive_log("%s.log" % id)
+# def archive_log(id):
+#     "Move the current logfile to one named after the current value of id."
+#     A.archive_log("%s.log" % id)
+
+
+def do_pcmd(cmd):
+    """run a particle command, read and return it's output."""
+    return s.do_cmd(s.mk_cmd(cmd, prefix="particle"))
+
+
+def do_id_pcmd(cmd, id):
+    """Do particle command with an id. Convenience for creating
+    more interface functions without writing python code, and still
+    get the id signature variable we want to automatically fill."""
+    # particle product add $product_id $device_id
+    do_pcmd(cmd + " " + id)
 
 
 def do_pcmd_w_timeout(cmd, timeout):
@@ -113,6 +127,11 @@ def do_pcmd_w_timeout(cmd, timeout):
     return res.stdout.decode("utf-8")
 
 
+def list_usb():
+    "list the particle devices connected to usb."
+    return do_pcmd("serial list")
+
+
 def get_w_timeout(timeout):
     """
     loop over list_usb() for a timeout period. Extract
@@ -130,7 +149,7 @@ def get_w_timeout(timeout):
         if stdout.split(" ")[0] != "No":
             device_line = stdout.split("\n")[1]
             devices = device_line.split(" - ")
-            return {path: devices[0], name: devices[1], id: devices[2]}
+            return {"path": devices[0], "name": devices[1], "id": devices[2]}
 
         if time.time() - start >= timeout:
             logger.error("Getting USB and device ID timed out")
@@ -141,36 +160,11 @@ def get_w_timeout(timeout):
     return stdout
 
 
-def do_pcmd(cmd):
-    """run a particle command, read and return it's output."""
-    return s.do_cmd(s.mk_cmd(cmd, prefix="particle"))
-
-
 # this doesn't actually work because particle returns 0
 # no matter what happens.
 def list_usb_w_timeout(timeout):
     "list the particle devices connected to usb."
     return do_pcmd_w_timeout("serial list", timeout)
-
-
-def list_usb():
-    "list the particle devices connected to usb."
-    return do_pcmd("serial list")
-
-
-def inspect():
-    "Inspect the particle device"
-    return do_pcmd("serial inspect")
-
-
-def login():
-    "Login to particle cloud from the cli prompt"
-    return os.system("particle cloud login")
-
-
-def logout():
-    "Logout of particle cloud, clean up tokens."
-    return os.system("particle cloud logout")
 
 
 def get_usb_and_id():
@@ -181,6 +175,12 @@ def get_usb_and_id():
     devices = list_usb()
     # USB, id
     return [devices.split(" - ")[2], devices.split()[0]]
+
+
+def listen():
+    "Start listening."
+    do_pcmd("usb start-listening")
+    logger.info("Listening")
 
 
 def identify():
@@ -200,46 +200,6 @@ def identify():
         return identify
 
 
-def doctor():
-    """Run particle doctor. (list usb, dfu mode then -> doctor)"""
-    list_usb()
-    dfu_mode()
-    return do_pcmd("-v doctor")
-
-
-def _doctor():
-    """Run particle doctor. (just doctor)"""
-    return do_pcmd("-v doctor")
-
-
-def listen():
-    """Start listening."""
-    do_pcmd("usb start-listening")
-    logger.info("Listening")
-
-
-def update():
-    """Update the device OS. ie. dfu, update."""
-    logger.info("Updating device")
-    dfu_mode()
-    return do_pcmd("update")
-
-
-def set_setup_bit():
-    """Mark the setup bit done."""
-    do_pcmd("usb setup-done")
-    logger.info("Set: Setup-done")
-
-
-# no command product add...
-# particle help product add --> gives nothing.
-def add(id):
-    """Register/claim device with 'particle device add'"""
-    logger.info("Registering device:")
-    # particle product add $product_id $device_id
-    do_pcmd("device add {}".format(id))
-
-
 def product_add(product, id):
     """Associate device with a product 'particle product device add'
     Associate the device with a product.
@@ -254,31 +214,14 @@ def product_add(product, id):
     do_pcmd("product device add %s %s" % (product, id))
 
 
-def claim(id):
-    """Cloud claim device with 'particle cloud claim'"""
-    logger.info("Claiming device:")
-    # particle product add $product_id $device_id
-    do_pcmd("cloud claim {}".format(id))
-
-
-def release(id):
-    """Release the claim on a device"""
-    do_pcmd("device remove {}".format(id))
-
-
-def cloud_status(id):
-    """Check the cloud-status of the device."""
-    do_pcmd("usb cloud-status {}".format(id))
-
-
-def reset_usb(id):
-    """Reset the device on the usb."""
-    do_pcmd("usb reset {}".format(id))
-
-
-def name(id, name):
+def name(name, id):
     """Name/Rename a device"""
     do_pcmd("device rename %s %s" % (id, name))
+
+
+def dfu_mode():
+    "Put USB device in dfu mode."
+    do_pcmd("usb dfu")
 
 
 def flash(image):
@@ -291,11 +234,6 @@ def flash(image):
         logger.debug(foo)
     else:
         logger.error("Image %s to flash does not exist." % image)
-
-
-def dfu_mode():
-    """Put USB device in dfu mode."""
-    do_pcmd("usb dfu")
 
 
 def get_usb_and_id(timeout):
@@ -311,4 +249,5 @@ def get_usb_and_id(timeout):
     # it's strange, if we add timeout to the args, and use with, we can
     # remove the explicit get-in-config.
     path, name, id = get_w_timeout(timeout)
-    A._set_in({"path": path, "name": name, "id": id})
+    # A._set_in({"path": path, "name": name, "id": id})
+    return {"path": path, "name": name, "id": id}
