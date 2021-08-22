@@ -3,6 +3,11 @@
 A YAML datastore, a config file, a namespace manager, and an interpreter walk 
 into a bar...
 
+This has been changing a lot, the wiki is a bit chaotic.
+Important concepts are: 
+ * datastore/appstate in the _as_ namepace
+ * The _With_ stack.
+ * The _results_ stack.
 
  Short-cuts: 
   * [Read the Wiki](https://github.com/EricGebhart/Simple_Process_REPL/wiki)
@@ -30,7 +35,15 @@ To start the REPL;
 
 read, think, type, repeat.
   
+  
+### zbar requirement.
 
+At the moment there is a requirement for zbar in order to detect 
+bar and QR codes with the camera. This will need to be installed manually.
+Instructions can be found in the
+    [pyzbar documentation.](https://pypi.org/project/pyzbar/)
+    
+    
 ### What is it?
 
 Many things.
@@ -52,6 +65,10 @@ a process as if it is an application. Possibly with nothing but a configuration
 file.
 
 SPR is actually a very simple interpreter with an interactive REPL. 
+
+The code is data, and the data is code.
+But it keeps code and data separate in a nice way. Function parameters are
+automatically bound if they are needed and can be found.
 
 SPR code is really simple. SPR only knows YAML, words, strings and numbers.
 If you give it a list, it will try to look up what you gave it and 
@@ -85,6 +102,9 @@ which is represented as a big tree of Yaml.
 ## The parts.
   * The Interpreter/Repl
   * Namespaces
+  * appstate/ _as_ ie. the datastore.
+  * a with stack
+  * results stacks.
   * yaml datastore data structure, configuration, state, etc...
   * SPR/Python extensions that are built in.
   * Any python module you care to import.
@@ -102,7 +122,6 @@ existing processes:
 * print-codes - print bar and QR codes.
 * internal readme viewer code
 
-refactoring the existing particle board extension to 2.0 would be good.
 
 
 
