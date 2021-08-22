@@ -55,8 +55,10 @@ namespace as "Application State functionality"
     push
     pop
     _with
-    _print_stack
-    _pop_with
+    _with_stack
+    flat_with
+    flatten_with
+    pop_with
     clear_path
     eval_default_process
     save_config

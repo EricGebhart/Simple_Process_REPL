@@ -150,12 +150,12 @@ def _with(wpath=None, wcommand=None, destpath=None):
             pass
 
 
-def _pop_with():
+def pop_with():
     """until it gets surfaced."""
     with_stack.pop()
 
 
-def _print_stack():
+def _with_stack():
     """Print the stack of 'withs/scopes'.
     Show the contents of the top entry
     and the entries of the stack which are below it."""
@@ -211,6 +211,11 @@ def select_keys(m, keys):
     return d
 
 
+def flat_with():
+    """Print the flattened with in YAML."""
+    print(yaml.dump(flatten_with()))
+
+
 def flatten_with():
     """Go through the with stack and flatten it,
     Only go to the depth set by /with_depth.
@@ -218,6 +223,7 @@ def flatten_with():
     If < 0 will go all the way to the layer above /.
 
     A simple method for variable resolution with scope.
+    returns a map of the flattened with values.
     """
     depth = get_in(["with_depth"])
     fd = {}
