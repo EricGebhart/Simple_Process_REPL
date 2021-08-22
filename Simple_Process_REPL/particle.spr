@@ -19,7 +19,7 @@ device:
 
 
 
-def init_with
+def init-with
     "Set up the with stack so we get our stuff."
 '
 - with /config/device/serial
@@ -32,7 +32,7 @@ def init_with
 
 def inspect
     "Inspect the particle device"
-    pb/do_pcmd "serial inspect"
+    pb/do-pcmd "serial inspect"
 
 def login
     "Login to particle cloud from the cli prompt"
@@ -42,15 +42,15 @@ def logout
     "Logout of particle cloud, clean up tokens."
     os/system "particle cloud logout"
 
-def flash_image
+def flash-image
     "Flash the default flash image"
     pb/flash /config/particle/images/flash
 
-def flash_tinker
+def flash-tinker
     "Flash the default tinker image"
     pb/flash /config/particle/images/tinker
 
-def flash_test
+def flash-test
     "Flash the defaul test image"
     pb/flash /config/particle/images/test
 
@@ -59,31 +59,28 @@ def list-w-timeout
      pb/-list-usb-w-timeout
 #    with /config/device/waiting pb/-list-usb-w-timeout
 
+partial release
+    "Release the claim on a device"
+    pb/do-id-pcmd  "device remove"
 
-# partial release
-#     "Release the claim on a device"
-#     pb/do_id_pcmd  "device remove"
+partial cloud-status
+    "Check the cloud-status of the device."
+    pb/do-id-pcmd "usb cloud-status"
 
-# partial cloud_status
-#     "Check the cloud-status of the device."
-#     pb/do_id_pcmd "usb cloud-status"
+partial reset-usb
+    "Reset the device on the usb for the given device id."
+    pb/do-id-pcmd "usb reset"
 
-# partial reset_usb
-#     "Reset the device on the usb for the given device id."
-#     pb/do_id_pcmd "usb reset"
-
-
-
-def _doctor
+def -doctor
     "Run particle doctor. (just doctor)"
-    pb/do_pcmd "-v doctor"
+    pb/do-pcmd "-v doctor"
 
 def doctor
     "Run particle doctor. (list usb, dfu mode then -> doctor)"
     '
-    - pb/list_usb
-    - pb/dfu_mode
-    - pb/_doctor
+    - pb/list-usb
+    - pb/dfu-mode
+    - pb/-doctor
 
 
 
@@ -91,15 +88,15 @@ def update
     "Update the device OS. ie. dfu, update."
     '
     - log/info "Updating device"
-    - dfu_mode
-    - do_pcmd("update")
+    - dfu-mode
+    - do-pcmd("update")
 
 
 
-def set_setup_bit
+def set-setup-bit
     "Mark the setup bit done."
     '
-    - pb/do_pcmd "usb setup-done"
+    - pb/do-pcmd "usb setup-done"
     - log/info "Set: Setup-done"
 
 
@@ -110,7 +107,7 @@ def add
     '
     - log/info "Registering device."
     # particle product add $product_id $device_id
-    - pb/do_id_pcmd "device add"
+    - pb/do-id-pcmd "device add"
 
 
 
@@ -119,24 +116,24 @@ def claim
     '
     - log/info("Claiming device."
     # particle product add $product_id $device_id
-    - pb/do_id_pcmd "cloud claim"
+    - pb/do-id-pcmd "cloud claim"
 
 
 
 
 
-def get_usb_and_id:
+def get-usb-and-id:
     "Retrieve and set the USB device, the board name,  and the device id.
     Uses 'particle serial list' in a timeout loop. This is required
     for most things. Wait and handshake, use the usb device,
     and the id is needed by many things."
     '
-    - pb/get_w_timeout /config/waiting/timeout
+    - pb/get-w-timeout /config/waiting/timeout
     - pop _result_ /device
 
 
 
-def wait_for_plist
+def wait-for-plist
     "Wait for particle serial list to succeed with timeout, doesn't
     really work."
 # we don't care about the results, just to wait.
