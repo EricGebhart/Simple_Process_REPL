@@ -12,4 +12,6 @@ partial run "Run the autoexec command set in the configuration" as/eval-default-
 
 partial with "Set or show the current with path." as/-with
 
+partial with-stack "Show the current resolution map of the with stack." as/-with-stack
+
 partial pop-with "Pop the current with from the stack." as/pop /_with_

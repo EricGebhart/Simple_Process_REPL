@@ -5,17 +5,17 @@ config:
 
     ssh:
         pemfile       : 'server.pem'
-        ssh_server    : 'someserver-url'
+        ssh_server    : 'someserver_url'
 
     files:
-        logfile       : SPR.log
-        loglevel      : debug
+        logfile       : 'SPR.log'
+        loglevel      : 'debug'
 
-        config_file   : SPRConfig.yaml
+        config_file   : 'SPRConfig.yaml'
 
     readme:
         module: Simple_Python_REPL
-        filename: README.md
+        filename: 'README.md'
         path: ""
         md: ""
         html: ""
@@ -24,7 +24,7 @@ config:
         # function name to autoexec when asked to run
 
         autoexec : ui/hello
-        autoload : SPRConfig.spr
+        autoload : 'SPRConfig.spr'
 
         help:
 
@@ -37,12 +37,14 @@ config:
         hooks:
             startup:
 
-            #- as/show config
-            #- cli/msg "Welcome :-)"
+            # - as/show config
+            #- cli/msg "Welcome"
 
             shutdown:
+                - cli/msg "Goodbye have a nice day!"
 
-            - cli/msg "Goodbye have a nice day!"
+# end of Yaml
+
 
 
 -def-path _results_ "The results stack, Relative to With" results
@@ -59,7 +61,6 @@ namespace as "Application State functionality"
     _with_stack
     flat_with
     flatten_with
-    pop_with
     clear_path
     eval_default_process
     save
@@ -93,14 +94,6 @@ namespace ui "User interface using dialog"
     save_bcqr
     print_bcqr
 
-
-namespace os "Python os library"
-    os
-    fchown lchown ctermid getcwd getcwdb link listdir
-    lstat mkdir readlink rename replace rmdir system umask
-    uname unlink remove getpid getpgrp getppid getuid getlogin
-    kill killpg setuid sendfile fstat curdir pardir makedirs
-    removedirs getenv
 
 
 namespace shutil "Python shutil library"
@@ -163,6 +156,13 @@ namespace pb "Particle Board CLI interface"
     do_pcmd
     do_id_pcmd
 
+namespace os "Python os library"
+    os
+    fchown lchown ctermid getcwd getcwdb link listdir
+    lstat mkdir readlink rename replace rmdir system umask
+    uname unlink remove getpid getpgrp getppid getuid getlogin
+    kill killpg setuid sendfile fstat curdir pardir makedirs
+    removedirs getenv
 
 in-ns
 
@@ -200,7 +200,7 @@ def view-doc "Display the Readme documentation in an html viewer."
 def browse-doc "Display the Readme documentation in a browser window."
     with readme web/browse
 
-as/-print-stack
+as/-with-stack
 
 pop-with
 
@@ -214,7 +214,7 @@ title: The SPR Wiki
 
 pop-with
 
-as/-print-stack
+as/-with-stack
 
 def browse-wiki "Browse the SPR Wiki with your browser."
     with /wiki web/browse

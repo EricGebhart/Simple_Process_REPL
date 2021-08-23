@@ -610,7 +610,7 @@ def yaml_load(y):
         d = yaml.load(y, Loader=yaml.SafeLoader)
     except Exception as e:
         logger.error("Yaml load failed.")
-        logger.error("y")
+        logger.error(y)
         logger.error(e)
         d = None
         raise Exception(e)
@@ -619,13 +619,12 @@ def yaml_load(y):
 
 def merge_yaml_with(y):
     """Merge a yaml data structure into the yaml datastore."""
-    logger.debug("Merge yaml-\n %s" % y)
     root = _get_with_vv()
     try:
         d = [yaml.load(y, Loader=yaml.SafeLoader)]
     except Exception as e:
         logger.error("Yaml load/merge failed.")
-        logger.error("y")
+        logger.error(y)
         logger.error(e)
         raise Exception(e)
         return
@@ -665,7 +664,8 @@ def load_defaults(state_init, pkgname=None, yamlname=None):
     global AS
 
     bc = load_base_config()
-    if bc:
+
+    if bc is not None and len(bc):
         AS["config"] = u.merge(AS["config"], bc)
         # AS |= state_init  #### destructive...
     AS = u.merge(AS, state_init)

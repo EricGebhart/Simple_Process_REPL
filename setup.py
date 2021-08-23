@@ -40,7 +40,8 @@ setup(
         "numpy",
         "Image",
         "Pyzbar",
-        "markdown"
+        "markdown",
+        "pywebview"
         # "brother_ql",
     ],
 )

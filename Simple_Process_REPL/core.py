@@ -79,7 +79,9 @@ def do_something():
     try:
         r.load(pkgutil.get_data(__name__, "core.spr").decode("utf-8").split("\n"))
     except Exception as e:
+        logger.error("load of core.spr failed.")
         logger.error(e)
+        raise Exception(e)
 
     commands = A.get_in(["args", "commands"])
 

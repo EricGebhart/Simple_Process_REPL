@@ -103,7 +103,12 @@ def root_symbols(symbols, specials):
 def append_funcs(st, module, funclist):
     """Import a python module and add the function list to the given symbol table."""
     # get the SPR symbols and stuff from the module.
-    lib = __import__(module, globals(), locals(), funclist, 0)
+    try:
+        lib = __import__(module, globals(), locals(), funclist, 0)
+
+    except Exception as e:
+        logger.error(e)
+        raise Exception("Failed to import %s" % module)
 
     # logger.info("Append Funcs: %s %d" % (funclist, len(funclist)))
     for fname in list(funclist):
@@ -111,7 +116,12 @@ def append_funcs(st, module, funclist):
             # logger.info("Not str: %s" % str(fname))
             return
         else:
-            f = getattr(lib, fname)
+            try:
+                f = getattr(lib, fname)
+            except Exception as e:
+                logger.error(e)
+                raise Exception("\nFailed to import %s  %s" % (module, e))
+                return None
 
         # figure out if it's a var args [a*], or an [a b c*] varargs.
         # and how many args. Just to be nice and check later.
@@ -168,9 +178,20 @@ def inline_yaml(lines, txt=None):
         yaml += line + "\n"
 
     if txt is not None and len(txt):
-        gensym = setgensym(yaml_load(yaml))
+        try:
+            y = yaml_load(yaml)
+            gensym = setgensym(y)
+        except Exception as e:
+            logger.error("Load of inline Yaml failed: %s" % y)
+            logger.error(e)
+            raise Exception(e)
     else:
-        merge_yaml_with(yaml)
+        try:
+            merge_yaml_with(yaml)
+        except Exception as e:
+            logger.error("Load of inline Yaml failed: %s" % yaml)
+            logger.error(e)
+            raise Exception(e)
     return gensym, lines
 
 
@@ -202,7 +223,11 @@ def load(reader):
 
         if len(line) == 0 or is_blank_line(line):
             if len(txt) > 0:
-                eval_cmd(txt)
+                try:
+                    eval_cmd(txt)
+                except Exception as e:
+                    logger.error("Evaluation Failed for:\n %s" % txt)
+                    logger.error(e)
                 txt = ""
         else:
             # get rid of newlines so the interpreter
@@ -249,16 +274,22 @@ def namespace(name, docstr, module, *funclist):
     """
     global Root
     logger.info("\nCreating Namespace: %s from Python module: %s" % (name, module))
-    ns = {
-        "symbols": append_funcs({}, module, *funclist),
-        "doc": docstr,
-        "name": module,
-        "funclist": funclist,
-        "stype": "namespace",
-    }
-    Root[name] = ns
-    in_ns(name)
-    import_lib_spr(module)
+    try:
+        ns = {
+            "symbols": append_funcs({}, module, *funclist),
+            "doc": docstr,
+            "name": module,
+            "funclist": funclist,
+            "stype": "namespace",
+        }
+        Root[name] = ns
+        in_ns(name)
+        import_lib_spr(module)
+
+    except Exception as e:
+        logger.fatal("Failed: Namespace creation failed")
+        logger.error(e)
+        raise Exception(e)
 
 
 def _import_(module, *funclist):
@@ -361,7 +392,7 @@ def get_fsig_map(parameters):
 
 def get_fsig(f):
     if not callable(f):
-        return None, 0, False, 0, []
+        return "", None, 0, False, 0, []
 
     sig = signature(f)
     parameters = sig.parameters
@@ -1127,7 +1158,8 @@ def do_fptrs(commands):
                 push("results", result)
 
     except Exception as e:
-        logger.error(commands)
+        logger.error("Command Failed")
+        # logger.error(" ".join(commands))
         print(e)
         # traceback.print_exception(*sys.exc_info())
 
@@ -1337,6 +1369,7 @@ def load_file(filename):
             load(reader)
 
     except Exception as e:
+        logger.error("Load file %s Failed." % filename)
         logger.error(e)
 
 
