@@ -5,13 +5,13 @@ config:
 
     ssh:
         pemfile       : 'server.pem'
-        ssh_server    : 'ubuntu@ec2-11-111-111-11.us-east-2.compute.amazonaws.com'
+        ssh_server    : 'someserver-url'
 
     files:
-        logfile       : 'SPR.log'
-        loglevel      : 'debug'
+        logfile       : SPR.log
+        loglevel      : debug
 
-        config_file   : 'SPRConfig.yaml'
+        config_file   : SPRConfig.yaml
 
     readme:
         module: Simple_Python_REPL
@@ -24,6 +24,7 @@ config:
         # function name to autoexec when asked to run
 
         autoexec : ui/hello
+        autoload : SPRConfig.spr
 
         help:
 
@@ -37,14 +38,14 @@ config:
             startup:
 
             #- as/show config
-            #- ui/msg "Where ami"
+            #- cli/msg "Welcome :-)"
 
             shutdown:
 
-            - ui/msg "Goodbye have a nice day!"
+            - cli/msg "Goodbye have a nice day!"
 
 
--def-path _results_ "The results stack, relative to With" results
+-def-path _results_ "The results stack, Relative to With" results
 
 namespace as "Application State functionality"
     Simple_Process_REPL.appstate

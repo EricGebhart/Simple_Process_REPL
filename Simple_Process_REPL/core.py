@@ -1,4 +1,5 @@
 import pkgutil
+from pathlib import Path
 
 # import logging
 import Simple_Process_REPL.logs as logs
@@ -81,6 +82,11 @@ def do_something():
         logger.error(e)
 
     commands = A.get_in(["args", "commands"])
+
+    autoload = A.get_in(["config", "exec", "autoload"])
+
+    if Path(autoload).is_file():
+        r.load_file(autoload)
 
     # Each of these should be a list of commands to execute.
     startup_hook = A.get_in(["config", "exec", "hooks", "startup"])

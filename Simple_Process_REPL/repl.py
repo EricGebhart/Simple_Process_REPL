@@ -1332,8 +1332,12 @@ class HistoryConsole(code.InteractiveConsole):
 def load_file(filename):
     """load an SPR file into the application."""
     logger.info("Loading SPR file: %s" % filename)
-    with open(filename, "r") as reader:
-        load(reader)
+    try:
+        with open(filename, "r") as reader:
+            load(reader)
+
+    except Exception as e:
+        logger.error(e)
 
 
 def _quit_():
