@@ -61,9 +61,10 @@ namespace as "Application State functionality"
     pop_with
     clear_path
     eval_default_process
+    save
+    load
     save_config
     load_config
-    load_yaml
     load_pkg_resource
     merge_yaml
     sync_functions

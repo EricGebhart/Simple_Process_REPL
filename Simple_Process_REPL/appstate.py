@@ -637,14 +637,15 @@ def merge_yaml_with(y):
     u.merge(AS, d)
 
 
+# These should probably honor the current with.
 def merge_yaml(y):
     """Merge a yaml data structure into the yaml datastore."""
     logger.debug("Merge yaml-\n %s" % y)
     u.merge(AS, yaml.load(y, Loader=yaml.SafeLoader))
 
 
-def load_yaml(yaml_file):
-    """Load a yaml file into the yaml datastore"""
+def load(yaml_file):
+    """Load a yaml file into the yaml datastore, merging at /."""
     merge_yaml(u.load_yaml_file(yaml_file))
 
 
@@ -742,6 +743,11 @@ def load_pkg_resource_with(path):
     res = u.load_pkg_resource(pkgname, filename)
     keys = _get_vv_from_path(path)
     set_in(keys + ["content", res])
+
+
+def save(path, filename):
+    "Save some part of the data store as a yaml file."
+    u.save_yaml_file(filename, get_from_path(path))
 
 
 def save_config(filename):
