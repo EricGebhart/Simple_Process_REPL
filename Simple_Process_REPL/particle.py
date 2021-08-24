@@ -91,7 +91,6 @@ def help():
 
 def do_pcmd(cmd):
     """run a particle command, read and return it's output."""
-    logger.info("DO pcommand: %s" % cmd)
     return s.do_cmd(s.mk_cmd(cmd, prefix="particle"))
 
 

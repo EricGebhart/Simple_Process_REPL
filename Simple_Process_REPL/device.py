@@ -84,17 +84,17 @@ def help():
     print(HelpText)
 
 
-def _pause(pause_time):
+def pause(pause_time):
     "Sleep for configured number of some # of seconds."
     time.sleep(pause_time)
 
 
-def pause():
-    "Sleep for configured number of some # of seconds."
-    time.sleep(A.get_in_config(["device", "waiting", "pause_time"]))
+# def pause():
+#     "Sleep for configured number of some # of seconds."
+#     time.sleep(A.get_in_config(["device", "waiting", "pause_time"]))
 
 
-def _wait(path, timeout):
+def wait(path, timeout):
     """
     Look for a file at path for the given timeout period.
     returns True or False, works for /dev/ttyUSB...
@@ -107,11 +107,11 @@ def _wait(path, timeout):
     return True
 
 
-def wait():
-    """wait for our device to appear."""
-    return _wait(
-        A.get_in_device("path"), A.get_in_config(["device", "waiting", "timeout"])
-    )
+# def wait():
+#     """wait for our device to appear."""
+#     return _wait(
+#         A.get_in_device("path"), A.get_in_config(["device", "waiting", "timeout"])
+#     )
 
 
 def do_qqc(line):

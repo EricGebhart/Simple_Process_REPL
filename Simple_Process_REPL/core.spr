@@ -118,7 +118,7 @@ namespace log "logger controls and messages"
 namespace dev "Device interaction, waiting for, handshaking."
     Simple_Process_REPL.device
     help
-    wait _wait handshake _handshake pause _pause
+    wait handshake _handshake pause
 
 namespace nw "Networking stuff, Wifi"
     Simple_Process_REPL.network

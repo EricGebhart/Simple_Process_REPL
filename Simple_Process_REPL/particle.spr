@@ -126,7 +126,7 @@ def get-usb-and-id
     Uses 'particle serial list' in a timeout loop."
     '
     - pb/get
-    - pop _results_ .
+    - pop results .
 
 
 
@@ -136,8 +136,9 @@ def id-it
     "Id the board. get, reset then identify. Need the reset and pauses for consistent success"
     '
     - pb/get
-    - pb/reset
-    - dev/wait pb/pause pb/pause
+    - pop results .
+    - pb/reset-usb
+    - dev/wait dev/pause dev/pause
     - pb/identify
 
 
@@ -167,7 +168,7 @@ def setup
     "Update the os and mark the setup bit done."
     '
     - pb/update
-    - dev/wait pb/pause
+    - dev/wait dev/pause
     - pb/setup-bit-done
 
 
@@ -176,7 +177,7 @@ def testit
     "flash the test, handshake and process the results."
     '
     - pb/flash-test
-    - dev/wait pb/pause
+    - dev/wait dev/pause
     - dev/handshake
 
 
