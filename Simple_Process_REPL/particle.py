@@ -235,20 +235,3 @@ def flash(image):
         logger.debug(foo)
     else:
         logger.error("Image %s to flash does not exist." % image)
-
-
-def get_usb_and_id(timeout):
-    """
-    Retrieve and set the USB device, the board name,  and the device id.
-    Uses 'particle serial list' in a timeout loop. This is required
-    for most things. Wait and handshake, use the usb device,
-    and the id is needed by many things.
-
-    Sets path, name and id in current 'with'
-    Use 'with /device' or another location where you would like the results.
-    """
-    # it's strange, if we add timeout to the args, and use with, we can
-    # remove the explicit get-in-config.
-    path, name, id = get_w_timeout(timeout)
-    # A._set_in({"path": path, "name": name, "id": id})
-    return {"path": path, "name": name, "id": id}

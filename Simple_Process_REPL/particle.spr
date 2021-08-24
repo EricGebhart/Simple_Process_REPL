@@ -121,14 +121,12 @@ partial get
     pb/get-w-timeout
 
 
-def get-usb-and-id:
+def get-usb-and-id
     "Retrieve and set the USB device, the board name,  and the device id.
-    Uses 'particle serial list' in a timeout loop. This is required
-    for most things. Wait and handshake, use the usb device,
-    and the id is needed by many things."
+    Uses 'particle serial list' in a timeout loop."
     '
-    - get
-    - pop _result_ /device
+    - pb/get
+    - pop _results_ .
 
 
 
