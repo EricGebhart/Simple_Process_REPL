@@ -1149,7 +1149,9 @@ def do_fptrs(commands):
         elif vargs:
 
             args = dequote(commands[1:fnargs])
-            args += [commands[fnargs:]]
+            if nargs > fnargs:
+                args += [commands[fnargs:]]
+            # logger.info("*ARgs: %s" % args)
             result = fn(*args)
 
         # elif nargs <= fnargs and nargs >= def_index - 1:
