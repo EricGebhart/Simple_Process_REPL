@@ -312,16 +312,8 @@ def pop(path, destination=None):
         v = value
 
     if destination is not None:
-        logger.info("Pop Dest: %s, %s" % (destination, destination[0]))
-
         if destination[0] == ".":
-            logger.info("with path: %s" % _get_with_path())
             destination = _get_with_path()
-
-            # if isinstance(value, dict):
-            #     _set_in(None, value)
-            #     return
-            #     # AS = u.merge(AS, u.make_dict(set_keys))
 
         set(destination, v)
 
@@ -348,21 +340,21 @@ def push(set_path, fromv):
     except Exception:
         dest = None
 
-    logger.info("push dest: %s" % dest)
+    # logger.info("push: %s to %s " % (val, dest))
+    if not isinstance(val, list):
+        val = [val]
 
     if dest:
         if not isinstance(dest, list):
             dest = [dest]
-            dest += [val]
+            dest += val
         else:
             dest += val
     else:
-        dest = val  # >[val]
-
-    logger.info("push: %s" % dest)
-    logger.info("keys: %s" % set_keys)
+        dest = val
 
     set_keys += [dest]
+    # logger.info("keys: %s" % set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
