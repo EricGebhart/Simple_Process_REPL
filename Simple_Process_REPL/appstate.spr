@@ -1,3 +1,4 @@
+# move back to root (/)
 in-ns
 
 partial show "Show the Application state datastore." as/show

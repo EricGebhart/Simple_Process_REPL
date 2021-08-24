@@ -54,9 +54,10 @@ def print_command_menu():
     return choice, p_dict[choice]
 
 
+# something to fix. The regex should be in the config.
 def yes_no(yn_msg):
-    "Yes or No message, returns True or False."
-    return re.match("^[yY]?$", input(yn_msg))
+    "Yes or No message, returns True if y or Y response."
+    return re.findall("^[yY]?$", input(yn_msg))
 
 
 def continue_to_next(continue_to_next):

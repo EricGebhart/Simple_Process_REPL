@@ -1033,7 +1033,8 @@ def expand(commands):
 
 def dequote(args):
     """look for tokens that are double quoted and get rid of the quotes.
-    called just before calling  python functions.  Ugly hack I think."""
+    called just before calling  python functions. Maybe a string type would
+    be better someday..."""
     res = []
     for symbol in args:
         if isinstance(symbol, str) and len(symbol) > 2:

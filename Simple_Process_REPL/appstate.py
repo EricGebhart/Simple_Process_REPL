@@ -312,7 +312,17 @@ def pop(path, destination=None):
         v = value
 
     if destination is not None:
-        # logger.info(destination)
+        logger.info("Pop Dest: %s, %s" % (destination, destination[0]))
+
+        if destination[0] == ".":
+            logger.info("with path: %s" % _get_with_path())
+            destination = _get_with_path()
+
+            # if isinstance(value, dict):
+            #     _set_in(None, value)
+            #     return
+            #     # AS = u.merge(AS, u.make_dict(set_keys))
+
         set(destination, v)
 
 
@@ -338,15 +348,19 @@ def push(set_path, fromv):
     except Exception:
         dest = None
 
+    logger.info("push dest: %s" % dest)
+
     if dest:
         if not isinstance(dest, list):
             dest = [dest]
             dest += [val]
+        else:
+            dest += val
     else:
-        dest = [val]
+        dest = val  # >[val]
 
-    # logger.info("push: %s" % dest)
-    # logger.info("keys: %s" % set_keys)
+    logger.info("push: %s" % dest)
+    logger.info("keys: %s" % set_keys)
 
     set_keys += [dest]
     AS = u.merge(AS, u.make_dict(set_keys))
@@ -405,9 +419,14 @@ def resolve_path(path):
     if path is None:
         set_keys = _get_with_vv()
 
+    elif path[0] == "/":
+        set_keys = get_vv(path)
+
     elif path[0] != "/":
         path = _full_with_path(path)
         set_keys = get_vv(path)
+
+    # logger.info("resolve path: %s: %s" % (path, set_keys))
 
     return set_keys
 
