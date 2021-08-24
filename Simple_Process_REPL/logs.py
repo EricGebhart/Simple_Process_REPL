@@ -80,7 +80,7 @@ def add_file_handler(logger, loglevel, filename):
 
 
 def setup_logger():
-    """ "setup a root level logger with the stdout handler"""
+    """setup a root level logger with the stdout handler"""
     log = logging.getLogger()
     out_hdlr = logging.StreamHandler(sys.stdout)
     out_hdlr.setFormatter(logging.Formatter(stdout_format))
