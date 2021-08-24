@@ -1016,17 +1016,30 @@ def expand(commands):
     res = []
     for symbol in commands:
         path = isa_path(symbol)
-        if path:
-            logger.debug("Expand: %s" % path["fn"])
+        if path is not None:
+            logger.debug("Expand: %s : %s" % (symbol, path["fn"]))
             v = get(path["fn"])
             if not isinstance(v, str):
                 res += [v]
             else:
                 res += v.split(" ")
+
         else:
             res += [symbol]
 
-    logger.debug("Expand: %s" % res)
+    logger.debug("Expand Result: %s" % res)
+    return res
+
+
+def dequote(args):
+    """look for tokens that are double quoted and get rid of the quotes.
+    called just before calling  python functions.  Ugly hack I think."""
+    res = []
+    for symbol in args:
+        if isinstance(symbol, str) and len(symbol) > 2:
+            if symbol[0] == '"' and symbol[-1] == '"':
+                symbol = symbol[1:-1]
+        res += [symbol]
     return res
 
 
@@ -1134,18 +1147,19 @@ def do_fptrs(commands):
 
         elif vargs:
 
-            args = commands[1:fnargs]
+            args = dequote(commands[1:fnargs])
             args += [commands[fnargs:]]
             result = fn(*args)
 
         # elif nargs <= fnargs and nargs >= def_index - 1:
         else:
 
-            args = dict(zip(pkeys, commands[1:]))
+            the_args = dequote(commands[1:])
+            args = dict(zip(pkeys, the_args))
             with_vars = select_with(list(pkeys)[nargs:])
 
             try:
-                args = dict(zip(pkeys, commands[1:]))
+                # args = dict(zip(pkeys, commands[1:]))
                 if with_vars and nargs < fnargs:
                     args.update(with_vars)
 
@@ -1170,8 +1184,8 @@ def atom(token):
     """Numbers become numbers; quotes make strings; otherwise Symbol/cmd."""
 
     if token[0] == '"':
-        # to get rid of the quotes, but that doesn't serve us.
-        # return token[1:-1].encode('utf_8').decode('unicode_escape')
+        # to get rid of the quotes
+        # return token[1:-1].encode("utf_8").decode("unicode_escape")
         return token.encode("utf_8").decode("unicode_escape")
     try:
         return int(token)

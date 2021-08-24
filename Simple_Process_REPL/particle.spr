@@ -54,10 +54,6 @@ def flash-test
     "Flash the defaul test image"
     pb/flash /config/particle/images/test
 
-def list-w-timeout
-    "Do a serial list, trying repeatedly on failure for a timeout period"
-     pb/-list-usb-w-timeout
-#    with /config/device/waiting pb/-list-usb-w-timeout
 
 partial release
     "Release the claim on a device"
@@ -88,8 +84,8 @@ def update
     "Update the device OS. ie. dfu, update."
     '
     - log/info "Updating device"
-    - dfu-mode
-    - do-pcmd("update")
+    - pb/dfu-mode
+    - pb/do-pcmd "update"
 
 
 
@@ -114,12 +110,15 @@ def add
 def claim
     "Cloud claim device with 'particle cloud claim'"
     '
-    - log/info("Claiming device."
+    - log/info "Claiming device."
     # particle product add $product_id $device_id
     - pb/do-id-pcmd "cloud claim"
 
 
 
+partial get
+    "Find the particle device and get it's vitals."
+    pb/get-w-timeout
 
 
 def get-usb-and-id:
@@ -128,16 +127,9 @@ def get-usb-and-id:
     for most things. Wait and handshake, use the usb device,
     and the id is needed by many things."
     '
-    - pb/get-w-timeout /config/waiting/timeout
+    - get
     - pop _result_ /device
 
-
-
-def wait-for-plist
-    "Wait for particle serial list to succeed with timeout, doesn't
-    really work."
-# we don't care about the results, just to wait.
-    pb/-get-w-timeout
 
 
 # Create some steps from the parts to compose into a process.

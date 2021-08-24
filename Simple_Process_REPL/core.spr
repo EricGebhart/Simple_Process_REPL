@@ -148,8 +148,11 @@ namespace pb "Particle Board CLI interface"
     help
     list_usb
     get_usb_and_id
+    get_w_timeout
+    list_usb_w_timeout
     product_add
     name
+    listen
     dfu_mode
     identify
     flash
