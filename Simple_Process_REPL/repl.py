@@ -1157,9 +1157,13 @@ def do_fptrs(commands):
         # elif nargs <= fnargs and nargs >= def_index - 1:
         else:
 
+            # logger.info("the fptr: %s" % fptr)
             the_args = dequote(commands[1:])
+            # logger.info("the args: %s, pkeys: %s" % (the_args, pkeys))
             args = dict(zip(pkeys, the_args))
+            # logger.info("args: %s, pkeys: %s" % (args, pkeys))
             with_vars = select_with(list(pkeys)[nargs:])
+            # logger.info("with: %s, pkeys: %s" % (with_vars, pkeys))
 
             try:
                 # args = dict(zip(pkeys, commands[1:]))
@@ -1169,10 +1173,12 @@ def do_fptrs(commands):
             except Exception as e:
                 print(e)
 
+            # logger.info("**args: %s" % args)
+
             result = fn(**args)
 
-            if result is not None:
-                push("results", result)
+        if result is not None:
+            push("results", result)
 
     except Exception as e:
         logger.error("Command Failed")

@@ -203,11 +203,16 @@ def select_keys(m, keys):
     """Given a map and list of keys,
     return a map of with those keys from the map.
     """
-    d = None
+    d = {}
+    # logger.info("select-keys: %s, %s" % (keys, m))
     try:
-        d = {k: m[k] for k in keys}
-    except Exception:
+        for k in keys:
+            if m.__contains__(k):
+                d[k] = m[k]
+    except Exception as e:
+        logger.info(e)
         pass
+    # logger.info("select-keys: %s" % d)
     return d
 
 
@@ -301,6 +306,10 @@ def pop(path, destination=None):
     else:
         value = get_from_path(path)
 
+    if value is None:
+        logger.info("Pop: %s not found, no thing to pop." % path)
+        return
+
     if isinstance(value, list):
         if len(value):
             v = value.pop()
@@ -328,7 +337,6 @@ def push(set_path, fromv):
     treated a path, otherwise as a symbol/value.
 
     pushes the value onto the list at set_path.
-    If set_path is not a list, it will be turned into one.
     """
     global AS
 

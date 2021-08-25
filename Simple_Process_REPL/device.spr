@@ -12,6 +12,7 @@ config:
         serial:
             baudrate      : 9600
             regex         : r"^\d{8}$"
+            msg           : Please input an 8 digit serial number
 
         handshake:
             init_string     : Some handshake string
@@ -28,12 +29,6 @@ config:
 
 
 
-def input-serial "input a serial number"
-'
-- with /config/dialogs
-- with /config/device/serial
-- with /tmp
-- ui/-input-string
-- as/pop-with
-- pop-with
-- pop-with
+def input-serial
+    "input a serial number"
+    ui/-input-string

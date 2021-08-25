@@ -56,7 +56,7 @@ def input_string(msg):
         height=10,
         width=50,
     )
-    return res
+    return code, res
 
 
 def input_count(msg):
@@ -78,7 +78,13 @@ def input_count(msg):
     return res
 
 
-def _input_string(msg, regex=None, correct=None, must=None, confirmation=True):
+def _input_string(
+    input_please,
+    input_regex=None,
+    input_is_correct=None,
+    input_must=None,
+    confirmation=True,
+):
     """
     Give an input dialog which will check the entered value against
     a regular expression.
@@ -99,21 +105,26 @@ def _input_string(msg, regex=None, correct=None, must=None, confirmation=True):
     regex : r"^\d{8}$"
 
     """
-    if regex is None:
-        return input_string(msg)
+    if input_regex is None:
+        return input_string(input_please)
 
     while True:
-        res = input_string(msg)
-        if re.match(regex, res):
-            if confirmation and correct is not None:
-                yno_msg = "%s : %s" % (correct, res)
+        code, res = input_string(input_please)
+
+        if code == "cancel":
+            res = code
+            break
+
+        if re.match(input_regex, res):
+            if confirmation and input_is_correct is not None:
+                yno_msg = "%s : %s" % (input_is_correct, res)
                 if yes_no(yno_msg):
                     break
             else:
                 break
         else:
-            if must is not None:
-                msg("%s : %s" % ("must", regex))
+            if input_must is not None:
+                msg("%s : %s" % (input_must, input_regex))
             else:
                 break
 
@@ -145,7 +156,7 @@ def _msg(msg, title, height, width):
 
 def _yes_no(yn_msg, title, height, width):
     return "ok" == d.yesno(
-        msg,
+        yn_msg,
         title=title,
         height=height,
         width=width,
@@ -173,18 +184,18 @@ def msg(msg):
         os.system("clear")
 
 
-def yes_no(msg):
+def yes_no(yn_msg):
     """Display a yesno dialog,
     If msg is a path, use the contents of path.
 
     return True or False."
     """
 
-    if msg[0] == "/":
-        msg = A.get(msg)
+    if yn_msg[0] == "/":
+        yn_msg = A.get(yn_msg)
 
     response = d.yesno(
-        msg,
+        yn_msg,
         title=A.get_in_config(["dialogs", "title"]),
         height=10,
         width=50,
@@ -199,7 +210,7 @@ def yes_no(msg):
 def _radiolist(msg, title, height, width, choices):
     return d.radiolist(
         msg,
-        title=A.get_in_config(["dialogs", "title"]),
+        title=title,
         choices=choices,
         height=50,
         width=50,
@@ -222,7 +233,7 @@ def radiolist(msg, choices):
 def _menu(msg, title, height, width, choices):
     return d.menu(
         msg,
-        title=A.get_in_config(["dialogs", "title"]),
+        title=title,
         choices=choices,
         height=50,
         width=50,
@@ -328,22 +339,22 @@ def continue_to_next():
     return True
 
 
-def yno_fail(yno_msg):
+def yno_fail(yn_fail_msg):
     """Ask if the test images are seen, using the value in images_seen,
     possibly found in /config/dialogs/images_seen.
     ie. do 'with /config/dialogs'
     fail if the answer is no."""
 
-    if yno_msg is not None and not yes_no(yno_msg):
-        raise Exception("Failure: %s No!" % yno_msg)
+    if yn_fail_msg is not None and not yes_no(yn_fail_msg):
+        raise Exception("Failure: %s No!" % yn_fail_msg)
 
 
 def input_with_regex(
-    message,
-    regex,
+    msg,
+    input_regex,
     title,
-    is_correct,
-    must,
+    input_is_correct,
+    input_must,
     height=10,
     width=50,
     question=None,
@@ -376,13 +387,15 @@ def input_with_regex(
 
     # msg = A.get_in_config(["dialogs", "input_serial"])
     while True:
-        code, res = inputbox(message, title=title, height=height, width=width)
-        if re.match(regex, res):
-            yno_msg = "%s : %s" % (is_correct, res)
+        code, res = inputbox(msg, title=title, height=height, width=width)
+        if code:
+            break
+        if re.match(input_regex, res):
+            yno_msg = "%s : %s" % (input_is_correct, res)
             if yes_no(yno_msg):
                 break
         else:
-            msg("%s : %s" % (must, regex))
+            msg("%s : %s" % (input_must, input_regex))
 
             os.system("clear")
             logger.info("Value Entered is: %s" % res)

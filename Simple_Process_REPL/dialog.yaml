@@ -3,22 +3,33 @@ config:
 
     dialogs:
         title : 'The Simple Process REPL'
+        msg              : 'Just in case msg is empty.'
+        yn_msg           : 'Did you expect this message? Y/N: '
+        yn_fail_msg      : 'This fails if you do not say yes. ? Y/N: '
+        # yn_fail_msg      : 'Please verify the test image is shown on the screen.'
+
         plugin_start     : 'Plug in a new device, press OK to start'
-        ready_to_test    : 'Ready to test'
-        ready_to_flash   : 'Ready to flash'
+        ready_to_test    : 'Ready to test.'
+        ready_to_flash   : 'Ready to flash.'
+
         process_failed   : 'Process Failed!'
         process_success  : 'Process Succeeded!'
-        start_again      : 'Setup another device ? '
-        continue_to_next : 'Choice?  Press Y/y to congure another device: '
-        input_serial     : 'Please input the 8 digit serial number.'
-        images_seen      : 'Please verify the test image is shown on the screen.'
-        serial_is_correct : 'This serial number is correct?'
-        serial_must      : 'Serial Number must be 8 digits.'
-        correct          : 'This entry is correct ?'
-        must             : 'Entry must match regex: %s.'
-        continue         : 'Ready to Continue ?'
         process_finish   : 'Turn the Power Switch Off and Disconnect the Battery and USB.'
-        regex            : r"^\d{8}$"
+
+        continue         : 'Ready to Continue ?'
+
+        start_again      : 'Do it again ? '
+        # start_again      : 'Setup another device ? '
+        continue_to_next : 'Choice?  Press Y/y to do it again: '
+        # continue_to_next : 'Choice?  Press Y/y to configure another device: '
+
+        input_please     : 'Please input Something.'
+        # input_please     : 'Please input the 8 digit serial number.'
+        input_regex      : '^\d{8}$'
+        # input_is_correct : 'This serial number is correct?'
+        input_is_correct : 'This entry is correct ?'
+        # input_must       : 'Serial Number must be 8 digits.'
+        input_must       : 'Entry must match regex:'
 
         hellomsg         : "You have received this message because your autoexec
             attribute is set to 'hello' or None, or can't be found. Maybe

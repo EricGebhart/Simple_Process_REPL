@@ -22,6 +22,7 @@ device:
 def init-with
     "Set up the with stack so we get our stuff."
 '
+- with /config/dialogs
 - with /config/device/serial
 - with /config/device/waiting
 - with /config/device/handshake
@@ -80,7 +81,7 @@ def doctor
 
 
 
-sudo cp 50-particle.rules /etc/udev/rules.d/def update
+def update
     "Update the device OS. ie. dfu, update."
     '
     - log/info "Updating device"
