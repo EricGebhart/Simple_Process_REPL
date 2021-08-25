@@ -1,3 +1,9 @@
+partial first "Get the first value of a list." as/nth 1
+
+partial second "Get the second value of a list." as/nth 2
+
+partial last "Get the last value of a list." as/nth 0
+
 # move back to root (/)
 in-ns
 
@@ -8,6 +14,7 @@ partial set "Set a value in the app state." as/set
 partial pop "Pop a value from a stack in the app state." as/pop
 
 partial push "Push a value onto a stack in the app state." as/push
+
 
 partial run "Run the autoexec command set in the configuration" as/eval-default-process
 

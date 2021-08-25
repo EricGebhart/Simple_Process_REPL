@@ -368,7 +368,7 @@ def push(set_path, fromv):
 
 def swap(path):
     """If the path is a list , swap the last 2 values.
-    otherwise do nothing.
+    Otherwise do nothing.
     """
     if path is None or len(path) == 0:
         return
@@ -385,6 +385,25 @@ def swap(path):
         newlast = value.pop()
         value += [last]
         value += [newlast]
+
+
+def nth(nth, path):
+    """If the path is a list , return the nth value.
+    Otherwise do nothing.
+    """
+    if path is None or len(path) == 0:
+        return
+
+    if path[0] != "/":
+        value = get_in_with(path)
+    else:
+        value = get_from_path(path)
+
+    if isinstance(value, list):
+        if len(value) >= nth:
+            return value[nth - 1]
+
+    return "Not found"
 
 
 def get_fromv(fromv):

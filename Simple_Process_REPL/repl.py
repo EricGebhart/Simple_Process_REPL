@@ -1120,7 +1120,10 @@ def do_fptrs(commands):
         if isinstance(commands[3], list):
             fn(commands[1], commands[2], commands[3])
         else:
-            commandstr = " ".join(commands[3:])
+            nc = []
+            for c in commands[3:]:
+                nc.append(str(c))
+            commandstr = " ".join(nc)
             fn(commands[1], commands[2], commandstr)
         return True
 
