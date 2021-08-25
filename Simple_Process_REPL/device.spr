@@ -11,8 +11,8 @@ config:
     device:
         serial:
             baudrate      : 9600
-            regex         : r"^\d{8}$"
-            msg           : Please input an 8 digit serial number
+            input_regex   : '^\d{8}$'
+            input_please  : Please input an 8 digit serial number
 
         handshake:
             init_string     : Some handshake string
