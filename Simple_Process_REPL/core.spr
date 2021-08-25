@@ -57,6 +57,7 @@ namespace as "Application State functionality"
     set
     push
     pop
+    swap
     _with
     _with_stack
     flat_with

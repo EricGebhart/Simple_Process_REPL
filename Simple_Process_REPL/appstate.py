@@ -366,6 +366,27 @@ def push(set_path, fromv):
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
+def swap(path):
+    """If the path is a list , swap the last 2 values.
+    otherwise do nothing.
+    """
+    if path is None or len(path) == 0:
+        return
+
+    logger.info("swapping %s" % path)
+
+    if path[0] != "/":
+        value = get_in_with(path)
+    else:
+        value = get_from_path(path)
+
+    if isinstance(value, list):
+        last = value.pop()
+        newlast = value.pop()
+        value += [last]
+        value += [newlast]
+
+
 def get_fromv(fromv):
     """Get the value from there, if it's a there.
     If its raw value is a list, then it's a string from the parser.
