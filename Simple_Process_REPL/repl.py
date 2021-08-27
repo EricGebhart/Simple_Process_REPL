@@ -1040,6 +1040,7 @@ def dequote(args):
         if isinstance(symbol, str) and len(symbol) > 2:
             if symbol[0] == '"' and symbol[-1] == '"':
                 symbol = symbol[1:-1]
+
         res += [symbol]
     return res
 

@@ -54,15 +54,23 @@ def mk_cmd(cmd, prefix=""):
     return command
 
 
-def do_cmd(command, shell=False):
+def do_cmd(command, shell=False, timeout=None):
     """run a sub command, read and return it's output."""
+    doit = command
     if shell is True:
-        command = " ".join(command)
 
-    logging.debug("do_cmd: %s" % command)
+        for thing in command:
+            doit + " " + str(thing)
+            # command = " ".join(command)
+
+    logging.debug("do_cmd, Timeout: %s\n%s" % (timeout, command))
 
     res = subprocess.run(
-        command, shell=shell, stderr=subprocess.PIPE, stdout=subprocess.PIPE
+        doit,
+        shell=shell,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        timeout=timeout,
     )
 
     stderr = res.stderr.decode("utf-8")

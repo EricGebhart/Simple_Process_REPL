@@ -75,8 +75,8 @@ def -doctor
 def doctor
     "Run particle doctor. (list usb, dfu mode then -> doctor)"
     '
-    - pb/list-usb
-    - pb/dfu-mode
+    - pb/list
+    - pb/dfu
     - pb/-doctor
 
 
@@ -85,7 +85,7 @@ def update
     "Update the device OS. ie. dfu, update."
     '
     - log/info "Updating device"
-    - pb/dfu-mode
+    - pb/dfu
     - pb/do-pcmd "update"
 
 
@@ -122,12 +122,37 @@ partial get
     pb/get-w-timeout
 
 
-def get-usb-and-id
-    "Retrieve and set the USB device, the board name,  and the device id.
-    Uses 'particle serial list' in a timeout loop."
+# def get-usb-and-id
+#     "Retrieve and set the USB device, the board name,  and the device id.
+#     Uses 'particle serial list' in a timeout loop."
+#     '
+#     - pb/get
+#     - pop results .
+
+
+
+def listen
+    "Start listening."
     '
-    - pb/get
-    - pop results .
+    - pb/do-pcmd "usb start-listening"
+    - log/info "Listening"
+
+
+
+def dfu
+    "Put USB device in dfu mode. `particle usb dfu`.
+    Timeout should not be necessary."
+    pb/do-pcmd "usb dfu"
+
+def list
+    "list the particle devices connected to usb."
+    pb/do-pcmd "serial list"
+
+def identify "Identify a particle board"
+    '
+    - log/info "Identify, Start listening"
+    - pb/listen
+    - pb/do-pcmd "identify"
 
 
 

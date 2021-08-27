@@ -148,14 +148,9 @@ namespace web "View HTML and urls."
 namespace pb "Particle Board CLI interface"
     Simple_Process_REPL.particle
     help
-    list_usb
     get_w_timeout
-    list_usb_w_timeout
     product_add
     name
-    listen
-    dfu_mode
-    identify
     flash
     do_pcmd
     do_id_pcmd

@@ -89,17 +89,19 @@ def help():
 #     A.archive_log("%s.log" % id)
 
 
-def do_pcmd(cmd):
-    """run a particle command, read and return it's output."""
-    return s.do_cmd(s.mk_cmd(cmd, prefix="particle"))
+def do_pcmd(cmd, timeout=None):
+    """run a particle command, read and return it's output. timeout is the amount
+    of time given for the command to return before killing it and raising an exception.
+    """
+    return s.do_cmd(s.mk_cmd(cmd, prefix="particle"), timeout=timeout)
 
 
-def do_id_pcmd(cmd, id):
+def do_id_pcmd(cmd, id, timeout=None):
     """Do particle command with an id. Convenience for creating
     more interface functions without writing python code, and still
     get the id signature variable we want to automatically fill."""
     # particle product add $product_id $device_id
-    do_pcmd(cmd + " " + id)
+    do_pcmd(cmd + " " + id, timeout=timeout)
 
 
 def do_pcmd_w_timeout(cmd, timeout):
@@ -127,11 +129,6 @@ def do_pcmd_w_timeout(cmd, timeout):
     return res.stdout.decode("utf-8")
 
 
-def list_usb():
-    "list the particle devices connected to usb."
-    return do_pcmd("serial list")
-
-
 def get_w_timeout(timeout):
     """
     loop over list_usb() for a timeout period. Extract
@@ -143,7 +140,7 @@ def get_w_timeout(timeout):
     """
     start = time.time()
     while True:
-        stdout = list_usb()
+        stdout = do_pcmd("list usb")
 
         # USB, id
         if stdout.split(" ")[0] != "No":
@@ -158,46 +155,6 @@ def get_w_timeout(timeout):
         time.sleep(1)
 
     return stdout
-
-
-# this doesn't actually work because particle returns 0
-# no matter what happens.
-def list_usb_w_timeout(timeout):
-    "list the particle devices connected to usb."
-    return do_pcmd_w_timeout("serial list", timeout)
-
-
-def get_usb_and_id():
-    """
-    Does a particle list and retrieves the usb device and device id
-    Returns: usb, id
-    """
-    devices = list_usb()
-    # USB, id
-    return [devices.split(" - ")[2], devices.split()[0]]
-
-
-def listen():
-    "Start listening."
-    do_pcmd("usb start-listening")
-    logger.info("Listening")
-
-
-def identify():
-    """
-    Get the identity of the particle board,
-    send it to the log. (listen then identify)
-    """
-    logger.info("Identify: Start listening")
-    listen()
-    try:
-        identify = do_pcmd("identify")
-    except Exception as e:
-        logger.error("Unable to Identify the particle board.")
-        logger.error(e)
-        raise (e)
-    else:
-        return identify
 
 
 def product_add(product, id):
@@ -219,16 +176,11 @@ def name(name, id):
     do_pcmd("device rename %s %s" % (id, name))
 
 
-def dfu_mode():
-    "Put USB device in dfu mode."
-    do_pcmd("usb dfu")
-
-
 def flash(image):
     """flash an image. (dfu, flash --usb)"""
     logger.info("Flashing device with: %s" % image)
     if os.path.exists(image):
-        dfu_mode()
+        do_pcmd("usb dfu")
         # do_pcmd('flash ––usb {}'.format(image))
         foo = os.popen("particle flash --usb %s" % image).read()
         logger.debug(foo)
