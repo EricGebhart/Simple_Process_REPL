@@ -14,11 +14,10 @@ from pyzbar import pyzbar
 logger = logging.getLogger()
 
 BarCodeType = "barcode"
-QRCodeType = "QR_code"
+QRCodeType = "QRcode"
 
-Root = "bar-QR"
+Root = "bq"
 
-yaml = u.dump_pkg_yaml("Simple_Process_REPL", "bar_qr.yaml")
 spr = u.load_pkg_resource("Simple_Process_REPL", "bar_qr.spr")
 
 # format and fill in as you wish.
@@ -27,15 +26,29 @@ bar-qr: - Bar and QR Code Scanning, generation, saving and printing.  -
 
 Recognized codetypes are either 'barcode' and 'QR-code'.
 
-Encode any value with preset prefix and suffixes as set in the configuration
-into a barcode or QR-code.
+Setup the with stack to point at either barcode config or the QRcode config.
+
+The with-bc or with-qr functions will set up the with stack.
+From there populate _value_ with something to encode, the function signatures
+daisy chain like this. Mix up as you like.
+
+* build-code-string
+* pop results code_string
+* create
+* pop results code
+* gen-filename
+* pop results filename
+* save
+
+Most of this is about building nice codes and filenames for them. There are
+settings for many things in the configuration.
+
+
+Bar/QR code Reader
 
 Read a bar or QR code using the webcam. Currently keeps trying until it
 catches it or an escape key is pressed.
 
-Bar-qr uses this part of the Application state.
-
-%s
 
 When encoding the value is retrieved from bar-QR/value.
 When scanning with the webcam the resulting value will be placed in bar-QR/value.
@@ -48,7 +61,6 @@ bar-qr has the following spr code.
 %s
 
 """ % (
-    yaml,
     spr,
 )
 
@@ -58,15 +70,15 @@ def help():
     print(HelpText)
 
 
-def gen(value, codetype=BarCodeType):
-    """Generate a bar or QR code for the value.
-    returns: the generated code
+def create(code_string, code_type=BarCodeType, font="DejaVuSans", font_size=18):
+    """Generate a bar or QR code for the codestring.
+    returns: the generated code.
     """
     try:
-        if codetype == BarCodeType:
-            code = create_bar_code(value)
-        elif codetype == QRCodeType:
-            code = create_qr_code(value)
+        if code_type == BarCodeType:
+            code = create_bar_code(code_string)
+        elif code_type == QRCodeType:
+            code = create_qr_code(code_string, font, font_size)
 
     except Exception as e:
         logger.error(e)
@@ -74,53 +86,25 @@ def gen(value, codetype=BarCodeType):
     return code
 
 
-def save(value, code, codetype=BarCodeType):
-    """Save the codetype, 'barcode/QR_code',
-    for value with generated code, code.
-
-    Write code for value to a file with a nice name generated
-    from the value and type.
-
-    returns: filename
-    """
-    if codetype == BarCodeType:
-        fname = get_bc_filename(value)
-        save_barcode(code, fname)
-        # because the extension is automatic on the save.
-        fname = "%s%s" % (fname, ".png")
-    elif codetype == QRCodeType:
-        fname = get_qr_filename(value)
-        save_qr_code(code, fname)
-
-    return fname
-
-
-def write(value, codetype=BarCodeType):
-    """Generate and write a bar or QR code for
-    value into a file which is appropriately named.
-
-    Returns: filename."""
-    c = gen(value, codetype)
-    filename = save(value, c, codetype)
-    return filename
-
-
-def pad_num(n):
+def pad_num(number, min_length=10):
     """make sure its a number and is the minimum length, pad from left with 0s."""
-    try:
-        min = int(A.get_in_config(["bcqr_minimum_length"]))
-    except Exception:
-        min = 10
-    fmt = "%%.%dd" % min
+    fmt = "%%.%dd" % min_length
     return fmt % int(n)
 
 
-def build_code(s, prefix, suffix):
-    """turn a number into what we need for a barcode."""
-    if prefix is not None:
-        code = "%s%s" % (prefix, pad_num(s))
+def build_code_string(value, prefix="", suffix=""):
+    """Turn a number string into what we need for a barcode. Give this to create to be
+    encoded.
+    """
+    if isinstance(value, str):
+        string = value
     else:
-        code = pad_num(s)
+        string = pad_num(value)
+
+    if prefix is not None:
+        code = "%s%s" % (prefix, string)
+    else:
+        code = string
 
     if suffix is not None:
         code = "%s%s" % (code, suffix)
@@ -128,61 +112,44 @@ def build_code(s, prefix, suffix):
     return code
 
 
-def num_2_barcode(s):
-    """turn a number into what we need for a barcode."""
-    return build_code(
-        s,
-        A.get_in_config(["barcode", "prefix"]),
-        A.get_in_config(["barcode", "suffix"]),
-    )
+def gen_filename(code_string, save_path, filename_suffix, filename_extension):
+    """Generate a name for a barcode or QR code file"""
+    os.makedirs(save_path, exist_ok=True)
+    return os.path.join(save_path, "%s%s%s" % (code_string, filename_suffix, extension))
 
 
-def num_2_qrcode(s):
-    return build_code(
-        s,
-        A.get_in_config(["QR_code", "prefix"]),
-        A.get_in_config(["QR_code", "suffix"]),
-    )
-
-
-def save_barcode(bc, filename):
+def save_bar_code(bc, filename, save_path, save_options):
+    "Save a bar code to filename."
     # options = [module_height = 8, text_distance = 2]
-    path = A.get_in_config(["barcode", "save_path"])
-    options = A.get_in_config(["barcode", "save_options"])
     bc.save(filename, options)
 
 
-def get_bc_filename(s):
-    """generate a name for a barcode file"""
-    suffix = A.get_in_config(["barcode", "filename_suffix"])
-    path = A.get_in_config(["barcode", "save_path"])
-    os.makedirs(path, exist_ok=True)
-    return os.path.join(path, "%s%s" % (s, suffix))
-
-
-def get_qr_filename(s):
-    """generate a name for a QR code file"""
-    suffix = A.get_in_config(["QR_code", "filename_suffix"])
-    path = A.get_in_config(["QR_code", "save_path"])
-    os.makedirs(path, exist_ok=True)
-    return os.path.join(path, "%s%s%s" % (s, suffix, ".png"))
-
-
 def save_qr_code(qrc, filename):
+    "Save a qr code to filename."
     qrc.save(filename)
 
 
-def create_bar_code(s):
+def save(code, filename, save_path, save_options, code_type="barcode"):
+    """Save a bar or QR code according to code_type."""
+    try:
+        if code_type == BarCodeType:
+            save_bar_code(code, filename, save_path, save_options)
+        else:
+            save_qr_code(code, filename)
+
+    except Exception as e:
+        logger.error(e)
+        logger.error("Unable to save %s" % code_type)
+
+
+def create_bar_code(code_string):
     """Create a barcode from a string"""
-    return barcode.get("code128", num_2_barcode(s), writer=ImageWriter())
+    return barcode.get("code128", code_string, writer=ImageWriter())
 
 
-def create_qr_code(s):
+def create_qr_code(code_string, font, font_size):
     """Create a QR code from a string"""
-    qrfont = A.get_in_config(["QR_code", "font"])
-    qrfont_size = A.get_in_config(["QR_code", "font_size"])
 
-    qrCode = num_2_qrcode(s)
     qr = qrcode.QRCode(
         version=2,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
@@ -190,7 +157,7 @@ def create_qr_code(s):
         border=0,
     )
 
-    qr.add_data(qrCode)
+    qr.add_data(code_string)
     qr.make(fit=True)
 
     img = qr.make_image(fill_color="black", back_color="white")
@@ -199,10 +166,10 @@ def create_qr_code(s):
     bimg = ImageOps.expand(img, border=(30, 0, 30, 40), fill=backColor)
 
     draw = ImageDraw.Draw(bimg)
-    font = ImageFont.truetype(qrfont, size=qrfont_size)
+    font = ImageFont.truetype(font, size=font_size)
     (x, y) = (34, 116)
     color = "rgb(0, 0, 0)"
-    draw.text((x, y), qrCode, fill=color, font=font)
+    draw.text((x, y), code_string, fill=color, font=font)
 
     return bimg
 
@@ -222,6 +189,7 @@ def makeFailSticker(reason, code):
     return img
 
 
+# ### Bar/QR code reader....
 def read_barcodes(frame):
     success = False
     barcodes = pyzbar.decode(frame)
@@ -232,11 +200,12 @@ def read_barcodes(frame):
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, barcode_info, (x + 6, y - 6), font, 2.0, (255, 255, 255), 1)
 
-        A.set_in([Root, "value", barcode_info])
+        # I think unnecessary.
+        A.set("value", barcode_info)
         logging.info("Read Code: %s" % barcode_info)
         success = True
 
-    return frame, success
+    return frame, success, barcode_info
 
 
 # Need to take a closer look at this stuff. It's not very nice.
@@ -249,7 +218,7 @@ def read_barcode_from_camera():
     ret = True
     while ret:
         ret, frame = camera.read()
-        frame, res = read_barcodes(frame)
+        frame, res, info = read_barcodes(frame)
         # frame, res = read_code(frame)
         if res:
             break
@@ -258,7 +227,7 @@ def read_barcode_from_camera():
             break
     camera.release()
     cv2.destroyAllWindows()
-    return frame
+    return frame, info
 
 
 def read_code(image):

@@ -37,6 +37,8 @@ def init-with
 #     '
 #     - set external_cli_prefix 'particle'
 #     - sh/do-cli-cmd
+def browse "Browse to the particle-cli developer tools website."
+    web/browse "https://docs.particle.io/tutorials/developer-tools/cli/#installing"
 
 def inspect
     "Inspect the particle device"
