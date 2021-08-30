@@ -1,6 +1,7 @@
 '
 config:
     particle:
+        external_cli_prefix: 'particle'
         product    : 'XXXXX'
 
         images:
@@ -31,9 +32,15 @@ def init-with
 
 
 
+# # experiment.
+# def cmd "Do particle-cli commands"
+#     '
+#     - set external_cli_prefix 'particle'
+#     - sh/do-cli-cmd
+
 def inspect
     "Inspect the particle device"
-    pb/do-pcmd "serial inspect"
+    pb/cmd "serial inspect"
 
 def login
     "Login to particle cloud from the cli prompt"
@@ -45,32 +52,31 @@ def logout
 
 def flash-image
     "Flash the default flash image"
-    pb/flash /config/particle/images/flash
+    pb/flash `~/config/particle/images/flash
 
 def flash-tinker
     "Flash the default tinker image"
-    pb/flash /config/particle/images/tinker
+    pb/flash `~/config/particle/images/tinker
 
 def flash-test
-    "Flash the defaul test image"
-    pb/flash /config/particle/images/test
-
+    "Flash the default test image"
+    pb/flash `~/config/particle/images/test
 
 partial release
     "Release the claim on a device"
-    pb/do-id-pcmd  "device remove"
+    pb/id-cmd  "device remove"
 
 partial cloud-status
     "Check the cloud-status of the device."
-    pb/do-id-pcmd "usb cloud-status"
+    pb/id-cmd "usb cloud-status"
 
 partial reset-usb
     "Reset the device on the usb for the given device id."
-    pb/do-id-pcmd "usb reset"
+    pb/id-cmd "usb reset"
 
 def -doctor
     "Run particle doctor. (just doctor)"
-    pb/do-pcmd "-v doctor"
+    pb/cmd "-v doctor"
 
 def doctor
     "Run particle doctor. (list usb, dfu mode then -> doctor)"
@@ -84,16 +90,21 @@ def doctor
 def update
     "Update the device OS. ie. dfu, update."
     '
-    - log/info "Updating device"
+    - with /tmp
+    - log/info "Temporarily setting timeout to 60."
+    - set timeout 60
+    - log/info "Starting dfu"
     - pb/dfu
-    - pb/do-pcmd "update"
+    - log/info "Updating device"
+    - pb/cmd "update"
+    - pop-with
 
 
 
 def set-setup-bit
     "Mark the setup bit done."
     '
-    - pb/do-pcmd "usb setup-done"
+    - pb/cmd "usb setup-done"
     - log/info "Set: Setup-done"
 
 
@@ -104,7 +115,7 @@ def add
     '
     - log/info "Registering device."
     # particle product add $product_id $device_id
-    - pb/do-id-pcmd "device add"
+    - pb/id-cmd "device add"
 
 
 
@@ -113,7 +124,7 @@ def claim
     '
     - log/info "Claiming device."
     # particle product add $product_id $device_id
-    - pb/do-id-pcmd "cloud claim"
+    - pb/id-cmd "cloud claim"
 
 
 
@@ -134,7 +145,7 @@ partial get
 def listen
     "Start listening."
     '
-    - pb/do-pcmd "usb start-listening"
+    - pb/cmd "usb start-listening"
     - log/info "Listening"
 
 
@@ -142,29 +153,32 @@ def listen
 def dfu
     "Put USB device in dfu mode. `particle usb dfu`.
     Timeout should not be necessary."
-    pb/do-pcmd "usb dfu"
+    pb/cmd "usb dfu"
 
 def list
     "list the particle devices connected to usb."
-    pb/do-pcmd "serial list"
+    pb/cmd "serial list"
 
 def identify "Identify a particle board"
     '
     - log/info "Identify, Start listening"
     - pb/listen
-    - pb/do-pcmd "identify"
+    - pb/cmd "identify"
 
 
 
 # Create some steps from the parts to compose into a process.
 
 def id-it
-    "Id the board. get, reset then identify. Need the reset and pauses for consistent success"
+    "Id the board. get, reset then identify. The reset and pauses are
+    necessary for consistent success"
     '
     - pb/get
     - pop results .
     - pb/reset-usb
-    - dev/wait dev/pause dev/pause
+    - dev/wait
+    - dev/pause
+    - dev/pause
     - pb/identify
 
 
@@ -194,7 +208,8 @@ def setup
     "Update the os and mark the setup bit done."
     '
     - pb/update
-    - dev/wait dev/pause
+    - dev/wait
+    - dev/pause
     - pb/setup-bit-done
 
 
@@ -203,7 +218,8 @@ def testit
     "flash the test, handshake and process the results."
     '
     - pb/flash-test
-    - dev/wait dev/pause
+    - dev/wait
+    - dev/pause
     - dev/handshake
 
 
@@ -250,6 +266,8 @@ def processit-with-dialogs
     - pb/setup
     - pb/add
     - dev/wait
-    - ui/dialog-test pb/testit
-    - ui/dialog-flash pb/flash
+    - ui/dialog-test
+    - pb/testit
+    - ui/dialog-flash
+    - pb/flash
     - as/archive-log

@@ -1,11 +1,9 @@
-import Simple_Process_REPL.appstate as A
 import subprocess
 import os
 import time
 import logging
 
 logger = logging.getLogger()
-AS = A.AS
 
 # format and fill in as you wish.
 HelpText = """
@@ -14,6 +12,7 @@ Subcmd: - SPR's subprocess interface, ie. shell.  -
 Use the sub process command library to execute system commands.
 
 Roughly equivalent, but not, to python's os.system().
+There are reasons to use one or the other.
 
 https://docs.python.org/3/library/subprocess.html
 
@@ -89,3 +88,45 @@ def do_cmd(command, shell=False, timeout=None):
 def do(*commands):
     """A varargs wrapper for do_cmd using subprocess to run shell commands."""
     do_cmd(*commands)
+
+
+def do_cli_cmd(cmd, timeout=None, external_cli_prefix=None):
+    """run a command, adding the prefix before execution.
+    read and return it's output.
+    timeout is the amount of time given for the command to
+    return before killing it and raising an exception.
+    """
+    return do_cmd(mk_cmd(cmd, prefix=external_cli_prefix), timeout=timeout)
+
+
+def do_cli_cmd_w_timeout(cmd, timeout, external_cli_prefix=None):
+    """loop over a command for a timeout period. For commands
+    that return failure quickly.
+    Note, this is not the same meaning of timeout elsewhere.
+    It is similar.. This is for things that are too quick, and
+    also for things that hang. It's the too quick situation that
+    is being addressed here.  It really has not worked out yet.
+    so it's here in theory that it could be useful.
+
+    Didn't work out for 'particle serial list',
+    because it returns 0 no matter what happens."""
+    start = time.time()
+    while True:
+        command = mk_cmd(cmd, prefix=external_cli_prefix)
+        res = subprocess.run(
+            command, stderr=subprocess.PIPE, stdout=subprocess.PIPE, timeout=timeout
+        )
+
+        logger.debug(res)
+        if res.returncode == 0:
+            break
+
+        if time.time() - start >= timeout:
+            logger.warning("%s: timed out" % " ".join(command))
+            break
+
+        time.sleep(1)
+
+    # print(res.stdout)
+    logger.info(res.stdout.decode("utf-8"))
+    return res.stdout.decode("utf-8")

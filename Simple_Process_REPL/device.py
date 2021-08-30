@@ -85,13 +85,8 @@ def help():
 
 
 def pause(pause_time):
-    "Sleep for configured number of some # of seconds."
+    "Sleep for some # of seconds."
     time.sleep(pause_time)
-
-
-# def pause():
-#     "Sleep for configured number of some # of seconds."
-#     time.sleep(A.get_in_config(["device", "waiting", "pause_time"]))
 
 
 def wait(path, timeout):
@@ -107,22 +102,15 @@ def wait(path, timeout):
     return True
 
 
-# def wait():
-#     """wait for our device to appear."""
-#     return _wait(
-#         A.get_in_device("path"), A.get_in_config(["device", "waiting", "timeout"])
-#     )
-
-
-def do_qqc(line):
-    do_qqc_regex = A.get_in_config(["device", "handshake", "do_qqc_regex"])
+def do_qqc(line, do_qqc_regex):
+    """Check the line againg the Do Quelque chose regex. True if the regex matches."""
     if do_qqc_regex:
         return re.match(do_qqc_regex, line)
     return False
 
 
-def test_line_fails(line):
-    fail_regex = A.get_in_config(["device", "handshake", "fail_regex"])
+def test_line_fails(line, fail_regex):
+    """Check the line given against the fail regex."""
     result = False
     if re.match(fail_regex, line):
         result = True
@@ -130,8 +118,8 @@ def test_line_fails(line):
     return result
 
 
-def test_done(line):
-    done_regex = A.get_in_config(["device", "handshake", "done_regex"])
+def test_done(line, done_regex):
+    """Check the line given against the done regex."""
     result = False
     if re.match(done_regex, line):
         result = True
@@ -139,35 +127,43 @@ def test_done(line):
     return result
 
 
-def handshake():
+# def handshake():
+#     """
+#     Handshake with the device after test flash.
+#     All parameters are set in the configuration.
+#     Wait for start string, respond with response string.
+#     Look for fail_regex, done_regex, and do_qqc_regex.
+#     If fail, raise exception.
+#     if done, exit quietly with true.
+#     if do_qqc, then call function and send return to the
+#     serial device.
+#     """
+#     init_string = A.get_in_config(["device", "handshake", "init_string"])
+#     response_string = A.get_in_config(["device", "handshake", "response_string"])
+#     do_qqc_func = A.get_in_config(["device", "handshake", "do_qqc_func"])
+#     baudrate = A.get_in_config(["device", "serial", "baudrate"])
+#     usb_device = A.get_in_device("path")
+
+# _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func)
+
+
+def handshake(path, baudrate, init_string, response_string, do_qqc_func):
     """
-    Handshake with the device after test flash.
+    Handshake with the device at path. Generally done after flash of
+    something that would like to communicate. Like a test binary.
+
     All parameters are set in the configuration.
-    Wait for start string, respond with response string.
-    Look for fail_regex, done_regex, and do_qqc_regex.
+
+    The process is:
+
+    Wait for start string through the serial device at path,
+    Respond with the response string.
+
+    Continually look for fail_regex, done_regex, and do_qqc_regex.
+
     If fail, raise exception.
     if done, exit quietly with true.
-    if do_qqc, then call function and send return to the
-    serial device.
-    """
-    init_string = A.get_in_config(["device", "handshake", "init_string"])
-    response_string = A.get_in_config(["device", "handshake", "response_string"])
-    do_qqc_func = A.get_in_config(["device", "handshake", "do_qqc_func"])
-    baudrate = A.get_in_config(["device", "serial", "baudrate"])
-    usb_device = A.get_in_device("path")
-
-    _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func)
-
-
-def _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func):
-    """
-    Handshake with the device after test flash.
-    All parameters are set in the configuration.
-    Wait for start string, respond with response string.
-    Look for fail_regex, done_regex, and do_qqc_regex.
-    If fail, raise exception.
-    if done, exit quietly with true.
-    if do_qqc, then call function and send return to the
+    if do_qqc, then call the qqc function and send the return value to the
     serial device.
     """
 
@@ -175,7 +171,7 @@ def _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func):
 
     logger.info("Wait for string: %s" % init_string)
     # timout=None makes this a blocking call that waits.
-    with serial.Serial(usb_device, baudrate, timeout=None) as ser:
+    with serial.Serial(path, baudrate, timeout=None) as ser:
         got_string = ser.read(size=len(init_string)).decode("utf-8")
         logger.info("Caught: %s" % got_string)
 

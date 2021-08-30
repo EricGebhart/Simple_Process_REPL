@@ -138,6 +138,7 @@ def _with(wpath=None, wcommand=None, destpath=None):
             "vv": vv,
         }
     )
+    set_in(vv + [{}])
     if wcommand:
         r.eval_cmd(wcommand)
         if destpath is not None:
@@ -219,6 +220,12 @@ def select_keys(m, keys):
 def flat_with():
     """Print the flattened with in YAML."""
     print(yaml.dump(flatten_with()))
+
+
+def get_in_stack(symbol):
+    """Get a value from the with stack. Returns the value
+    or none."""
+    return flatten_with().get(symbol, None)
 
 
 def flatten_with():
@@ -320,7 +327,7 @@ def pop(path, destination=None):
         clear_path(path)
         v = value
 
-    if destination is not None:
+    if destination is not None and v is not None:
         if destination[0] == ".":
             destination = _get_with_path()
 
@@ -486,6 +493,7 @@ def set(set_path, fromv):
     # with local and absolute paths.
     set_keys = resolve_path(set_path)
 
+    # if isinstance(fromv, str):
     fromv = get_fromv(fromv)
 
     set_keys += [fromv]
@@ -506,7 +514,10 @@ def get(path):
         vv = _get_vv_from_path(path[1:])
         vv = _get_with_vv() + vv
 
-    vv = _get_vv_from_path(path)
+    else:
+        vv = _get_vv_from_path(path)
+
+    logger.debug("get path: %s, %s" % (path, vv))
 
     return get_in(vv)
 

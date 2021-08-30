@@ -18,6 +18,7 @@ from Simple_Process_REPL.appstate import (
     getgensym,
     _full_with_path,
     select_with,
+    get_in_stack,
     push,
     get,
     _set_,
@@ -519,7 +520,7 @@ def _get_symbol(s):
             # get it from the appstate if we can.
             symbol = get(s)
     else:
-        symbol = None
+        symbol = s
 
     logger.debug("Got Symbol: %s" % symbol)
 
@@ -1007,23 +1008,52 @@ def _set_sig_map(symbol, path=None):
 
 def expand(commands):
     """Expand the arguments into their values as needed.
-    So far this is just paths. With this, we have 'variables'.
+
     Path symbols expand to their value.
 
-    Keeping it simple, one layer expansion, no recursion. It's enough
-    to give dangerous power.
+    Now ~ will force the path that follows to be evaluated to it's
+    value. Paths can be absolute or relative to the current with,
+    by starting with '/' or '.' respectively.
+
     """
     res = []
     for symbol in commands:
-        path = isa_path(symbol)
-        if path is not None:
-            logger.debug("Expand: %s : %s" % (symbol, path["fn"]))
-            v = get(path["fn"])
-            if not isinstance(v, str):
-                res += [v]
-            else:
-                res += v.split(" ")
 
+        if isinstance(symbol, str):
+            path = isa_path(symbol)
+
+            # it's protected once.
+            if symbol[0] == "`":
+                res += [symbol[1:]]
+
+            # expand it. - look for it in the datastore.
+            elif symbol[0] == "~":
+                symbol = symbol[1:]
+
+                if symbol[0] and (symbol[0] == "." or symbol[0] == "/"):
+                    # it's a path.
+                    v = get(symbol)
+
+                else:
+                    # its a symbol to look for in the with stack.
+                    v = get_in_stack(symbol)
+
+                # if not isinstance(v, str):
+                res += [v]
+                # else:
+                #    res += v.split(" ")
+                logger.debug("Expand~: %s : %s" % (symbol, v))
+
+            elif path is not None:
+                logger.debug("Expand: %s : %s" % (symbol, path["fn"]))
+                v = get(path["fn"])
+                if not isinstance(v, str):
+                    res += [v]
+                else:
+                    res += v.split(" ")
+
+            else:
+                res += [symbol]
         else:
             res += [symbol]
 
@@ -1277,11 +1307,6 @@ def eval_list(commands):
     """
     logger.debug("eval list: %s" % commands)
 
-    # we have function pointers sort-of by having this here.
-    # if you put a symbol name for something in the yaml
-    # and a path symbol that points at it....
-    commands = expand(commands[0:])
-
     # logger.info(commands)
     # if it's a partial expand it.
     first_sym = _get_symbol(commands[0])
@@ -1294,6 +1319,8 @@ def eval_list(commands):
         logger.debug("Partial: %s --> %s" % (commands[0], commands))
         eval_list(parse(first_sym["fn"]) + commands[1:])
         return
+
+    commands = expand(commands[0:])
 
     if do_fptrs(commands) is False:
         # it's a do-list

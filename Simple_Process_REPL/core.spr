@@ -26,6 +26,9 @@ config:
         autoexec : ui/hello
         autoload : 'SPRConfig.spr'
 
+        # for subcmd, particle uses it.
+        # external_cli_prefix: ''
+
         help:
 
         # # a list of functions
@@ -41,7 +44,7 @@ config:
             #- cli/msg "Welcome"
 
             shutdown:
-                - cli/msg "Goodbye have a nice day!"
+                - log/info "Goodbye have a nice day!"
 
 # end of Yaml
 
@@ -61,6 +64,7 @@ namespace as "Application State functionality"
     nth
     _with
     _with_stack
+    get_in_stack
     flat_with
     flatten_with
     clear_path
@@ -110,7 +114,7 @@ namespace shutil "Python shutil library"
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
     help
-    do rm sleep environ
+    do rm sleep environ do_cli_cmd do_cmd
 
 namespace log "logger controls and messages"
     Simple_Process_REPL.logs
@@ -120,7 +124,7 @@ namespace log "logger controls and messages"
 namespace dev "Device interaction, waiting for, handshaking."
     Simple_Process_REPL.device
     help
-    wait handshake _handshake pause
+    wait handshake pause
 
 namespace nw "Networking stuff, Wifi"
     Simple_Process_REPL.network
@@ -152,8 +156,8 @@ namespace pb "Particle Board CLI interface"
     product_add
     name
     flash
-    do_pcmd
-    do_id_pcmd
+    cmd
+    id_cmd
 
 namespace os "Python os library"
     os
