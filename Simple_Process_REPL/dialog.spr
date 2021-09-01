@@ -1,17 +1,37 @@
 def hello "message for when Autoexec is not set"
-    ui/msg /config/dialogs/hellomsg
+    ui/msg `~/config/dialogs/hellomsg
 
 def start "message for start of Process"
-    ui/msg /config/dialogs/plugin_start
+    ui/msg `~/config/dialogs/plugin_start
 
 def test "message for start of Test"
-    ui/msg /config/dialogs/ready_to_test
+    ui/msg `~/config/dialogs/ready_to_test
 
 def flash "message for start of Flash"
-    ui/msg /config/dialogs/ready_to_flash
+    ui/msg `~/config/dialogs/ready_to_flash
 
 def failed "message for Process Failure"
-    ui/msg /config/dialogs/process_failed
+    ui/msg `~/config/dialogs/process_failed
 
 def finish "message for finish of Process"
-    ui/msg /config/dialogs/process_finish
+    ui/msg `~/config/dialogs/process_finish
+
+def clear "clear the screen"
+    os/system "clear"
+
+def continue_to_next
+    "Do process again? Use message in _continue_next_"
+    ui/yes_no `~continue_next
+
+def with-ui
+    "Add to with stack to pick up dialog message configuration."
+    '
+    - with /config/dialogs
+    - with /config/dialogs/print_commands
+
+
+
+# def print-codes.
+# def print_menu "Give a menu to select a print command by platform."
+#     '
+#     def-path choices "choices for printing by platform" ~/config/dialogs/print_commands/Linux

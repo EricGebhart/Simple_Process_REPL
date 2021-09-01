@@ -130,3 +130,11 @@ def do_cli_cmd_w_timeout(cmd, timeout, external_cli_prefix=None):
     # print(res.stdout)
     logger.info(res.stdout.decode("utf-8"))
     return res.stdout.decode("utf-8")
+
+
+def loop_cmd(command, count=1):
+    """Loop over a shell command using os.system."""
+        for i in range(0, count):
+            os.system(command)
+    else:
+        os.system(command)

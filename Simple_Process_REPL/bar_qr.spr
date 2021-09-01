@@ -1,7 +1,7 @@
 # this is the bar qr data store and configuration settings.
 '
 config:
-    BQR:
+    BQ:
         input_please: Please input a code to be encoded.
         QRcode:
             code_type: QRcode
@@ -32,13 +32,17 @@ config:
 
 def with-bc   "Add the barcode config to the with stack."
     '
-    - with /config/BQR/barcode
+    - with /config/BQ/barcode
     - with barcode
+
+
 
 def with-qr   "Add the QR code config to the with stack."
     '
-    - with /config/BQR/QRcode
+    - with /config/BQ/QRcode
     - with qrcode
+
+
 
 def gen
     "Generate bar or QR code from 'string'.
@@ -55,11 +59,16 @@ def gen
     - pop results code
 
 
+
 def input-code
     "Dialog to get a string to encode to a bar or QR code"
     '
+    - with /config/BQ
     - ui/input-string
     - pop results value
+    - pop-with
+
+
 
 def print-codes
     "Dialogs to get a string, encode it, and print it as some number of Bar or QR codes."

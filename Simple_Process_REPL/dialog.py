@@ -43,31 +43,31 @@ def help():
     print(HelpText)
 
 
-def hello():
+def hello(hellomsg):
     "Just in case we don't know what to do."
-    msg(A.get_in_config(["dialogs", "hellomsg"]))
+    msg(hellomsg)
 
 
-def input_string(msg):
+def input_string(input_please, title, height=10, width=50):
     """Get a string input"""
     code, res = inputbox(
-        msg,
-        title=A.get_in_config(["dialogs", "title"]),
-        height=10,
-        width=50,
+        input_please,
+        title=title,
+        height=height,
+        width=width,
     )
     return code, res
 
 
-def input_count(msg):
+def input_count(input_please, title, height=10, width=50):
     """Give an input dialog that insists on an integer input.
     A range box could work, but seemed cumbersome."""
     while True:
         code, res = inputbox(
             msg,
-            title=A.get_in_config(["dialogs", "title"]),
-            height=10,
-            width=50,
+            title=title,
+            height=height,
+            width=width,
         )
         try:
             res = int(res)
@@ -75,19 +75,30 @@ def input_count(msg):
             logger.info("count must be an integer")
             continue
         break
-    return res
+    return code, res
 
 
 def _input_string(
     input_please,
+    title,
     input_regex=None,
     input_is_correct=None,
     input_must=None,
-    confirmation=True,
+    height=10,
+    width=50,
 ):
     """
     Give an input dialog which will check the entered value against
-    a regular expression.
+    a regular expression. If no regex is given, this function
+    behaves the same as input_string.
+
+    message - The request to input something.
+    input_regex - the regex to match the input.
+    title - usually the application title for all dialogs.
+    input_is_correct - question to ask, if result matches regex.
+    input_must - message to say what it must match.
+    height - height of dialog.
+    width - width of dialog.
 
     Allows for the elimination of the confirmation
     dialog and setting of confirmation and error messages.
@@ -96,27 +107,26 @@ def _input_string(
     and a 'correct' message is provided,
     Then there will be a confirmation dialog provided.
 
-    If incorrect, the message provided by must or in
-    /config/dialogs/must is displayed along with the regular
-    expression which failed.
+    If incorrect, the message provided by input_must
+    is displayed along with the regular expression which failed.
 
     An example of yaml to hold a regex.
     This one is for 8 digits.
-    regex : r"^\d{8}$"
+    regex : '^\d{8}$'
 
     """
     if input_regex is None:
-        return input_string(input_please)
+        return input_string(input_please, title, height, width)
 
     while True:
-        code, res = input_string(input_please)
+        code, res = input_string(input_please, title, height, width)
 
         if code == "cancel":
             res = code
             break
 
         if re.match(input_regex, res):
-            if confirmation and input_is_correct is not None:
+            if input_is_correct is not None:
                 yno_msg = "%s : %s" % (input_is_correct, res)
                 if yes_no(yno_msg):
                     break
@@ -131,83 +141,36 @@ def _input_string(
     return res
 
 
-def dialog_print(fname):
-    """Dialog to ask which print command to use."""
-    cmd_name, print_command = print_command_menu()
-    command = print_command % fname
-    return cmd_name, command
-
-
-def dialog_print_loop(fname):
-    """Dialog to ask which print command to use and how many times to print it."""
-    cmd_name, command = dialog_print(fname)
-    count = input_count("How many to Print ?")
-    return cmd_name, command, count
-
-
-def _msg(msg, title, height, width):
-    d.msgbox(
-        msg,
-        title=title,
-        height=height,
-        width=width,
-    )
-
-
-def _yes_no(yn_msg, title, height, width):
-    return "ok" == d.yesno(
-        yn_msg,
-        title=title,
-        height=height,
-        width=width,
-    )
-
-
-def msg(msg):
+def msg(msg, title, height=10, width=50):
     """Display a simple message box, with either
     the msg or the text located at msg if it begins with a /..
     """
-    logging.info(msg)
-
-    if msg[0] == "/":
-        msg = A.get(msg)
-
-    logging.info(msg)
-
     if msg is not None:
         d.msgbox(
             msg,
-            title=A.get_in_config(["dialogs", "title"]),
-            height=10,
-            width=50,
+            title=title,
+            height=height,
+            width=width,
         )
-        os.system("clear")
 
 
-def yes_no(yn_msg):
+def yes_no(yn_msg, title, height=10, width=50):
     """Display a yesno dialog,
-    If msg is a path, use the contents of path.
-
-    return True or False."
+    return True if ok or False."
     """
-
-    if yn_msg[0] == "/":
-        yn_msg = A.get(yn_msg)
-
     response = d.yesno(
         yn_msg,
-        title=A.get_in_config(["dialogs", "title"]),
-        height=10,
-        width=50,
+        title=title,
+        height=height,
+        width=width,
     )
-    os.system("clear")
     if response == "ok":
         return True
     else:
         return False
 
 
-def _radiolist(msg, title, height, width, choices):
+def radiolist(radio_msg, title, choices, height=50, width=50):
     return d.radiolist(
         msg,
         title=title,
@@ -217,186 +180,20 @@ def _radiolist(msg, title, height, width, choices):
     )
 
 
-def radiolist(msg, choices):
-    if msg[0] == "/":
-        msg = A.get(msg)
-
-    (code, tag) = d.radiolist(
-        msg,
-        width=50,
-        title=A.get_in_config(["dialogs", "title"]),
-        choices=choices,
-    )
-    return tag
-
-
-def _menu(msg, title, height, width, choices):
+def menu(menu_msg, title, choices, height=50, width=50):
     return d.menu(
-        msg,
+        menu_msg,
         title=title,
         choices=choices,
-        height=50,
-        width=50,
+        height=height,
+        width=width,
     )
-
-
-def select_choice(msg, choices):
-    if msg[0] == "/":
-        msg = A.get(msg)
-
-    logger.info("select choice: %s", choices)
-    code, choice = d.menu(
-        msg,
-        title=A.get_in_config(["dialogs", "title"]),
-        choices=choices,
-        height=50,
-        width=50,
-    )
-    os.system("clear")
-    return choice
-
-
-# I believe this could be more easily done with just spr.
-def print_command_menu():
-    """Give a menu of possible print commands for the current platform"""
-    p_dict = A.get_in_config(["print_commands", A.get_in(["platform"])])
-    p_p_cmds = list(p_dict.items())
-
-    rlist = [(key, "") for key, cmd in p_p_cmds]
-    choice = select_choice("Which print command to use ?", rlist)
-    return choice, p_dict[choice]
-
-
-# If _menu works well, there's probably no need for all this.
-def BC_or_QR_menu():
-    return select_choice(
-        "Which would you like to print?",
-        [
-            ("Bar Code", ""),
-            ("QR Code", ""),
-        ],
-    )
-
-
-def BC_or_QR():
-    """Dialog for Bar code or QR, normalized to Codetype."""
-    label_type = BC_or_QR_menu()
-    if label_type == "Bar Code":
-        return BarCodeType
-    elif label_type == "QR Code":
-        return QRCodeType
-
-
-def save_bcqr():
-    """Ask which; Barcode or Qr code, then generate and save the png,
-    return the filename."""
-    codetype = BC_or_QR()
-    bq.get_bcqr(codetype)
-    return bq.save_bcqr(codetype)
-
-
-def print_bcqr():
-    """Dialogs to generate, save, and print any number of the current barQR
-    value as a bar or QR code."""
-    fn = bq.print_bcqr()
-    print_file_loop(fn)
-
-
-# has nothing to do with printing really.... Just the messages. -- Refactor.
-def _print_file(fname, cmd_name, command, count=1):
-    """Internal use. Display print messages and loop or not over a system command."""
-    if count > 1:
-        logger.info("Printing file %s, %d times, to %s" % (fname, count, cmd_name))
-    else:
-        logger.info("Printing file %s to %s" % (fname, cmd_name))
-
-    if count > 1 and ynbox(
-        "You are ready to print %d times to %s?" % (count, cmd_name)
-    ):
-        for i in range(0, count):
-            os.system(command)
-    else:
-        os.system(command)
-
-
-def print_file(filename):
-    """Print a filename with a series of dialog prompts."""
-    name, cmd = dialog_print(filename)
-    _print_file(filename, name, cmd, 1)
-
-
-def print_file_loop(filename):
-    """Print a filename A number of times with a series of dialog prompts."""
-    name, cmd, count = dialog_print_loop(filename)
-    _print_file(filename, name, cmd, count)
-
-
-def continue_to_next():
-    "Do another one? Dialog. returns True/False"
-    if yes_no(A.get_in_config(["dialogs", "start_again"])):
-        logger.info("exiting")
-        return False
-    return True
 
 
 def yno_fail(yn_fail_msg):
-    """Ask if the test images are seen, using the value in images_seen,
-    possibly found in /config/dialogs/images_seen.
-    ie. do 'with /config/dialogs'
-    fail if the answer is no."""
+    """Ask a yes no question, raise an exception
+    to fail if the answer is no.
+    """
 
     if yn_fail_msg is not None and not yes_no(yn_fail_msg):
         raise Exception("Failure: %s No!" % yn_fail_msg)
-
-
-def input_with_regex(
-    msg,
-    input_regex,
-    title,
-    input_is_correct,
-    input_must,
-    height=10,
-    width=50,
-    question=None,
-):
-    """
-    Give a set of dialogs to input a value which matches a regex.
-
-    If a question is given, ask and fail if the answer is no.
-    Loop on input until input matches regex or user exits.
-
-    Set 'with' to /config/dialogs, or another place which has the
-    values desired.
-
-    message - The request to input something.
-    regex - the regex to match the input.
-    title - usually the application title for all dialogs.
-    is_correct - question if result is correct.
-    must - message to say what it must match.
-    height - height of dialog.
-    width - width of dialog.
-    question - additional confirmation question to start. Exception if no.
-
-    Asks question,
-    then presents a dialog loop to receive an input which matches the regex.
-    the result is returned.
-    """
-    # =r"^\d{8}$",
-    if question is not None:
-        yno_fail(question)
-
-    # msg = A.get_in_config(["dialogs", "input_serial"])
-    while True:
-        code, res = inputbox(msg, title=title, height=height, width=width)
-        if code:
-            break
-        if re.match(input_regex, res):
-            yno_msg = "%s : %s" % (input_is_correct, res)
-            if yes_no(yno_msg):
-                break
-        else:
-            msg("%s : %s" % (input_must, input_regex))
-
-            os.system("clear")
-            logger.info("Value Entered is: %s" % res)
-        return res

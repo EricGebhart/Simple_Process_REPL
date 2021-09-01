@@ -89,16 +89,13 @@ namespace ui "User interface using dialog"
     Simple_Process_REPL.dialog
     help
     msg
-    _msg
     yes_no
-    _yes_no
-    print_file_loop
-    print_file
     input_count
     _input_string
     input_string
-    save_bcqr
-    print_bcqr
+    radiolist
+    menu
+    yno_fail
 
 
 
@@ -114,7 +111,7 @@ namespace shutil "Python shutil library"
 namespace sh "Subprocesses, shell etc."
     Simple_Process_REPL.subcmd
     help
-    do rm sleep environ do_cli_cmd do_cmd
+    do rm sleep environ do_cli_cmd do_cmd loop_cmd
 
 namespace log "logger controls and messages"
     Simple_Process_REPL.logs

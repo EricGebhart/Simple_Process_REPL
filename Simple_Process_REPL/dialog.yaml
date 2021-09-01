@@ -1,5 +1,4 @@
 config:
-    bcqr_minimum_length: 6
 
     dialogs:
         title : 'The Simple Process REPL'
@@ -17,11 +16,6 @@ config:
         process_finish   : 'Turn the Power Switch Off and Disconnect the Battery and USB.'
 
         continue         : 'Ready to Continue ?'
-
-        start_again      : 'Do it again ? '
-        # start_again      : 'Setup another device ? '
-        continue_to_next : 'Choice?  Press Y/y to do it again: '
-        # continue_to_next : 'Choice?  Press Y/y to configure another device: '
 
         input_please     : 'Please input Something.'
         # input_please     : 'Please input the 8 digit serial number.'
