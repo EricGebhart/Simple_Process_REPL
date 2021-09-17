@@ -228,7 +228,7 @@ def get_in_stack(symbol):
     return flatten_with().get(symbol, None)
 
 
-def _get_(symbol_or_path):
+def _get(symbol_or_path):
     """Get  a path  or symbol value from somewhere.
 
     / means its a full path.

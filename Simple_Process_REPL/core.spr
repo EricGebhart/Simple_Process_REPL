@@ -59,7 +59,7 @@ namespace as "Application State functionality"
     set_in
     set
     _format
-    _get_
+    _get
     get_in_stack
     push
     pop
