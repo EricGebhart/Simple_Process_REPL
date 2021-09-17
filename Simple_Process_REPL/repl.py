@@ -1175,14 +1175,20 @@ def do_fptrs(commands):
 
     # noop ? - yes
     # commands = resolve_vars(commands, start_index=1)
-
     try:
-        if fnargs == 0 and nargs == 0:
+        # need to fix varargs if below, and this together.
+        if command == "as/-format":
+            args = dequote(commands[1:])
+            result = fn(*args)
+            # result = fn(args[0], *args[1:])
+
+        elif fnargs == 0 and nargs == 0:
             result = fn()
 
         elif vargs:
 
             args = dequote(commands[1:fnargs])
+
             if nargs > fnargs:
                 args += [commands[fnargs:]]
             # logger.info("*ARgs: %s" % args)

@@ -28,21 +28,13 @@ config:
                 text_distance: 2
 
 
-# We need these to make it easy to print barcodes.
+def with-bc
+    "Add the barcode config to the with stack."
+    with /config/BQ/barcode
 
-def with-bc   "Add the barcode config to the with stack."
-    '
-    - with /config/BQ/barcode
-    - with barcode
-
-
-
-def with-qr   "Add the QR code config to the with stack."
-    '
-    - with /config/BQ/QRcode
-    - with qrcode
-
-
+def with-qr
+    "Add the QR code config to the with stack."
+    with /config/BQ/QRcode
 
 def gen
     "Generate bar or QR code from 'string'.

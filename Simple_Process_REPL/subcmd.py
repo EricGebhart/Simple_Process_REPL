@@ -134,7 +134,7 @@ def do_cli_cmd_w_timeout(cmd, timeout, external_cli_prefix=None):
 
 def loop_cmd(command, count=1):
     """Loop over a shell command using os.system."""
-        for i in range(0, count):
-            os.system(command)
+    for i in range(0, count):
+        os.system(command)
     else:
         os.system(command)

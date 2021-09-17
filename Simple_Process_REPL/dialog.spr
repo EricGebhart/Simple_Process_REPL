@@ -27,11 +27,73 @@ def with-ui
     "Add to with stack to pick up dialog message configuration."
     '
     - with /config/dialogs
-    - with /config/dialogs/print_commands
+    - with /config/print_commands
 
 
 
 # def print-codes.
-# def print_menu "Give a menu to select a print command by platform."
-#     '
-#     def-path choices "choices for printing by platform" ~/config/dialogs/print_commands/Linux
+
+# Print a bar or QR code a given number of times.
+
+  # prompt for a serial number
+  # encode the serial number as barcode or qrcode.
+  # save as a file.
+  # prompt for a printer command.
+  # prompt for number of times to print.
+  # loop over saved code file with print command.
+
+bq/with-bc
+bq/with-qr
+
+with print-codes
+
+bq/input_code
+bq/gen
+bq/save
+
+# we have the platform, we should be able to get the choices
+# from /config/dialogs/print_commands for the one we are on.
+# ~/platform should resolve to Linux, Windows, or Darwin.
+as/-format "~%s" ~/platform
+pop result pcodes
+set choices ~pcodes
+
+# set choices ~/platform
+
+# get the print command
+ui/menu
+pop results command
+
+#format the print command with the filename
+as/format command ~.filename
+
+# get how many. Could just use the default message instead...
+#
+# All this just to put a message in a temporary spot,
+# push it under the work space so return values go where we
+# want. use the message and then get rid of it.
+#
+# Use /tmp to add/change the input message.
+# swap /tmp with the last with.
+# use the message/get the value and pop it.
+# swap the top with and pop /tmp.
+# seems like it could be a regular pattern.
+
+with /tmp
+
+'
+input_please: "How many barcodes would you like to print?"
+
+
+
+swap /_with_
+
+ui/input_count
+pop results count
+
+swap /_with_
+pop-with
+as/clear-path /tmp
+
+# loop over the command for count times.
+sh/loop-cmd

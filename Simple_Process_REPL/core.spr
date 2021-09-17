@@ -58,6 +58,9 @@ namespace as "Application State functionality"
     show
     set_in
     set
+    _format
+    _get_
+    get_in_stack
     push
     pop
     swap

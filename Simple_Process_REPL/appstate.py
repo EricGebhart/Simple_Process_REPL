@@ -228,6 +228,19 @@ def get_in_stack(symbol):
     return flatten_with().get(symbol, None)
 
 
+def _get_(symbol_or_path):
+    """Get  a path  or symbol value from somewhere.
+
+    / means its a full path.
+    . means local to the current with
+    nothing means to look in the with stack for resolution.
+    """
+    if symbol_or_path[0] == "/" or symbol_or_path[0] == ".":
+        return get(symbol_or_path)
+    else:
+        return get_in_stack(symbol_or_path)
+
+
 def flatten_with():
     """Go through the with stack and flatten it,
     Only go to the depth set by /with_depth.
@@ -360,7 +373,7 @@ def push(set_path, fromv):
         val = [val]
 
     if dest:
-        if not isinstance(dest, list):
+        if not (isinstance(dest, list) or isinstance(dest, dict)):
             dest = [dest]
             dest += val
         else:
@@ -413,6 +426,7 @@ def nth(nth, path):
     return "Not found"
 
 
+# This seems weird to me.
 def get_fromv(fromv):
     """Get the value from there, if it's a there.
     If its raw value is a list, then it's a string from the parser.
@@ -422,7 +436,7 @@ def get_fromv(fromv):
 
     elif isinstance(fromv, str):
         # path = r.isa_path(fromv)
-        # if path:
+        # if path
         #     fromv = _get_vv_from_path(path)
         # else:
 
@@ -490,6 +504,7 @@ def set(set_path, fromv):
     treated as a path, otherwise as a symbol/value.
     """
     global AS
+
     # with local and absolute paths.
     set_keys = resolve_path(set_path)
 
@@ -813,6 +828,11 @@ def load_pkg_resource_with(path):
     res = u.load_pkg_resource(pkgname, filename)
     keys = _get_vv_from_path(path)
     set_in(keys + ["content", res])
+
+
+def _format(string, *args):
+    """Python format function"""
+    return format(string % args)
 
 
 def save(path, filename):
