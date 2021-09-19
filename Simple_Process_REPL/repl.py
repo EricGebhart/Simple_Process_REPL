@@ -267,6 +267,21 @@ def import_lib_spr(module):
         # logger.info("\nImport yaml failed: %s" % e)
 
 
+def new_ns(name, docstr, longname):
+    """
+    Create a new namespace with this name, and change to it.
+    """
+    global Root
+    Root[name] = {
+        "name": longname,
+        "doc": docstr,
+        "symbols": {},
+        "funclist": [],
+        "stype": "namespace",
+    }
+    in_ns(name)
+
+
 def namespace(name, docstr, module, *funclist):
     """
     Create a name space with name. From the python module, import the functions listed.
@@ -274,10 +289,15 @@ def namespace(name, docstr, module, *funclist):
     same name as the module. As per the import_lib_spr function.
     """
     global Root
+    pysymbols = {}
+
     logger.info("\nCreating Namespace: %s from Python module: %s" % (name, module))
     try:
+        if funclist:
+            pysymbols = append_funcs({}, module, *funclist)
+
         ns = {
-            "symbols": append_funcs({}, module, *funclist),
+            "symbols": pysymbols,
             "doc": docstr,
             "name": module,
             "funclist": funclist,

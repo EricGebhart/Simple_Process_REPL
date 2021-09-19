@@ -55,10 +55,8 @@ def gen
 def input-code
     "Dialog to get a string to encode to a bar or QR code"
     '
-    - with /config/BQ
     - ui/input-string
     - pop results value
-    - pop-with
 
 
 
@@ -67,3 +65,14 @@ def print-codes
     '
     - bq/input-code
     - ui/print-bcqr
+
+
+
+def get-gen-save-code
+    "Give an Input dialog for a serial number,
+     generate a code and save it in a file.
+     Place the filename in 'filename'"
+    '
+    - bq/input-code
+    - bq/gen
+    - bq/save

@@ -148,6 +148,7 @@ def init(symbols, specials, parser):
             "partial",
             "in_ns",
             "namespace",
+            "new_ns",
             "load_file",
             "_quit_",
             "eval",

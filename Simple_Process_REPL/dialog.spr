@@ -31,69 +31,62 @@ def with-ui
 
 
 
-# def print-codes.
+def choose-platform-command
+    "Give a menu of format strings to choose based on /platform.
+    place the result in 'command'. Commands should be a dictionary
+    named after the value in '~platform'.
+    we have the platform, we should be able to get the choices
+    from /config/print_commands for the one we are on.
+    ~/platform should resolve to Linux, Windows, or Darwin
+    or who knows what else."
+    '
+    # put the map at ~platform in choices.
+    - as/-get-in-stack ~platform
+    - pop results choices
 
-# Print a bar or QR code a given number of times.
-
-  # prompt for a serial number
-  # encode the serial number as barcode or qrcode.
-  # save as a file.
-  # prompt for a printer command.
-  # prompt for number of times to print.
-  # loop over saved code file with print command.
-
-bq/with-bc
-bq/with-qr
-
-with print-codes
-
-bq/input_code
-bq/gen
-bq/save
-
-# we have the platform, we should be able to get the choices
-# from /config/dialogs/print_commands for the one we are on.
-# ~/platform should resolve to Linux, Windows, or Darwin.
-as/-format "~%s" ~/platform
-pop result pcodes
-set choices ~pcodes
-
-# set choices ~/platform
-
-# get the print command
-ui/menu
-pop results command
-
-#format the print command with the filename
-as/format command ~.filename
-
-# get how many. Could just use the default message instead...
-#
-# All this just to put a message in a temporary spot,
-# push it under the work space so return values go where we
-# want. use the message and then get rid of it.
-#
-# Use /tmp to add/change the input message.
-# swap /tmp with the last with.
-# use the message/get the value and pop it.
-# swap the top with and pop /tmp.
-# seems like it could be a regular pattern.
-
-with /tmp
-
-'
-input_please: "How many barcodes would you like to print?"
+    # choose the command
+    - ui/menu
+    - pop results command
 
 
 
-swap /_with_
+def format-filename-command
+    "Use command to format a command using the value of filename as a format value."
+    '
+    #format the print command with the filename
+    - as/-format command ~.filename
+    - pop results command
 
-ui/input_count
-pop results count
 
-swap /_with_
-pop-with
-as/clear-path /tmp
 
-# loop over the command for count times.
-sh/loop-cmd
+# Set up the printer choices for the  platform and give a menu.
+def get-filename-command
+    "Choose a print command for this platform and format it with the value of command."
+    '
+    -  ui/choose-platform-command
+    -  ui/format-filename-command
+
+
+
+partial get-print-command
+    "Different name wrapper.
+    Use get-platform-command, with /config/print-commands to
+    create a print command with the filename available."
+    ui/get-filename-command
+
+
+def get-count
+    "Get how many into 'count'. Give an input count dialog and pop results to count."
+    '
+    - ui/input_count
+    - pop results count
+
+
+
+def get-count-loop-command
+    "Get a count from an input dialog and do 'command' that many times."
+    '
+    - with /print-codes/input-count
+    - ui/get-count
+    - sh/loop-cmd
+    - pop-with
