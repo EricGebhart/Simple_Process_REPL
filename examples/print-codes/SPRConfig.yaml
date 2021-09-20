@@ -1,0 +1,14 @@
+files:
+    logfile       : 'SPR.log'
+    loglevel      : 'info'
+
+exec:
+    autoexec : pc/print-codes
+
+    hooks:
+        startup:
+        - pc/initialize
+
+        shutdown:
+
+        - ui/msg "Goodbye have a nice day!"

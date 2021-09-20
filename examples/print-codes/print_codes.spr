@@ -1,0 +1,114 @@
+# Print-codes
+#
+# Application to input, generate and print a number of bar or QR codes.
+# value -> code_string -> code -> filename ->
+# Do command on filename count times.
+
+# Our workspace. Initialize will copy into place.
+# clear will reset it.
+# Set code-with to be bq/with-bc or bq/with-qr to
+# automatically create the right type. Barcode or
+# QR code respectively.
+#
+# input-count provides a new prompt so pushing that
+# on the with stack gives the final with-space for
+# the shell loop to happen.
+
+
+# setup the data.
+
+with /config/print-codes
+
+'
+workspace:
+    # do barcodes by default
+    code-with: bq/with-bc
+
+    # They have a serial number, so make it more personal
+    input_please: "Please enter a serial number to encode."
+
+    # another place so we can have another prompt to get count.
+    input-count:
+        input_please: "How many codes would you like to print?"
+        count:    1
+
+    # parameters that get used as we go along. Just so it's doc'd.
+    value:    null
+    code_string: null
+    code:     null
+    filename: null
+    command:  null
+
+help:
+  - Print-Codes.
+
+    A set of functions to give a dialog process for
+    a number to encode as either a barcode or QRcode, Prompting
+    based on platform for the print command to print the resulting
+    code file any number of times.
+
+    Setting 'command' and filename would allow for skipping the
+    printer choice dialog.  Use ui/format-filename-command.
+
+    The value of code-with should be function to evaluate which will setup the
+    proper with data structure defining the options required by the
+    bq module. bq/with-bc and bq/with-qr are provided by barqr.
+
+    Initialize should be placed in the startup hooks so that it
+    only runs once if it is run as a repeating process.
+
+    The with stack is setup so that ui/get-filename-command will
+    find ~platform in /config/print_commands
+
+    The print-codes function will Print a bar or QR code a given
+    number of times. This Expects values in the with stack to be set
+    appropriately, as in using bq/with-qr or bq/with-bc to set the
+    values for code generation and saving. The value of code-with is
+    used by Initialize to ensure this.
+
+    The following steps are taken.
+        * Prompt for a serial number
+        * Encode the serial number as barcode or qrcode.
+        * Save the code as a file.
+        * Prompt for a printer command.
+        * Format the command using ~filename as the format argument.
+        * Prompt for number of times to print.
+        * Loop count times to execute the print command.
+
+
+
+# get out of /config/print-codes
+pop-with
+
+# End of Data
+
+# Give ourselves a namespace
+new-ns pc "Print Bar and QR codes" Print-Codes
+
+def help "Help for print-codes."
+   show /config/print-codes/help
+
+def clear
+    "Initialize the print-codes work space to that of config."
+    set /print-codes /config/print-codes/workspace
+
+
+def initialize
+    "Initialize the print-codes work space to original,
+    setup the with stack."
+    '
+    - pc/clear
+    - ui/with-ui
+    - eval .code-with
+    - with /print-codes
+
+
+
+def print-codes
+    "Present dialogs to input a serial number, encode it as a bar or QR code,
+    save it as a file, then print it some number of times."
+    '
+    - bq/get-gen-save-code
+    - ui/get-print-command
+    - ui/get-count-loop-command
+    - pc/clear

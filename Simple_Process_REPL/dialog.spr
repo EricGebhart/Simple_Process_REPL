@@ -45,7 +45,7 @@ def choose-platform-command
     - pop results choices
 
     # choose the command
-    - ui/menu-map
+    - ui/menu
     - pop results command
 
 
@@ -54,14 +54,14 @@ def format-filename-command
     "Use command to format a command using the value of filename as a format value."
     '
     #format the print command with the filename
-    - as/-format command ~.filename
+    - as/-format ~command ~.filename
     - pop results command
 
 
 
 # Set up the printer choices for the  platform and give a menu.
 def get-filename-command
-    "Choose a print command for this platform and format it with the value of command."
+    "Choose a print command for this platform and format it with the value of filename."
     '
     -  ui/choose-platform-command
     -  ui/format-filename-command
