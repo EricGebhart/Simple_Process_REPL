@@ -6,7 +6,7 @@
 
 # Our workspace. Initialize will copy into place.
 # clear will reset it.
-# Set code-with to be bq/with-bc or bq/with-qr to
+# Set 'code-with' to be bq/with-bc or bq/with-qr to
 # automatically create the right type. Barcode or
 # QR code respectively.
 #
@@ -29,7 +29,7 @@ workspace:
 
     # another place so we can have another prompt to get count.
     input-count:
-        input_please: "How many codes would you like to print?"
+        input_please: "How many copies would you like to print?"
         count:    1
 
     # parameters that get used as we go along. Just so it's doc'd.
