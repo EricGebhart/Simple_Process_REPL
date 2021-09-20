@@ -41,11 +41,11 @@ def choose-platform-command
     or who knows what else."
     '
     # put the map at ~platform in choices.
-    - as/-get-in-stack ~platform
+    - as/get-in-stack ~/platform
     - pop results choices
 
     # choose the command
-    - ui/menu
+    - ui/menu-map
     - pop results command
 
 

@@ -171,23 +171,42 @@ def yes_no(yn_msg, title, height=10, width=50):
 
 
 def radiolist(radio_msg, title, choices, height=50, width=50):
-    return d.radiolist(
+    """
+    Give a radio list from a dictionary of choices.
+    """
+    choice_tuples = list(choices.items())
+
+    code, value = d.radiolist(
         msg,
         title=title,
-        choices=choices,
+        choices=choice_tuples,
         height=50,
         width=50,
     )
+    return [code, value, choices[value]]
 
 
 def menu(menu_msg, title, choices, height=50, width=50):
-    return d.menu(
+    """
+    Give a menu using a dictionary of key values to make the choice tuples.
+    """
+
+    # choice_tuples = []
+    # logger.info("choices: %s" % choices)
+    # for k, v in choices.items():
+    #     choice_tuples += tuple(k, v)
+
+    choice_tuples = list(choices.items())
+
+    code, value = d.menu(
         menu_msg,
         title=title,
-        choices=choices,
+        choices=choice_tuples,
         height=height,
         width=width,
     )
+
+    return [code, value, choices[value]]
 
 
 def yno_fail(yn_fail_msg):

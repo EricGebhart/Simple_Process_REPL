@@ -448,14 +448,15 @@ def get_fromv(fromv):
             vv = _get_vv_from_path(fromv[1:])
             fromv = get_in(_get_with_vv() + vv)
 
-    elif isinstance(fromv, list):
-        res = None
-        for x in fromv:
-            if res is None:
-                res = str(x)
-            else:
-                res = res + " " + str(x)
-                fromv = res
+    # haven't found the reason this was here yet.
+    # elif isinstance(fromv, list):
+    #     res = None
+    #     for x in fromv:
+    #         if res is None:
+    #             res = str(x)
+    #         else:
+    #             res = res + " " + str(x)
+    #             fromv = res
 
     elif fromv and len(fromv) == 1:
         fromv = fromv  # [0]
