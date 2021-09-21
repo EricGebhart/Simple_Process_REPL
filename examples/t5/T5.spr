@@ -1,0 +1,56 @@
+# This is an application to connect, update, register, test and flash
+# a particle.io board.
+#
+# See the device (dev) and particle (pb) modules for more information.
+
+
+# Set up the data
+
+with /config/device
+
+'
+  handshake:
+    do_qqc_func: dev/input-serial
+    do_qqc_regex: ^I:Now Setting Serial Number
+    done_regex: ^I:Test All Done
+    fail_regex: ^F:.*
+    init_string: 'R5 Test'
+    response_string: '!'
+  serial:
+    baudrate: 9600
+    input_please: Please input an 8 digit serial number
+    input_regex: ^\d{8}$
+  waiting:
+    pause_time: 5
+    timeout: 30
+
+
+
+pop-with
+
+def processit
+    "Process a particle.io board, no dialogs other than those provided by SPR."
+    '
+    - pb/id-it
+    - pb/setup
+    - pb/add
+    - dev/wait
+    - pb/testit
+    - pb/flash
+    - as/archive-log
+
+
+
+def processit-with-dialogs
+    "Process a particle.io board, more dialogs."
+    '
+    - ui/dialog-start
+    - pb/id-it
+    - pb/setup
+    - pb/add
+    - dev/wait
+    - ui/dialog-test
+    - pb/testit
+    - ui/dialog-flash
+    - pb/flash
+    - as/archive-log

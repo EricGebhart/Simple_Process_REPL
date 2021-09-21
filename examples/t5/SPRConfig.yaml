@@ -1,0 +1,3 @@
+exec:
+  autoexec: processit
+  autoload: T5.spr

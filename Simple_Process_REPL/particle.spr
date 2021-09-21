@@ -22,21 +22,16 @@ device:
 
 def init-with
     "Set up the with stack so we get our stuff."
-'
-- with /config/dialogs
-- with /config/device/serial
-- with /config/device/waiting
-- with /config/device/handshake
-- with /config/particle
-- with /device
+    '
+    - with /config/dialogs
+    - with /config/device/serial
+    - with /config/device/waiting
+    - with /config/device/handshake
+    - with /config/particle
+    - with /device
 
 
 
-# # experiment.
-# def cmd "Do particle-cli commands"
-#     '
-#     - set external_cli_prefix 'particle'
-#     - sh/do-cli-cmd
 def browse "Browse to the particle-cli developer tools website."
     web/browse "https://docs.particle.io/tutorials/developer-tools/cli/#installing"
 
@@ -111,7 +106,6 @@ def set-setup-bit
 
 
 
-
 def add
     "Register/claim device with 'particle device add'"
     '
@@ -130,17 +124,12 @@ def claim
 
 
 
-partial get
-    "Find the particle device and get it's vitals."
-    pb/get-w-timeout
-
-
-# def get-usb-and-id
-#     "Retrieve and set the USB device, the board name,  and the device id.
-#     Uses 'particle serial list' in a timeout loop."
-#     '
-#     - pb/get
-#     - pop results .
+ def get
+     "Retrieve and set the USB device, the board name,  and the device id.
+     Uses 'particle serial list' in a timeout loop."
+     '
+     - pb/get-w-timeout
+     - pop results .
 
 
 
@@ -176,7 +165,6 @@ def id-it
     necessary for consistent success"
     '
     - pb/get
-    - pop results .
     - pb/reset-usb
     - dev/wait
     - dev/pause
@@ -243,33 +231,3 @@ def claimit-3ways
     - pb/add
     - dev/wait
     - claim
-
-
-
-def processit
-    "This is the whole process, dialogs only at the beginning and end."
-    '
-    - pb/id-it
-    - pb/setup
-    - pb/add
-    - dev/wait
-    - pb/testit
-    - pb/flash
-    - as/archive-log
-
-
-
-
-def processit-with-dialogs
-    "This is the whole process, dialogs everywhere."
-    '
-    - ui/dialog-start
-    - pb/id-it
-    - pb/setup
-    - pb/add
-    - dev/wait
-    - ui/dialog-test
-    - pb/testit
-    - ui/dialog-flash
-    - pb/flash
-    - as/archive-log
