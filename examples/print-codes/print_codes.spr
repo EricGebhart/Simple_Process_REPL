@@ -54,6 +54,8 @@ help:
     proper with data structure defining the options required by the
     bq module. bq/with-bc and bq/with-qr are provided by barqr.
 
+    It can also be set with bq/code-type-menu.
+
     Initialize should be placed in the startup hooks so that it
     only runs once if it is run as a repeating process.
 
@@ -92,7 +94,6 @@ def clear
     "Initialize the print-codes work space to that of config."
     set /print-codes /config/print-codes/workspace
 
-
 def initialize
     "Initialize the print-codes work space to original,
     setup the with stack."
@@ -108,6 +109,7 @@ def print-codes
     "Present dialogs to input a serial number, encode it as a bar or QR code,
     save it as a file, then print it some number of times."
     '
+    # - bq/code-type-menu
     - bq/get-gen-save-code
     - ui/get-print-command
     - ui/get-count-loop-command

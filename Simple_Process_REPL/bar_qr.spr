@@ -26,6 +26,9 @@ config:
             save_options:
                 module_height: 8
                 text_distance: 2
+        type-menu:
+            barcode: bq/with-bc
+            QR-code: bq/with-qr
 
 
 def with-bc
@@ -76,3 +79,12 @@ def get-gen-save-code
     - bq/input-code
     - bq/gen
     - bq/save
+
+
+
+def code-type-menu
+    "Give a menu of code types to select from and place a command in code-with."
+    '
+    - set choices /config/BQ/type-menu
+    - ui/menu
+    - pop-results code-with
