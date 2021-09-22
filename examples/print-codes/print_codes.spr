@@ -96,8 +96,7 @@ def clear
     set . /config/print-codes/workspace
 
 def initialize
-    "Initialize the print-codes workspace,
-    setup the with stack."
+    "Initialize the print-codes workspace, setup the with stack."
     '
     - ui/with-ui
     - with /print-codes
@@ -106,11 +105,6 @@ def initialize
     - eval .code-with
     - with /print-codes
 
-def set-code-type
-    "Set the code type so we make the right kind,
-    it should be a with, so put it under the top"
-    # - bq/code-type-menu
-    - eval .code-with
 
 
 def print-codes
