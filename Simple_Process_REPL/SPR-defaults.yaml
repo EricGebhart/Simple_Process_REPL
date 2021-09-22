@@ -16,6 +16,8 @@ exec:
 
     autoexec : ui/hello
 
+    autoload:
+
     help:
 
     functions :

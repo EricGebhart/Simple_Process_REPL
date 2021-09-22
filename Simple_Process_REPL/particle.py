@@ -99,7 +99,7 @@ def get_w_timeout(timeout):
     loop over list_usb() for a timeout period. Extract
     the usb device, board name, and the device id if possible.
     This is actually nice behavior because it gives a chance to
-    replug your particle board. And this is the first step to
+    re-plug your particle board. And this is the first step to
     any set of operations on a device.
     returns path,type and id.
     """
@@ -117,7 +117,7 @@ def get_w_timeout(timeout):
             logger.error("Getting USB and device ID timed out")
             raise Exception("Getting USB and device ID timed out.")
 
-        time.sleep(1)
+        # time.sleep(1)
 
     return stdout
 

@@ -10,26 +10,26 @@ config:
             test    : 'R5Test.bin'
             tinker  : 'tinker-0.8.0-rc.27-boron.bin'
 
-device:
-  id: ''
-  last_id: ''
-  type: ''
-  serial: ''
-  name: ''
-  path: ''
+        workspace:
+            id: ''
+            type: ''
+            serial: ''
+            name: ''
+            path: ''
 
 
 
-def init-with
-    "Set up the with stack so we get our stuff."
+def clear
+    "Initialize the device workspace to that of config."
+    set . /config/particle/workspace
+
+def initialize
+    "Initialize the /device workspace to original, setup the with stack."
     '
-    - with /config/dialogs
-    - with /config/device/serial
-    - with /config/device/waiting
-    - with /config/device/handshake
+    - dev/initialize
     - with /config/particle
     - with /device
-
+    - pb/clear
 
 
 def browse "Browse to the particle-cli developer tools website."
@@ -40,7 +40,7 @@ def inspect
     pb/cmd "serial inspect"
 
 def login
-    "Login to particle cloud from the cli prompt"
+    "Login to particle cloud from the system cli prompt"
     os/system "particle cloud login"
 
 def logout

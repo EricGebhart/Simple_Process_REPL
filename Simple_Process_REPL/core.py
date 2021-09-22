@@ -87,7 +87,7 @@ def do_something():
 
     autoload = A.get_in(["config", "exec", "autoload"])
 
-    if Path(autoload).is_file():
+    if autoload and Path(autoload).is_file():
         r.load_file(autoload)
 
     # Each of these should be a list of commands to execute.

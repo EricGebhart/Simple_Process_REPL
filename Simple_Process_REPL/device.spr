@@ -1,11 +1,4 @@
 '
-device:
-  id: ''
-  last_id: ''
-  type: ''
-  serial: ''
-  name: ''
-  path: ''
 
 config:
     device:
@@ -15,8 +8,8 @@ config:
             input_please  : Please input an 8 digit serial number
 
         handshake:
-            init_string     : Some handshake string
-            response_string : some response string
+            init_string     : hello
+            response_string : hi!
             fail_regex      : ^F:.*
             done_regex      : ^I:Test All Done
             do_qqc_regex    : ^I:Now Setting Serial Number
@@ -27,8 +20,28 @@ config:
             timeout      : 30
             pause_time   : 5
 
+        workspace:
+            id: ''
+            type: ''
+            serial: ''
+            name: ''
+            path: ''
 
 
 def input-serial
     "input a serial number"
     ui/-input-string
+
+def clear
+    "Initialize the print-codes work space to that of config."
+    set . /config/device/workspace
+
+def initialize
+  "Set up the with stack for us."
+  '
+  - ui/with-ui
+  - with /config/device/handshake
+  - with /config/device/serial
+  - with /config/device/waiting
+  - with /device
+  - dev/clear

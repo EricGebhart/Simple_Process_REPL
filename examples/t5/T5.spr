@@ -4,11 +4,49 @@
 # See the device (dev) and particle (pb) modules for more information.
 
 
-# Set up the data
 
-with /config/device
+# set the automatic execution to do what we want.
+# Make sure our with stack has everything we need.
+# But we only want that once.
+with /config/exec
 
 '
+autoexec: processit
+hooks:
+    startup:
+    - pb/initialize
+
+
+
+pop-with
+
+# Set up the data
+# Most of this was stolen from the defaults already defined
+# by device and particle. Modify as needed.
+# if output from the device matches on do_qqc_regex, then
+#
+# do something function, an input dialog, is provided by device.
+# The result is sent back to the device which should be waiting.
+# in this case, to get input for and send back the serial number.
+#
+# help dev/handshake for more information.
+#
+# Serial has it's own regex and input prompt which will be used for this.
+#
+# Set the image names to the names of the binaries you have and wish
+# to use for the test and final flash, and optionally tinker if you have one.
+#
+# Product is used for product registration with particle.io.
+#
+# Two complete processes are provided, one with and one without dialogs
+# which prompt ready at various steps.
+# The default interactive behavior is to loop with begin, end, and again dialogs.
+
+
+with /config
+
+'
+device:
   handshake:
     do_qqc_func: dev/input-serial
     do_qqc_regex: ^I:Now Setting Serial Number
@@ -20,17 +58,22 @@ with /config/device
     baudrate: 9600
     input_please: Please input an 8 digit serial number
     input_regex: ^\d{8}$
-  waiting:
-    pause_time: 5
-    timeout: 30
 
+particle:
+  images:
+    flash: R5Bin.bin
+    test: R5Test.bin
+    tinker: tinker-0.8.0-rc.27-boron.bin
+  product: XXXXX
 
 
 pop-with
 
 def processit
-    "Process a particle.io board, no dialogs other than those provided by SPR."
+    "Process a particle.io board, no dialogs other than those provided by SPR.
+    or the particle board functions."
     '
+    - pb/clear
     - pb/id-it
     - pb/setup
     - pb/add
@@ -42,8 +85,9 @@ def processit
 
 
 def processit-with-dialogs
-    "Process a particle.io board, more dialogs."
+    "Process a particle.io board, more 'ready' dialogs."
     '
+    - pb/clear
     - ui/dialog-start
     - pb/id-it
     - pb/setup

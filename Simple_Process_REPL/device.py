@@ -61,19 +61,6 @@ Here are the steps that _handshake()_ does.
   validates it, and returns it.
   input-serial at the _SPR:>_ prompt.
 
-  Things are changing, calls to get_in_config are going away
-  in other modules as functions with args in conjuntion with 'with' are
-  easy to use and more flexible
-
-  Currently _pause, _wait, _handshake are the hard path free versions.
-  At the same time, everything needed is available with this with-stack.
-
-  with /config/dialogs
-  with /config/device/handshake
-  with /config/device/serial
-  with /config/device/waiting
-  with /device
-
 """
     % yaml
 )
