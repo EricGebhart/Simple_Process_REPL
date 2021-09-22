@@ -10,6 +10,7 @@ config:
             test    : 'R5Test.bin'
             tinker  : 'tinker-0.8.0-rc.27-boron.bin'
 
+        # being polite, for documentation's sake.
         workspace:
             id: ''
             type: ''

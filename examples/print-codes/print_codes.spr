@@ -39,6 +39,7 @@ workspace:
     filename: null
     command:  null
 
+
 help:
   - Print-Codes.
 
@@ -92,24 +93,30 @@ def help "Help for print-codes."
 
 def clear
     "Initialize the print-codes work space to that of config."
-    set /print-codes /config/print-codes/workspace
+    set . /config/print-codes/workspace
 
 def initialize
-    "Initialize the print-codes work space to original,
+    "Initialize the print-codes workspace,
     setup the with stack."
     '
-    - pc/clear
     - ui/with-ui
+    - with /print-codes
+    - pc/clear
+    # - bq/code-type-menu
     - eval .code-with
     - with /print-codes
 
+def set-code-type
+    "Set the code type so we make the right kind,
+    it should be a with, so put it under the top"
+    # - bq/code-type-menu
+    - eval .code-with
 
 
 def print-codes
     "Present dialogs to input a serial number, encode it as a bar or QR code,
     save it as a file, then print it some number of times."
     '
-    # - bq/code-type-menu
     - bq/get-gen-save-code
     - ui/get-print-command
     - ui/get-count-loop-command
