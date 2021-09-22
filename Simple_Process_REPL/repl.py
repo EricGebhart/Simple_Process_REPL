@@ -680,9 +680,14 @@ def printns_syms(ns):
 
 def get_parent_symbol(symbol):
     """get the symbol this symbol is derived from"""
-    func_name = symbol["fn"].split(" ")[0]
-    s = _get_symbol(func_name)
-    return func_name, _get_symbol(func_name)
+    try:
+        func_name = symbol["fn"].split(" ")[0]
+        s = _get_symbol(func_name)
+    except Exception as e:
+        logger.error(e)
+        logger.error("Symbol has no parent %s" % symbol)
+        return "No Symbol", None
+    return func_name, s
 
 
 def print_sym(k, symbol):
@@ -694,7 +699,13 @@ def print_sym(k, symbol):
 
     if isstype(symbol, "partial"):
         parent_name, parent = get_parent_symbol(symbol)
-        print("   %-30s  Partial -->  %-20s" % (sig, fptr_sig(parent_name, parent)))
+        if parent is not None:
+            print("   %-30s  Partial -->  %-20s" % (sig, fptr_sig(parent_name, parent)))
+        else:
+            print(
+                "   %-30s  Partial -->  %-20s Error: Does not exist"
+                % (sig, parent_name)
+            )
 
     if isstype(symbol, "dolist"):
         if isinstance(symbol["fn"], str):
