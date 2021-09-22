@@ -174,7 +174,11 @@ def _get_with_path():
 
 def _get_with_vv():
     """Return the current 'With' Vector."""
-    return with_stack[-1]["vv"]
+    path = _get_with_path()
+    if path == "/":
+        return []
+    else:
+        return _get_vv_from_path(_get_with_path())
 
 
 def _full_with_path(path):
@@ -298,6 +302,8 @@ def set_in(*keys):
 
 
 def _get_vv_from_path(path):
+    if path is None:
+        return ["_Root_"]
     if path[0] == "/":
         path = path[1:]
     return path.split("/")
@@ -442,7 +448,6 @@ def get_fromv(fromv):
 
         if fromv[0] == "/":
             fromv = get_from_path(fromv[1:])
-            logger.info(fromv)
 
         elif fromv[0] == ".":
             vv = _get_vv_from_path(fromv[1:])
@@ -484,11 +489,12 @@ def resolve_path(path):
     elif path[0] == "/":
         set_keys = get_vv(path)
 
+    elif path[0] == ".":
+        set_keys = _get_with_vv()
+
     elif path[0] != "/":
         path = _full_with_path(path)
         set_keys = get_vv(path)
-
-    # logger.info("resolve path: %s: %s" % (path, set_keys))
 
     return set_keys
 
@@ -500,6 +506,8 @@ def set(set_path, fromv):
     Set path can be absolute, or relative to the with.
     If set_path does not begin with / then it
     will be searched from the 'with' root.
+
+    If '.' The source will be merged directly into the current with.
 
     Values beginning with / will be
     treated as a path, otherwise as a symbol/value.
@@ -513,6 +521,7 @@ def set(set_path, fromv):
     fromv = get_fromv(fromv)
 
     set_keys += [fromv]
+
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -532,8 +541,6 @@ def get(path):
 
     else:
         vv = _get_vv_from_path(path)
-
-    logger.debug("get path: %s, %s" % (path, vv))
 
     return get_in(vv)
 
