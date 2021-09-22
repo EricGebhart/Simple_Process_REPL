@@ -80,7 +80,7 @@ def getgensym(sym):
 
 
 def _ls_with():
-    path = with_stack[-1]["path"]
+    path = with_stack[-1]
     print(path)
     print("-------------------------")
     if path[0] == "/":
@@ -118,32 +118,30 @@ def _with(wpath=None, wcommand=None, destpath=None):
     if wpath[0] != "/":
         wpath = "/" + wpath
 
-    # Value vectors, paths, I need to get these
-    # symbols straightened out a bit. Seems like
-    # should be keeping withs, in the app state too.
-    # they seem a little stupid at the moment.
-    # basically a manual path stack.
     vv = _get_vv_from_path(wpath)
-    try:
-        vv.remove("")
-    except Exception:
-        pass
 
-    if vv is None:
-        vv = []
+    with_stack.append(wpath)
 
-    with_stack.append(
-        {
-            "path": wpath,
-            "vv": vv,
-        }
-    )
     set_in(vv + [{}])
+
+    # if there is a command, either
+    # pop the result to the path or pushed with. before popping.
+    # if destination starts with a . it is taken to mean the
+    # the with from which this with was launched.
+    # not sure this is a good idea.
+    #
     if wcommand:
         r.eval_cmd(wcommand)
         if destpath is not None:
-            pop("results", destpath)
-        pop("/_with_")
+            if destpath[0] == ".":
+                g = gensym()
+                pop("results", g)
+                pop("/_with_")
+                set(destpath, g)
+            else:
+                pop("results", destpath)
+        else:
+            pop("/_with_")
     else:
         try:
             _ls_with()
@@ -151,52 +149,29 @@ def _with(wpath=None, wcommand=None, destpath=None):
             pass
 
 
-def pop_with():
-    """until it gets surfaced."""
-    with_stack.pop()
-
-
-def _with_stack():
-    """Print the stack of 'withs/scopes'.
-    Show the contents of the top entry
-    and the entries of the stack which are below it."""
-    global with_stack
-    # print(reversed(with_stack))
-    # pretty print the dict at path.
-    for p in reversed(with_stack):
-        print(p["path"])
-
-
 def _get_with_path():
     """Return the current 'With' Vector as a path."""
-    return with_stack[-1]["path"]
+    if len(with_stack) == 0:
+        return "/"
+    return with_stack[-1]
 
 
 def _get_with_vv():
     """Return the current 'With' Vector."""
     path = _get_with_path()
-    if path == "/":
+    if path is None or path == "/":
         return []
     else:
         return _get_vv_from_path(_get_with_path())
 
 
 def _full_with_path(path):
-    """takes a path and prepends the with path."""
+    """Takes a path and prepends the with path."""
     withpath = _get_with_path()
 
     if withpath != "/" and path[0] != "/":
         path = "/" + path
     return _get_with_path() + path
-
-
-# def set_with(set_path, fromv):
-#     """Takes a path or path symbol and a value
-#     or 2 paths. Prepends the path of with and calls set.
-#     """
-#     set_path = _full_with_path(set_path)
-#     # logger.debug("set-with %s" % set_path)
-#     set(set_path, fromv)
 
 
 def get_in_with(path):
@@ -223,7 +198,7 @@ def select_keys(m, keys):
 
 def flat_with():
     """Print the flattened with in YAML."""
-    print(yaml.dump(flatten_with()))
+    print(yaml.dump(flatten_with(), Dumper=NoAliasDumper))
 
 
 def get_in_stack(symbol):
@@ -258,7 +233,7 @@ def flatten_with():
     fd = {}
     i = 0
     for w in with_stack[1:]:
-        d = get_in(w["vv"])
+        d = get_in(_get_vv_from_path(w))
         fd |= d
 
         if depth >= 0 and i == depth:
@@ -418,16 +393,36 @@ def nth(nth, path):
     Otherwise do nothing.
     """
     if path is None or len(path) == 0:
-        return
+        return "Not found"
 
-    if path[0] != "/":
-        value = get_in_with(path)
-    else:
-        value = get_from_path(path)
+    if isinstance(path, list) or isinstance(path, str):
+        if len(path) >= nth:
+            v = path[nth]
+            return v
 
-    if isinstance(value, list):
-        if len(value) >= nth:
-            return value[nth - 1]
+    return "Not found"
+
+
+def rest(path):
+    """If the path is a list or string, return all but the first value."""
+    if path is None or len(path) == 0:
+        return "Not found"
+
+    if isinstance(path, list) or isinstance(path, str):
+        v = path[1:]
+        return v
+
+    return "Not found"
+
+
+def reverse(path):
+    """If the path is a list or string, return all but the first value."""
+    if path is None or len(path) == 0:
+        return "Not found"
+
+    if isinstance(path, str) or isinstance(path, list):
+        v = path[::-1]
+        return v
 
     return "Not found"
 
@@ -440,18 +435,18 @@ def get_fromv(fromv):
     if isinstance(fromv, int) or isinstance(fromv, float):
         fromv = fromv
 
-    elif isinstance(fromv, str):
-        # path = r.isa_path(fromv)
-        # if path
-        #     fromv = _get_vv_from_path(path)
-        # else:
+    # elif isinstance(fromv, str):
+    #     # path = r.isa_path(fromv)
+    #     # if path
+    #     #     fromv = _get_vv_from_path(path)
+    #     # else:
 
-        if fromv[0] == "/":
-            fromv = get_from_path(fromv[1:])
+    # if fromv[0] == "/":
+    #     fromv = get_from_path(fromv[1:])
 
-        elif fromv[0] == ".":
-            vv = _get_vv_from_path(fromv[1:])
-            fromv = get_in(_get_with_vv() + vv)
+    # elif fromv[0] == ".":
+    #     vv = _get_vv_from_path(fromv[1:])
+    #     fromv = get_in(_get_with_vv() + vv)
 
     # haven't found the reason this was here yet.
     # elif isinstance(fromv, list):
@@ -653,7 +648,7 @@ def show(pathname=None):
         qqc = get_in(vv)
 
     if qqc:
-        logger.info(yaml.dump(qqc))
+        logger.info(yaml.dump(qqc, Dumper=NoAliasDumper))
 
 
 def archive_log(new_name):
@@ -695,6 +690,11 @@ def eval_default_process():
             raise Exception(e)
     else:
         hello()
+
+
+class NoAliasDumper(yaml.SafeDumper):
+    def ignore_aliases(self, data):
+        return True
 
 
 def yaml_load(y):

@@ -65,8 +65,9 @@ namespace as "Application State functionality"
     pop
     swap
     nth
+    rest
+    reverse
     _with
-    _with_stack
     get_in_stack
     flat_with
     flatten_with
@@ -209,8 +210,6 @@ def view-doc "Display the Readme documentation in an html viewer."
 
 def browse-doc "Display the Readme documentation in a browser window."
     with readme web/browse
-
-as/-with-stack
 
 pop-with
 

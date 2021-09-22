@@ -1,8 +1,8 @@
-partial first "Get the first value of a list." as/nth 1
+partial first "Get the first value of a list." as/nth 0
 
-partial second "Get the second value of a list." as/nth 2
+partial second "Get the second value of a list." as/nth 1
 
-partial last "Get the last value of a list." as/nth 0
+partial last "Get the last value of a list." as/nth -1
 
 # move back to root (/)
 in-ns
@@ -19,6 +19,6 @@ partial run "Run the autoexec command set in the configuration" as/eval-default-
 
 partial with "Set or show the current with path." as/-with
 
-partial with-stack "Show the current resolution map of the with stack." as/-with-stack
+partial ls-with "Show the with stack." ls /_with_
 
 partial pop-with "Pop the current with from the stack." as/pop /_with_
