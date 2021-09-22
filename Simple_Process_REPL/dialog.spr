@@ -34,17 +34,17 @@ def with-ui
 def choose-platform-command
     "Give a menu of format strings to choose based on /platform.
     place the result in 'command'. Commands should be a dictionary
-    named after the value in '~platform'.
-    we have the platform, we should be able to get the choices
-    from /config/print_commands for the one we are on.
+    named after the value in '~/platform'.
+    For example we should be able to get some choices
+    from /config/print_commands for this platform.
     ~/platform should resolve to Linux, Windows, or Darwin
-    or who knows what else."
+    or who knows what else. ~/platform is set automatically by SPR."
     '
     # put the map at ~platform in choices.
     - as/get-in-stack ~/platform
     - pop results choices
 
-    # choose the command
+    # Choose the command, It's the last of 3 results.
     - ui/menu
     - pop results command
 
@@ -53,7 +53,7 @@ def choose-platform-command
 def format-filename-command
     "Use command to format a command using the value of filename as a format value."
     '
-    #format the print command with the filename
+    # format the print command with the filename
     - as/-format ~command ~.filename
     - pop results command
 
