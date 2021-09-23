@@ -4,7 +4,7 @@ partial second "Get the second value of a list." as/nth 1
 
 partial last "Get the last value of a list." as/nth -1
 
-# move back to root (/)
+# move back to the root namespace for  the rest   (/)
 in-ns
 
 partial show "Show the Application state datastore." as/show
@@ -19,6 +19,6 @@ partial run "Run the autoexec command set in the configuration" as/eval-default-
 
 partial with "Set or show the current with path." as/-with
 
-partial ls-with "Show the with stack." ls /_with_
+partial ls-with "Show the with stack." ls ~/_with_path_
 
-partial pop-with "Pop the current with from the stack." as/pop /_with_
+partial pop-with "Pop the current with from the stack." as/pop ~/_with_path_

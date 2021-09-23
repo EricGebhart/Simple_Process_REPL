@@ -1,5 +1,10 @@
 '
 config:
+
+    _with_ :
+       - '/'
+    _with_path_       : '/_with_'
+
     REPL:
         prompt        : 'SPR:> '
 

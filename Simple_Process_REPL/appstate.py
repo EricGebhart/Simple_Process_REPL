@@ -29,6 +29,9 @@ Within SPR code, show, set, and set-from are of primary use.
 
 """
 
+#  this  is where  we  will look for the path to the with stack.
+WITH_PATH = "/_with_path_"
+
 
 def help():
     """Additional SPR help For the appstate Module."""
@@ -47,9 +50,9 @@ AS = {
     },
     "platform": "",
     "with_depth": -1,
+    "_with_path_": "/_with_",
+    "_with_": [],
 }
-
-with_stack = []
 
 
 def gensym(prefix="__G__"):
@@ -79,8 +82,51 @@ def getgensym(sym):
     return get_in(path)
 
 
+def get_with_path():
+    """Return the  path  to the current with  stack."""
+    path = get_in(_get_vv_from_path(WITH_PATH))
+    return path
+
+
+def get_with_stack():
+    """Return  the entire with stack."""
+    return get_in(_get_vv_from_path(get_with_path()))
+
+
+def last_with():
+    """Return the current 'With' path."""
+    with_stack = get_with_stack()
+    if len(with_stack) == 0:
+        return "/"
+    else:
+        return nth(-1, with_stack)
+
+
+def last_with_vv():
+    """Return the current 'With' Vector."""
+    path = last_with()
+    if path == "/":
+        return []
+    else:
+        return _get_vv_from_path(path)
+
+
+def _push_with(path):
+    """push a path onto the current with stack.
+    Tries to resolve where the current with stack is and pushes value to it.
+    Equivalent to 'push ~/_with_path_ /some/path' in SPR."""
+    wp = get_with_path()
+    push(wp, path)
+
+
+def _pop_with(path):
+    """pop a path off of the current with stack.
+    Equivalent to 'pop ~/_with_path_' in SPR."""
+    pop(get_with_path())
+
+
 def _ls_with():
-    path = with_stack[-1]
+    path = last_with()
     print(path)
     print("-------------------------")
     if path[0] == "/":
@@ -100,14 +146,13 @@ def _ls_with():
 def _with(wpath=None, wcommand=None, destpath=None):
     """
     Show the current 'With' path or if a path is given,
-    Push a Yaml datastore path onto the 'with' stack.
+    Push a datastore path onto the 'with' stack.
 
     If it is not yet there, it will appear when someone sets something.
 
     If a command is given, execute the command and pop.
     if a destination is given pop the last result to that path.
     """
-    global with_stack
     #    logger.info("_with %s" % path)
     #    logger.info("_stack %s" % with_stack)
 
@@ -119,10 +164,9 @@ def _with(wpath=None, wcommand=None, destpath=None):
         wpath = "/" + wpath
 
     vv = _get_vv_from_path(wpath)
-
-    with_stack.append(wpath)
-
     set_in(vv + [{}])
+
+    _push_with(wpath)
 
     # if there is a command, either
     # pop the result to the path or pushed with. before popping.
@@ -136,12 +180,12 @@ def _with(wpath=None, wcommand=None, destpath=None):
             if destpath[0] == ".":
                 g = gensym()
                 pop("results", g)
-                pop("/_with_")
+                _pop_with()
                 set(destpath, g)
             else:
                 pop("results", destpath)
         else:
-            pop("/_with_")
+            _pop_with()
     else:
         try:
             _ls_with()
@@ -149,33 +193,17 @@ def _with(wpath=None, wcommand=None, destpath=None):
             pass
 
 
-def _get_with_path():
-    """Return the current 'With' Vector as a path."""
-    if len(with_stack) == 0:
-        return "/"
-    return with_stack[-1]
-
-
-def _get_with_vv():
-    """Return the current 'With' Vector."""
-    path = _get_with_path()
-    if path is None or path == "/":
-        return []
-    else:
-        return _get_vv_from_path(_get_with_path())
-
-
 def _full_with_path(path):
     """Takes a path and prepends the with path."""
-    withpath = _get_with_path()
+    withpath = last_with()
 
     if withpath != "/" and path[0] != "/":
         path = "/" + path
-    return _get_with_path() + path
+    return withpath + path
 
 
 def get_in_with(path):
-    vv = _get_with_vv() + _get_vv_from_path(path)
+    vv = last_with_vv() + _get_vv_from_path(path)
     return get_in(vv)
 
 
@@ -232,6 +260,7 @@ def flatten_with():
     depth = get_in(["with_depth"])
     fd = {}
     i = 0
+    with_stack = get_with_stack()
     for w in with_stack[1:]:
         d = get_in(_get_vv_from_path(w))
         fd |= d
@@ -253,7 +282,7 @@ def select_with(keys):
 
 def get_with():
     """Return the current with map."""
-    return get_in(_get_with_vv())
+    return get_in(last_with_vv())
 
 
 def _set_(d):
@@ -323,7 +352,7 @@ def pop(path, destination=None):
 
     if destination is not None and v is not None:
         if destination[0] == ".":
-            destination = _get_with_path()
+            destination = last_with()
 
         set(destination, v)
 
@@ -344,8 +373,9 @@ def push(set_path, fromv):
     set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
     val = get_fromv(fromv)
 
+    # get the thing at the path. hopefully it's a list.
     try:
-        dest = get_in_with(set_path)
+        dest = get(set_path)
     except Exception:
         dest = None
 
@@ -363,7 +393,6 @@ def push(set_path, fromv):
         dest = val
 
     set_keys += [dest]
-    # logger.info("keys: %s" % set_keys)
     AS = u.merge(AS, u.make_dict(set_keys))
 
 
@@ -427,7 +456,7 @@ def reverse(path):
     return "Not found"
 
 
-# This seems weird to me.
+# This seems weird to me. Less so now that most of it is a comment.
 def get_fromv(fromv):
     """Get the value from there, if it's a there.
     If its raw value is a list, then it's a string from the parser.
@@ -446,7 +475,7 @@ def get_fromv(fromv):
 
     # elif fromv[0] == ".":
     #     vv = _get_vv_from_path(fromv[1:])
-    #     fromv = get_in(_get_with_vv() + vv)
+    #     fromv = get_in(last_with_vv() + vv)
 
     # haven't found the reason this was here yet.
     # elif isinstance(fromv, list):
@@ -479,13 +508,13 @@ def get_vv(set_path):
 def resolve_path(path):
     """get the vv for path even if it's empty."""
     if path is None:
-        set_keys = _get_with_vv()
+        set_keys = last_with_vv()
 
     elif path[0] == "/":
         set_keys = get_vv(path)
 
     elif path[0] == ".":
-        set_keys = _get_with_vv()
+        set_keys = last_with_vv()
 
     elif path[0] != "/":
         path = _full_with_path(path)
@@ -528,11 +557,11 @@ def get(path):
 
     if path[0] != "/":
         vv = _get_vv_from_path(path[1:])
-        vv = _get_with_vv() + vv
+        vv = last_with_vv() + vv
 
     elif path[0] == ".":
         vv = _get_vv_from_path(path[1:])
-        vv = _get_with_vv() + vv
+        vv = last_with_vv() + vv
 
     else:
         vv = _get_vv_from_path(path)
@@ -589,7 +618,6 @@ def _get_in(dict_tree, keys):
 
     try:
         for key in keys:
-            # logger.info("key %s" % key)
             dict_tree = dict_tree[key]
 
         return dict_tree
@@ -627,7 +655,7 @@ def show(pathname=None):
 
     # point at with if we got Nothing.
     if pathname is None:
-        pathname = _get_with_path()
+        pathname = last_with()
         # We really don't want to 'show' that on accident.
         if pathname == "/":
             pathname = None
@@ -712,7 +740,7 @@ def yaml_load(y):
 
 def merge_yaml_with(y):
     """Merge a yaml data structure into the yaml datastore."""
-    root = _get_with_vv()
+    root = last_with_vv()
     try:
         d = [yaml.load(y, Loader=yaml.SafeLoader)]
     except Exception as e:
@@ -900,7 +928,6 @@ def init(parser, logger):
         get_in_config(["files", "logfile"]),
     )
     set_in(["platform", platform()])
-    set_in(["_with_", with_stack])
 
     # load functions from the config into the interpreter.
     load_functions()
