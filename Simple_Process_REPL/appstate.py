@@ -375,11 +375,13 @@ def push(set_path, fromv):
 
     # get the thing at the path. hopefully it's a list.
     try:
-        dest = get(set_path)
+        if set_path[0] == "/":
+            dest = get(set_path)
+        else:
+            dest = get_in_with(set_path)
     except Exception:
         dest = None
 
-    # logger.info("push: %s to %s " % (val, dest))
     if not isinstance(val, list):
         val = [val]
 
@@ -388,6 +390,7 @@ def push(set_path, fromv):
             dest = [dest]
             dest += val
         else:
+            # do it directly
             dest += val
     else:
         dest = val
@@ -486,6 +489,8 @@ def get_fromv(fromv):
     #         else:
     #             res = res + " " + str(x)
     #             fromv = res
+    if isinstance(fromv, list) or isinstance(fromv, dict):
+        fromv = fromv.copy()
 
     elif fromv and len(fromv) == 1:
         fromv = fromv  # [0]
