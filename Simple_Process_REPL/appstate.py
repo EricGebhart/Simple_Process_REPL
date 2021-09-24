@@ -489,12 +489,13 @@ def get_fromv(fromv):
     #         else:
     #             res = res + " " + str(x)
     #             fromv = res
-    if isinstance(fromv, list) or isinstance(fromv, dict):
+    if isinstance(fromv, list):
         fromv = fromv.copy()
 
-    elif fromv and len(fromv) == 1:
-        fromv = fromv  # [0]
+    # elif fromv and len(fromv) == 1:
+    #    fromv = fromv  # [0]
 
+    # logger.info("fromv: %s" % fromv)
     return fromv
 
 

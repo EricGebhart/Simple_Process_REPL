@@ -56,7 +56,7 @@ def input_string(input_please, title, height=10, width=50):
         height=height,
         width=width,
     )
-    return code, res
+    return res
 
 
 def input_count(input_please, title, height=10, width=50):
@@ -64,7 +64,7 @@ def input_count(input_please, title, height=10, width=50):
     A range box could work, but seemed cumbersome."""
     while True:
         code, res = inputbox(
-            msg,
+            input_please,
             title=title,
             height=height,
             width=width,
@@ -75,7 +75,7 @@ def input_count(input_please, title, height=10, width=50):
             logger.info("count must be an integer")
             continue
         break
-    return code, res
+    return res
 
 
 def _input_string(

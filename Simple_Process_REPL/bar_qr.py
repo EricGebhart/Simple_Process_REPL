@@ -75,6 +75,7 @@ def create(code_string, code_type=BarCodeType, font="DejaVuSans", font_size=18):
     returns: the generated code.
     """
     try:
+        logger.info("bq/create: %s" % code_type)
         if code_type == BarCodeType:
             code = create_bar_code(code_string)
         elif code_type == QRCodeType:
@@ -115,13 +116,15 @@ def build_code_string(value, prefix="", suffix=""):
 def gen_filename(code_string, save_path, filename_suffix, filename_extension):
     """Generate a name for a barcode or QR code file"""
     os.makedirs(save_path, exist_ok=True)
-    return os.path.join(save_path, "%s%s%s" % (code_string, filename_suffix, extension))
+    return os.path.join(
+        save_path, "%s%s%s" % (code_string, filename_suffix, filename_extension)
+    )
 
 
 def save_bar_code(bc, filename, save_path, save_options):
     "Save a bar code to filename."
     # options = [module_height = 8, text_distance = 2]
-    bc.save(filename, options)
+    bc.save(filename, save_options)
 
 
 def save_qr_code(qrc, filename):

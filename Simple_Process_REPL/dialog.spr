@@ -78,7 +78,7 @@ partial get-print-command
 def get-count
     "Get how many into 'count'. Give an input count dialog and pop results to count."
     '
-    - ui/input_count
+    - ui/input-count
     - pop results count
 
 
