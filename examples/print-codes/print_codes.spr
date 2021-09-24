@@ -41,7 +41,7 @@ workspace:
 
 
 help:
-  - Print-Codes.
+  - Print-Codes
 
     A set of functions to give a dialog process for
     a number to encode as either a barcode or QRcode, Prompting

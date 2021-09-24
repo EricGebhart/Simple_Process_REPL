@@ -370,15 +370,18 @@ def push(set_path, fromv):
     """
     global AS
 
-    set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
+    # set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
+    set_keys = _get_vv_from_path(set_path)
     val = get_fromv(fromv)
 
     # get the thing at the path. hopefully it's a list.
     try:
         if set_path[0] == "/":
             dest = get(set_path)
+            set_keys = _get_vv_from_path(set_path)
         else:
             dest = get_in_with(set_path)
+            set_keys = _get_vv_from_path(_full_with_path(set_path)[1:])
     except Exception:
         dest = None
 
@@ -676,13 +679,15 @@ def show(pathname=None):
         # so we don't have to type the first / in the path.
         if pathname[0] == "/":
             pathname = pathname[1:]
-        else:
-            pathname = pathname[1:]
         vv = pathname.split("/")
         qqc = get_in(vv)
 
     if qqc:
-        logger.info(yaml.dump(qqc, Dumper=NoAliasDumper))
+        try:
+            logger.info(yaml.dump(qqc, Dumper=NoAliasDumper))
+        except Exception as e:
+            logger.error(e)
+            logger.info(str(qqc))
 
 
 def archive_log(new_name):
