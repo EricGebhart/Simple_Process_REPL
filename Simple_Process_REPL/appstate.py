@@ -113,7 +113,7 @@ def last_with_vv():
 
 def _push_with(path):
     """push a path onto the current with stack.
-    Tries to resolve where the current with stack is and pushes value to it.
+    Tries to resolve where the current with stack is and pushes path to it.
     Equivalent to 'push ~/_with_path_ /some/path' in SPR."""
     wp = get_with_path()
     push(wp, path)
