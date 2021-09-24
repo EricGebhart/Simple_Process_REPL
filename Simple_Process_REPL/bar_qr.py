@@ -121,28 +121,43 @@ def gen_filename(code_string, save_path, filename_suffix, filename_extension):
     )
 
 
-def save_bar_code(bc, filename, save_path, save_options):
+def save_bar_code(bc, filename, save_path, save_options, auto_filename_extension=None):
     "Save a bar code to filename."
     # options = [module_height = 8, text_distance = 2]
     bc.save(filename, save_options)
+    if auto_filename_extension:
+        filename += auto_filename_extension
+    return filename
 
 
 def save_qr_code(qrc, filename):
     "Save a qr code to filename."
     qrc.save(filename)
+    return filename
 
 
-def save(code, filename, save_path, save_options, code_type="barcode"):
+def save(
+    code,
+    filename,
+    save_path,
+    save_options,
+    code_type="barcode",
+    auto_filename_extension=None,
+):
     """Save a bar or QR code according to code_type."""
     try:
         if code_type == BarCodeType:
-            save_bar_code(code, filename, save_path, save_options)
+            filename = save_bar_code(
+                code, filename, save_path, save_options, auto_filename_extension
+            )
         else:
-            save_qr_code(code, filename)
+            filename = save_qr_code(code, filename)
 
     except Exception as e:
         logger.error(e)
         logger.error("Unable to save %s" % code_type)
+
+    return filename
 
 
 def create_bar_code(code_string):
