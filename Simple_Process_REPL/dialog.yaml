@@ -33,6 +33,7 @@ config:
             commands the interpreter currently recognizes."
 
     print_commands:
+        menu_msg: "Please choose a printer command"
         Linux:
             default: 'echo "Sorry I dont know how to print this %s"'
             brother: "brother_ql -m QL-700 -p usb://04f9:2042 print -l 29 %s"
