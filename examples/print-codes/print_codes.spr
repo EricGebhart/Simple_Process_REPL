@@ -78,7 +78,6 @@ help:
       * Format the command using ~filename as the format argument.
       * Prompt for number of times to print.
       * Loop count times to execute the print command.
-      "
 
 
 
