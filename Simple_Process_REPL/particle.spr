@@ -1,3 +1,5 @@
+# Particle.io cli interface.
+
 '
 config:
     particle:
@@ -22,7 +24,7 @@ config:
 
 def clear
     "Initialize the device workspace to that of config."
-    set . /config/particle/workspace
+    set . `~/config/particle/workspace
 
 def initialize
     "Initialize the /device workspace to original, setup the with stack."

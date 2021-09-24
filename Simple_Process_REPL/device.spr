@@ -34,7 +34,7 @@ def input-serial
 
 def clear
     "Initialize the print-codes work space to that of config."
-    set . /config/device/workspace
+    set . `~/config/device/workspace
 
 def initialize
   "Set up the with stack for us."
