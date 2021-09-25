@@ -5,6 +5,7 @@ import time
 import logging
 import Simple_Process_REPL.repl as r
 import Simple_Process_REPL.utils as u
+from Simple_Process_REPL.appstate import get
 
 logger = logging.getLogger()
 
@@ -134,7 +135,16 @@ def test_done(line, done_regex):
 # _handshake(usb_device, baudrate, init_string, response_string, do_qqc_func)
 
 
-def handshake(path, baudrate, init_string, response_string, do_qqc_func):
+def handshake(
+    path,
+    baudrate,
+    init_string,
+    response_string,
+    do_qqc_func,
+    fail_regex,
+    do_qqc_regex,
+    done_regex,
+):
     """
     Handshake with the device at path. Generally done after flash of
     something that would like to communicate. Like a test binary.
@@ -175,18 +185,21 @@ def handshake(path, baudrate, init_string, response_string, do_qqc_func):
                 line = ser.readline().decode("utf-8")
                 logging.info(line)
 
-                if test_line_fails(line):
+                if test_line_fails(line, fail_regex):
                     result = False
                     # break
                     ser.close()
                     raise Exception("Fail: %s" % line)
 
-                if do_qqc_func is not None and do_qqc(line):
-                    func = r.get_symbol(do_qqc_func)["fn"]
-                    response = bytes(func() + "\n", "utf-8")
-                    ser.write(response)
+                if do_qqc_func is not None and do_qqc(line, do_qqc_regex):
 
-                if test_done(line):
+                    res = r._call(do_qqc_func, "qqc-response")
+
+                    if res is not None:
+                        response = bytes(res + "\n", "utf-8")
+                        ser.write(response)
+
+                if test_done(line, done_regex):
                     break
 
             ser.close()

@@ -35,6 +35,7 @@ def initialize
     - pb/clear
 
 
+
 def browse "Browse to the particle-cli developer tools website."
     web/browse "https://docs.particle.io/tutorials/developer-tools/cli/#installing"
 
@@ -203,7 +204,7 @@ def setup
     - pb/update
     - dev/wait
     - dev/pause
-    - pb/setup-bit-done
+    - pb/set-setup-bit
 
 
 

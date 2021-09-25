@@ -48,7 +48,7 @@ with /config
 '
 device:
   handshake:
-    do_qqc_func: dev/input-serial
+    do_qqc_func: do_something
     do_qqc_regex: ^I:Now Setting Serial Number
     done_regex: ^I:Test All Done
     fail_regex: ^F:.*
@@ -66,8 +66,30 @@ particle:
     tinker: tinker-0.8.0-rc.27-boron.bin
   product: XXXXX
 
+  yn_fail_msg : 'Please verify the test image is shown on the screen.'
+
 
 pop-with
+
+# pb/initialize should be in the start up hooks.
+
+def quick-test
+    "just enough to run a test."
+    '
+    - pb/initialize
+    - pb/get
+    - pb/testit
+
+
+
+def do_something
+    "Function to ask about the display, and get a serial number which is
+    then sent to the device."
+    '
+    - ui/yno-fail
+    - ui/-input-string
+
+
 
 def processit
     "Process a particle.io board, no dialogs other than those provided by SPR.

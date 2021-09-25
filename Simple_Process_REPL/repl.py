@@ -20,6 +20,7 @@ from Simple_Process_REPL.appstate import (
     select_with,
     get_in_stack,
     push,
+    pop,
     get,
     _set_,
     _set_in,
@@ -1363,6 +1364,15 @@ def eval_list(commands):
         # it's a do-list
         for cmd in commands:
             eval_symbol(cmd)
+
+
+def _call(symbol, result_name="_call_result_"):
+    """evaluate an spr symbol/func and pop the results to result name.
+    Then return the result as well."""
+    eval_cmd(symbol)
+    pop("results", result_name)
+    res = get_in_stack(result_name)
+    return res
 
 
 def eval_cmd(commandstr):

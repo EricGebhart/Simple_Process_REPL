@@ -78,6 +78,21 @@ def input_count(input_please, title, height=10, width=50):
     return res
 
 
+def _inputbox(input_please, title, height=10, width=50):
+    """Get a string input"""
+    code, res = inputbox(
+        input_please,
+        title=title,
+        height=height,
+        width=width,
+    )
+
+    if code == "cancel":
+        res = code
+
+    return res
+
+
 def _input_string(
     input_please,
     title,
@@ -116,25 +131,24 @@ def _input_string(
 
     """
     if input_regex is None:
-        return input_string(input_please, title, height, width)
+        return _inputbox(input_please, title, height, width)
 
     while True:
-        code, res = input_string(input_please, title, height, width)
+        res = _inputbox(input_please, title, height, width)
 
-        if code == "cancel":
-            res = code
+        if res == "cancel":
             break
 
         if re.match(input_regex, res):
             if input_is_correct is not None:
                 yno_msg = "%s : %s" % (input_is_correct, res)
-                if yes_no(yno_msg):
+                if yes_no(yno_msg, title):
                     break
             else:
                 break
         else:
             if input_must is not None:
-                msg("%s : %s" % (input_must, input_regex))
+                msg("%s : %s" % (input_must, input_regex), title)
             else:
                 break
 
@@ -209,10 +223,10 @@ def menu(menu_msg, title, choices, height=50, width=50):
     return [code, value, choices[value]]
 
 
-def yno_fail(yn_fail_msg):
+def yno_fail(yn_fail_msg, title):
     """Ask a yes no question, raise an exception
     to fail if the answer is no.
     """
 
-    if yn_fail_msg is not None and not yes_no(yn_fail_msg):
+    if yn_fail_msg is not None and not yes_no(yn_fail_msg, title):
         raise Exception("Failure: %s No!" % yn_fail_msg)
