@@ -162,7 +162,7 @@ namespace web "View HTML and urls."
     view
     browse
 
-namespace pb "Particle Board CLI interface"
+namespace pio "Particle.io Board CLI interface"
     Simple_Process_REPL.particle
     help
     get_w_timeout

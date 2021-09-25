@@ -32,7 +32,7 @@ def initialize
     - dev/initialize
     - with /config/particle
     - with /device
-    - pb/clear
+    - pio/clear
 
 
 
@@ -41,7 +41,7 @@ def browse "Browse to the particle-cli developer tools website."
 
 def inspect
     "Inspect the particle device"
-    pb/cmd "serial inspect"
+    pio/cmd "serial inspect"
 
 def login
     "Login to particle cloud from the system cli prompt"
@@ -53,38 +53,38 @@ def logout
 
 def flash-image
     "Flash the default flash image"
-    pb/flash `~/config/particle/images/flash
+    pio/flash `~/config/particle/images/flash
 
 def flash-tinker
     "Flash the default tinker image"
-    pb/flash `~/config/particle/images/tinker
+    pio/flash `~/config/particle/images/tinker
 
 def flash-test
     "Flash the default test image"
-    pb/flash `~/config/particle/images/test
+    pio/flash `~/config/particle/images/test
 
 partial release
     "Release the claim on a device"
-    pb/id-cmd  "device remove"
+    pio/id-cmd  "device remove"
 
 partial cloud-status
     "Check the cloud-status of the device."
-    pb/id-cmd "usb cloud-status"
+    pio/id-cmd "usb cloud-status"
 
 partial reset-usb
     "Reset the device on the usb for the given device id."
-    pb/id-cmd "usb reset"
+    pio/id-cmd "usb reset"
 
 def -doctor
     "Run particle doctor. (just doctor)"
-    pb/cmd "-v doctor"
+    pio/cmd "-v doctor"
 
 def doctor
     "Run particle doctor. (list usb, dfu mode then -> doctor)"
     '
-    - pb/list
-    - pb/dfu
-    - pb/-doctor
+    - pio/list
+    - pio/dfu
+    - pio/-doctor
 
 
 
@@ -95,9 +95,9 @@ def update
     - log/info "Temporarily setting timeout to 60."
     - set timeout 60
     - log/info "Starting dfu"
-    - pb/dfu
+    - pio/dfu
     - log/info "Updating device"
-    - pb/cmd "update"
+    - pio/cmd "update"
     - pop-with
 
 
@@ -105,7 +105,7 @@ def update
 def set-setup-bit
     "Mark the setup bit done."
     '
-    - pb/cmd "usb setup-done"
+    - pio/cmd "usb setup-done"
     - log/info "Set: Setup-done"
 
 
@@ -115,7 +115,7 @@ def add
     '
     - log/info "Registering device."
     # particle product add $product_id $device_id
-    - pb/id-cmd "device add"
+    - pio/id-cmd "device add"
 
 
 
@@ -124,7 +124,7 @@ def claim
     '
     - log/info "Claiming device."
     # particle product add $product_id $device_id
-    - pb/id-cmd "cloud claim"
+    - pio/id-cmd "cloud claim"
 
 
 
@@ -132,7 +132,7 @@ def claim
      "Retrieve and set the USB device, the board name,  and the device id.
      Uses 'particle serial list' in a timeout loop."
      '
-     - pb/get-w-timeout
+     - pio/get-w-timeout
      - pop results .
 
 
@@ -140,7 +140,7 @@ def claim
 def listen
     "Start listening."
     '
-    - pb/cmd "usb start-listening"
+    - pio/cmd "usb start-listening"
     - log/info "Listening"
 
 
@@ -148,17 +148,17 @@ def listen
 def dfu
     "Put USB device in dfu mode. `particle usb dfu`.
     Timeout should not be necessary."
-    pb/cmd "usb dfu"
+    pio/cmd "usb dfu"
 
 def list
     "list the particle devices connected to usb."
-    pb/cmd "serial list"
+    pio/cmd "serial list"
 
 def identify "Identify a particle board"
     '
     - log/info "Identify, Start listening"
-    - pb/listen
-    - pb/cmd "identify"
+    - pio/listen
+    - pio/cmd "identify"
 
 
 
@@ -168,50 +168,50 @@ def id-it
     "Id the board. get, reset then identify. The reset and pauses are
     necessary for consistent success"
     '
-    - pb/get
-    - pb/reset-usb
+    - pio/get
+    - pio/reset-usb
     - dev/wait
     - dev/pause
     - dev/pause
-    - pb/identify
+    - pio/identify
 
 
 
 def ckit
     "Id, and check it over, cloud status and inspect."
     '
-    - pb/id-it
-    - pb/cloud-status
-    - pb/inspect
+    - pio/id-it
+    - pio/cloud-status
+    - pio/inspect
 
 
 
 def nukeit
     "Try to reset the board to a sane state."
     '
-    - pb/tinker
+    - pio/tinker
     - dev/wait
-    - pb/update
+    - pio/update
     - dev/wait
-    - pb/get
-    - pb/id-it
+    - pio/get
+    - pio/id-it
 
 
 
 def setup
     "Update the os and mark the setup bit done."
     '
-    - pb/update
+    - pio/update
     - dev/wait
     - dev/pause
-    - pb/set-setup-bit
+    - pio/set-setup-bit
 
 
 
 def testit
     "flash the test, handshake and process the results."
     '
-    - pb/flash-test
+    - pio/flash-test
     - dev/wait
     - dev/pause
     - dev/handshake
@@ -221,17 +221,17 @@ def testit
 def claimit
     "Do a product add followed by device add."
     '
-    - pb/product-add
+    - pio/product-add
     - dev/wait
-    - pb/add
+    - pio/add
 
 
 
 def claimit-3ways
     "Do a product add, device add, cloud claim."
     '
-    - pb/product-add
+    - pio/product-add
     - dev/wait
-    - pb/add
+    - pio/add
     - dev/wait
     - claim

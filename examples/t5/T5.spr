@@ -11,10 +11,10 @@
 with /config/exec
 
 '
-autoexec: processit
+autoexec: pbe/processit
 hooks:
     startup:
-    - pb/initialize
+    - pbe/initialize
 
 
 
@@ -48,7 +48,7 @@ with /config
 '
 device:
   handshake:
-    do_qqc_func: do_something
+    do_qqc_func: pbe/do_something
     do_qqc_regex: ^I:Now Setting Serial Number
     done_regex: ^I:Test All Done
     fail_regex: ^F:.*
@@ -71,20 +71,33 @@ particle:
 
 pop-with
 
-# pb/initialize should be in the start up hooks.
+# namespace for extra particle io board stuff.
+new-ns pioe "A few extra particle io board functions" Particle.io-extras.
 
-def quick-test
-    "just enough to run a test."
+def initialize
+    "setup the with stack."
+    pio/initialize
+
+def tonce
+    "Initialize and test once, if not using autoload startup hooks."
     '
-    - pb/initialize
-    - pb/get
-    - pb/testit
+    - pio/initialize
+    - pioe/test
+
+
+
+def test
+    "just enough to plugin and run a test once."
+    '
+    - pio/get
+    - pio/testit
 
 
 
 def do_something
-    "Function to ask about the display, and get a serial number which is
-    then sent to the device."
+    "Function to ask about the display, and get a serial number.
+    dev/handshake will call this and then retrieve the result
+    and send it as a byte string to the device."
     '
     - ui/yno-fail
     - ui/-input-string
@@ -95,13 +108,13 @@ def processit
     "Process a particle.io board, no dialogs other than those provided by SPR.
     or the particle board functions."
     '
-    - pb/clear
-    - pb/id-it
-    - pb/setup
-    - pb/add
+    - pio/clear
+    - pio/id-it
+    - pio/setup
+    - pio/add
     - dev/wait
-    - pb/testit
-    - pb/flash
+    - pio/testit
+    - pio/flash
     - as/archive-log
 
 
@@ -109,14 +122,14 @@ def processit
 def processit-with-dialogs
     "Process a particle.io board, more 'ready' dialogs."
     '
-    - pb/clear
+    - pio/clear
     - ui/dialog-start
-    - pb/id-it
-    - pb/setup
-    - pb/add
+    - pio/id-it
+    - pio/setup
+    - pio/add
     - dev/wait
     - ui/dialog-test
-    - pb/testit
+    - pio/testit
     - ui/dialog-flash
-    - pb/flash
+    - pio/flash
     - as/archive-log
