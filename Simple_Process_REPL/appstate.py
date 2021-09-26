@@ -93,6 +93,13 @@ def get_with_stack():
     return get_in(_get_vv_from_path(get_with_path()))
 
 
+def show_with():
+    """Show the with stack as a series of yaml trees, Omitting '/'."""
+    for path in get_with_stack():
+        if not path == "/":
+            show(path)
+
+
 def last_with():
     """Return the current 'With' path."""
     with_stack = get_with_stack()

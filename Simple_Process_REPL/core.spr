@@ -76,6 +76,7 @@ namespace as "Application State functionality"
     get_in_stack
     flat_with
     flatten_with
+    show_with
     clear_path
     eval_default_process
     save
@@ -187,7 +188,7 @@ import Simple_Process_REPL.mkext new_spr_extension_project
 
 # Set up readme folder with stuff,
 # then load the readme and convert to html.
-with /readme
+with /config/help/readme
 
 '
 package: Simple_Process_REPL
@@ -211,10 +212,10 @@ pop results html
 # view-with and browse-with are handy to have.
 # view and browse use the current 'with'...
 def view-doc "Display the Readme documentation in an html viewer."
-    with readme web/view
+    with /config/help/readme web/view
 
 def browse-doc "Display the Readme documentation in a browser window."
-    with readme web/browse
+    with /config/help/readme web/browse
 
 pop-with
 

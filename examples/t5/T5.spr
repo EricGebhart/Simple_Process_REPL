@@ -11,10 +11,10 @@
 with /config/exec
 
 '
-autoexec: pbe/processit
+autoexec: pioe/processit
 hooks:
     startup:
-    - pbe/initialize
+    - pioe/initialize
 
 
 
@@ -46,20 +46,18 @@ pop-with
 with /config
 
 '
-device:
+R5Setup:
   handshake:
-    do_qqc_func: pbe/do_something
+    do_qqc_func: pioe/do_something
     do_qqc_regex: ^I:Now Setting Serial Number
     done_regex: ^I:Test All Done
     fail_regex: ^F:.*
     init_string: 'R5 Test'
     response_string: '!'
   serial:
-    baudrate: 9600
     input_please: Please input an 8 digit serial number
     input_regex: ^\d{8}$
 
-particle:
   images:
     flash: R5Bin.bin
     test: R5Test.bin
@@ -67,6 +65,41 @@ particle:
   product: XXXXX
 
   yn_fail_msg : 'Please verify the test image is shown on the screen.'
+  title: 'R5 Setup'
+
+help:
+  pioe-help:
+    R5 Setup
+
+    This is a couple of processes to identify, update, register, test and flash
+    the R5 project which is based on a particle.io Boron.
+
+    The crucial bits are the data and a helper function that the test handshake
+    will call to ask about the device's display and get a serial number, which
+    is then sent to the device as a bytestream. See 'help dev/handshake'.
+
+    Setting up the data need only be done once and is done with the pioe/initialize
+    function. This will build a _with_ stack which contains all the necessary
+    default data for both the device and particle modules. The initialization
+    is set as a startup hook when this module is autoloaded by SPR.
+
+    Essentially, run SPR in this
+    folder containing SPRConfig.yaml so that this file, T5.spr, is autoloaded
+    then startup hooks will be set in time to run.
+
+    The top _with_ path is /device and will contain all the data as the process
+    progresses. It can be reset with pio/clear.
+
+    It should be reasonable to add more projects here, simply by creating
+    another folder of data over-rides similar to /config/R5Setup.
+    A different with, and this process could be good to go.
+
+    * 'Show /config/R5Setup', to see all of the data over-rides provided.
+    * 'Show' will give the current _with_ which holds the device data.
+    * ls-with will reveal the with stack, and as/flat-with will show
+    the ultimate value of everything defined within that stack.
+
+
 
 
 pop-with
@@ -74,12 +107,26 @@ pop-with
 # namespace for extra particle io board stuff.
 new-ns pioe "A few extra particle io board functions" Particle.io-extras.
 
+def help
+    "Help for the pioe / R5 particle board extras."
+    '
+    - log/info ~/config/help/pioe-help
+    - log/info " "
+    - show /config/R5Setup
+
+
+
 def initialize
-    "setup the with stack."
-    pio/initialize
+    "Setup the with stack for the R5."
+    - pio/initialize
+    - with /config/R5Setup
+    - with /device
+
+
 
 def tonce
-    "Initialize and test once, if not using autoload startup hooks."
+    "Initialize and test once, if not using autoload startup hooks,
+    do this the first time and pioe/test from then on."
     '
     - pio/initialize
     - pioe/test
@@ -87,8 +134,9 @@ def tonce
 
 
 def test
-    "just enough to plugin and run a test once."
+    "just enough to plugin and run a test once, sans initialize."
     '
+    - pio/clear
     - pio/get
     - pio/testit
 
