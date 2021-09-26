@@ -123,7 +123,11 @@ def _push_with(path):
     Tries to resolve where the current with stack is and pushes path to it.
     Equivalent to 'push ~/_with_path_ /some/path' in SPR."""
     wp = get_with_path()
-    push(wp, path)
+    if isinstance(path, list):
+        _set_in(" ", get_with_path())
+        _set_in(path, get_with_path())
+    else:
+        push(wp, path)
 
 
 def _pop_with(path):
@@ -155,6 +159,9 @@ def _with(wpath=None, wcommand=None, destpath=None):
     Show the current 'With' path or if a path is given,
     Push a datastore path onto the 'with' stack.
 
+    if wpath is a list, that list will replace the current with stack
+    in it's entirety.
+
     If it is not yet there, it will appear when someone sets something.
 
     If a command is given, execute the command and pop.
@@ -163,15 +170,17 @@ def _with(wpath=None, wcommand=None, destpath=None):
     #    logger.info("_with %s" % path)
     #    logger.info("_stack %s" % with_stack)
 
-    if wpath is None:
-        _ls_with()
-        return
+    if not isinstance(wpath, list):
 
-    if wpath[0] != "/":
-        wpath = "/" + wpath
+        if wpath is None:
+            _ls_with()
+            return
 
-    vv = _get_vv_from_path(wpath)
-    set_in(vv + [{}])
+        if wpath[0] != "/":
+            wpath = "/" + wpath
+
+        vv = _get_vv_from_path(wpath)
+        set_in(vv + [{}])
 
     _push_with(wpath)
 
@@ -395,6 +404,7 @@ def push(set_path, fromv):
     if not isinstance(val, list):
         val = [val]
 
+    # pushing a list appends it, I don't know if I like that.
     if dest:
         if not (isinstance(dest, list) or isinstance(dest, dict)):
             dest = [dest]
@@ -467,6 +477,17 @@ def reverse(path):
         return v
 
     return "Not found"
+
+
+def dedup(path):
+    """If the path is a list remove duplicates, first wins."""
+    res = []
+
+    if isinstance(path, list):
+        for item in path:
+            if item not in res:
+                res.append(item)
+    return res
 
 
 # This seems weird to me. Less so now that most of it is a comment.

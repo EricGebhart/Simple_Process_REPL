@@ -72,6 +72,7 @@ namespace as "Application State functionality"
     nth
     rest
     reverse
+    dedup
     _with
     get_in_stack
     flat_with

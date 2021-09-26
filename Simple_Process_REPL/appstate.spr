@@ -22,3 +22,15 @@ partial with "Set or show the current with path." as/-with
 partial ls-with "Show the with stack." ls ~/_with_path_
 
 partial pop-with "Pop the current with from the stack." as/pop ~/_with_path_
+
+def dedup-with
+    "remove duplicates from the with stack,
+     keeping the first entries found from the topdown."
+    '
+    - with /tmp
+    - as/-get ~/_with_path_
+    - as/reverse ~_last_result_
+    - as/dedup ~_last_result_
+    - as/reverse ~_last_result_
+    - with ~_last_result_
+    - pop-with

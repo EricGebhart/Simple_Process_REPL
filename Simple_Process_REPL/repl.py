@@ -22,6 +22,7 @@ from Simple_Process_REPL.appstate import (
     push,
     pop,
     get,
+    set,
     _set_,
     _set_in,
     get_in,
@@ -1250,7 +1251,13 @@ def do_fptrs(commands):
             result = fn(**args)
 
         if result is not None:
-            push("results", result)
+            if isinstance(result, list):
+                result = result.copy()
+                push("results", [result])
+            else:
+                push("results", result)
+            _set_in({"_last_result_": None})
+            set("_last_result_", result)
 
     except Exception as e:
         logger.error("Command Failed")
